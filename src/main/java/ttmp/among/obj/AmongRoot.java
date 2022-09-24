@@ -18,7 +18,6 @@ import java.util.Objects;
 
 /**
  * Root object represents a whole file, including macro definitions, operator definitions, and objects.
- * ttmp.among.AmongEngine#read(Source, AmongRoot)} call.
  */
 public final class AmongRoot implements ToPrettyString{
 	/**
