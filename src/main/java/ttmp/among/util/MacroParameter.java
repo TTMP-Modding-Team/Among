@@ -35,10 +35,10 @@ public final class MacroParameter implements Comparable<MacroParameter>, ToPrett
 		if(this==o) return true;
 		if(o==null||getClass()!=o.getClass()) return false;
 		MacroParameter parameter = (MacroParameter)o;
-		return name().equals(parameter.name());
+		return name().equals(parameter.name())&&Objects.equals(defaultValue(), parameter.defaultValue());
 	}
 	@Override public int hashCode(){
-		return Objects.hash(name());
+		return Objects.hash(name(), defaultValue());
 	}
 
 	@Override public String toString(){

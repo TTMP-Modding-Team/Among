@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -24,22 +25,25 @@ import static ttmp.among.util.OperatorType.POSTFIX;
  * Just to be clear, absolutely everything in this class is not thread safe.
  */
 public final class OperatorRegistry{
-	private final Map<String, Operator> operators = new HashMap<>();
+	private final Map<String, NameGroup> operators = new HashMap<>();
 	private final Map<Double, PriorityGroup> priorityGroup = new HashMap<>();
 	@Nullable private List<PriorityGroup> priorityGroupList;
 
 	public OperatorRegistry(){}
 	public OperatorRegistry(OperatorRegistry copyFrom){
-		copyFrom.forEachOperatorOrKeyword(this::add);
+		copyFrom.forEachOperatorAndKeyword(this::add);
 	}
 
 	/**
-	 * Starting codepoint to list of operator names, sorted by name length in descending order (for maximal munch rule)
+	 * Starting codepoint to set of name groups, sorted by name length in descending order (for maximal munch rule)
 	 */
-	private final Map<Integer, Set<Operator>> operatorNameByStartingCodepoint = new HashMap<>();
-	private final Map<Integer, Set<Operator>> keywordNameByStartingCodepoint = new HashMap<>();
+	private final Map<Integer, Set<NameGroup>> operatorByStartingCodepoint = new HashMap<>();
+	/**
+	 * Starting codepoint to set of name groups, sorted by name length in descending order (for maximal munch rule)
+	 */
+	private final Map<Integer, Set<NameGroup>> keywordByStartingCodepoint = new HashMap<>();
 
-	public Collection<Operator> getAllOperatorsAndKeywords(){
+	public Collection<NameGroup> getAllNameGroups(){
 		return Collections.unmodifiableCollection(operators.values());
 	}
 
@@ -60,13 +64,13 @@ public final class OperatorRegistry{
 	public RegistrationResult add(AmongOperatorDef definition){
 		if(isPriorityOccupiedByWrongType(definition))
 			return RegistrationResult.PRIORITY_OCCUPIED_BY_DIFFERENT_TYPE;
-		Operator o = operators.get(definition.name());
+		NameGroup o = operators.get(definition.name());
 		if(o==null){
-			operators.put(definition.name(), o = new Operator(definition));
+			operators.put(definition.name(), o = new NameGroup(definition));
 			if(!definition.name().isEmpty())
 				(definition.isKeyword() ?
-						keywordNameByStartingCodepoint :
-						operatorNameByStartingCodepoint)
+						keywordByStartingCodepoint :
+						operatorByStartingCodepoint)
 						.computeIfAbsent(o.codePointAt(0), i -> new TreeSet<>())
 						.add(o);
 		}else{
@@ -78,14 +82,14 @@ public final class OperatorRegistry{
 	}
 
 	public void remove(String operatorName, boolean keyword){
-		Operator op = operators.get(operatorName);
+		NameGroup op = operators.get(operatorName);
 		if(op!=null&&op.isKeyword==keyword){
 			operators.remove(operatorName);
 			if(operatorName.isEmpty()){
-				Map<Integer, Set<Operator>> m = keyword ?
-						keywordNameByStartingCodepoint :
-						operatorNameByStartingCodepoint;
-				Set<Operator> operators = m.get(op.codePointAt(0));
+				Map<Integer, Set<NameGroup>> m = keyword ?
+						keywordByStartingCodepoint :
+						operatorByStartingCodepoint;
+				Set<NameGroup> operators = m.get(op.codePointAt(0));
 				operators.remove(op);
 				if(operators.isEmpty()) m.remove(op.codePointAt(0));
 			}
@@ -117,13 +121,13 @@ public final class OperatorRegistry{
 		}
 	}
 
-	public Set<Operator> getOperators(int startingCodePoint){
-		Set<Operator> operators = operatorNameByStartingCodepoint.get(startingCodePoint);
+	public Set<NameGroup> getOperators(int startingCodePoint){
+		Set<NameGroup> operators = operatorByStartingCodepoint.get(startingCodePoint);
 		return operators==null ? Collections.emptySet() : Collections.unmodifiableSet(operators);
 	}
 
-	public Set<Operator> getKeywords(int startingCodePoint){
-		Set<Operator> keywords = keywordNameByStartingCodepoint.get(startingCodePoint);
+	public Set<NameGroup> getKeywords(int startingCodePoint){
+		Set<NameGroup> keywords = keywordByStartingCodepoint.get(startingCodePoint);
 		return keywords==null ? Collections.emptySet() : Collections.unmodifiableSet(keywords);
 	}
 
@@ -136,9 +140,23 @@ public final class OperatorRegistry{
 		return priorityGroupList;
 	}
 
-	public void forEachOperatorOrKeyword(Consumer<AmongOperatorDef> consumer){
-		for(Operator op : operators.values())
+	public void forEachOperatorAndKeyword(Consumer<AmongOperatorDef> consumer){
+		for(NameGroup op : operators.values())
 			op.defByType.values().forEach(consumer);
+	}
+
+	public Set<AmongOperatorDef> allOperatorsAndKeywords(){
+		Set<AmongOperatorDef> set = new HashSet<>();
+		for(NameGroup op : operators.values())
+			set.addAll(op.defByType.values());
+		return set;
+	}
+
+	@Override public boolean equals(Object obj){
+		if(this==obj) return true;
+		if(!(obj instanceof OperatorRegistry)) return false;
+		OperatorRegistry reg = (OperatorRegistry)obj;
+		return this.allOperatorsAndKeywords().equals(reg.allOperatorsAndKeywords());
 	}
 
 	/**
@@ -184,13 +202,16 @@ public final class OperatorRegistry{
 		}
 	}
 
-	public static final class Operator implements Comparable<Operator>{
+	/**
+	 * Operators grouped by their name. Used in tokenization.
+	 */
+	public static final class NameGroup implements Comparable<NameGroup>{
 		private final String name;
 		private final int[] codePoints;
 		private final boolean isKeyword;
 		private final EnumMap<OperatorType, AmongOperatorDef> defByType = new EnumMap<>(OperatorType.class);
 
-		public Operator(AmongOperatorDef initial){
+		public NameGroup(AmongOperatorDef initial){
 			this.name = initial.name();
 			this.isKeyword = initial.isKeyword();
 			this.codePoints = name.codePoints().toArray();
@@ -228,7 +249,7 @@ public final class OperatorRegistry{
 			return RegistrationResult.OK;
 		}
 
-		@Override public int compareTo(@NotNull OperatorRegistry.Operator o){
+		@Override public int compareTo(@NotNull OperatorRegistry.NameGroup o){
 			int c = Integer.compare(o.name.length(), name.length());
 			if(c!=0) return c;
 			c = this.name.compareTo(o.name);
@@ -238,7 +259,7 @@ public final class OperatorRegistry{
 		@Override public boolean equals(Object o){
 			if(this==o) return true;
 			if(o==null||getClass()!=o.getClass()) return false;
-			Operator operator = (Operator)o;
+			NameGroup operator = (NameGroup)o;
 			return Objects.equals(name, operator.name);
 		}
 		@Override public int hashCode(){
@@ -250,6 +271,9 @@ public final class OperatorRegistry{
 		}
 	}
 
+	/**
+	 * Operators grouped by their priority. Used in parsing.
+	 */
 	public static final class PriorityGroup implements Comparable<PriorityGroup>{
 		private final double priority;
 		private final OperatorType type;
@@ -262,16 +286,16 @@ public final class OperatorRegistry{
 		}
 
 		private void add(AmongOperatorDef def){
-			if(def.priority()!=this.priority)
+			if(Double.compare(this.priority, def.priority())!=0)
 				throw new IllegalStateException("Trying to register operator with wrong priority to group");
-			if(def.type()!=this.type)
+			if(this.type!=def.type())
 				throw new IllegalStateException("Trying to register operator with wrong type to group");
 			if(operators.putIfAbsent(def.name(), def)!=null)
 				throw new IllegalStateException("Duplicated registration of operator '"+def.name()+"'");
 		}
 
 		private void remove(AmongOperatorDef def){
-			if(this.priority==def.priority()&&this.type==def.type())
+			if(Double.compare(this.priority, def.priority())==0&&this.type==def.type())
 				operators.remove(def.name());
 		}
 

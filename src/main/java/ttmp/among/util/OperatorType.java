@@ -8,9 +8,9 @@ public enum OperatorType{
 
 	public double defaultPriority(){
 		switch(this){
-			case BINARY: return 11;
-			case POSTFIX: return 12;
-			case PREFIX: default: return 13;
+			case BINARY: return OperatorPriorities.BINARY_CUSTOM;
+			case POSTFIX: return OperatorPriorities.POSTFIX_CUSTOM;
+			case PREFIX: default: return OperatorPriorities.PREFIX;
 		}
 	}
 }

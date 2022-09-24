@@ -17,12 +17,8 @@ public class AmongMacroDefBuilder{
 	private final List<MacroParameter> parameters = new ArrayList<>();
 	@Nullable private Among object;
 
-	public AmongMacroDefBuilder name(String name){
+	public AmongMacroDefBuilder signature(String name, MacroType type){
 		this.name = name;
-		return this;
-	}
-
-	public AmongMacroDefBuilder type(MacroType type){
 		this.type = type;
 		return this;
 	}

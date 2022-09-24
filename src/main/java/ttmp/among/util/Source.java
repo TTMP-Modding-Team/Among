@@ -45,8 +45,18 @@ public final class Source{
 	 */
 	public static final int EOF = -1;
 
+	/**
+	 * Raw string source.
+	 */
 	private final String[] rawSource;
+	/**
+	 * Codepoints. The value directly corresponds to {@link Source#rawSource}, with line break('\n') inserted
+	 * between each line.
+	 */
 	private final int[] codePoints;
+	/**
+	 * Positions of starting char of each {@link Source#rawSource}.
+	 */
 	private final int[] lineStarts;
 
 	private Source(String[] rawSource){
@@ -55,11 +65,11 @@ public final class Source{
 		this.lineStarts = new int[rawSource.length];
 		int position = 0;
 		for(int i = 0; i<rawSource.length; i++){
-			lineStarts[i] = position;
 			if(i!=0){
 				b.accept('\n');
 				position++;
 			}
+			lineStarts[i] = position;
 			rawSource[i].codePoints().forEach(b);
 			position += rawSource[i].codePointCount(0, rawSource[i].length());
 		}
@@ -110,21 +120,6 @@ public final class Source{
 	}
 	public int lineSize(int line){
 		return lineEnd(line)-lineStart(line);
-	}
-
-	public String lineAroundPosition(int position, int includePrev, int maxSize){
-		if(position<0) throw new IndexOutOfBoundsException("position");
-		LnCol lnCol = getLnCol(position);
-		if(lineSize(lnCol.line-1)<=maxSize)
-			return rawSource[lnCol.line-1];
-
-		StringBuilder stb = new StringBuilder();
-		int start = lineStarts[lnCol.line-1]+Math.max(0, lnCol.column-1-includePrev);
-		int end = lineEnd(lnCol.line-1);
-		for(int i = start; i<end; i++){
-			stb.appendCodePoint(codePointAt(i));
-		}
-		return stb.toString();
 	}
 
 	public LnCol getLnCol(int position){

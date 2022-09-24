@@ -39,13 +39,11 @@ def eat as prefix keyword
 // BINARY "&&" : 2
 // BINARY "==" "!=" : 3
 // BINARY ">" "<" ">=" "<=" : 4
-// BINARY "~" : 5
-// BINARY "|" : 6
-// BINARY "&" : 7
-// BINARY "+" "-" : 8
-// BINARY "*" "/" : 9
-// BINARY "^" "**" : 10
-// BINARY Custom POSTFIX Custom : 11 (binary default)
-// UNARY POSTFIX Custom : 12 (postfix default)
-// UNARY PREFIX "!" "-" "+" "~" : 13 (prefix default)
-// BINARY "." : 14
+// BINARY "|" "&" : 5
+// BINARY "+" "-" : 6
+// BINARY "*" "/" "%" : 7
+// BINARY "^" "**" : 8
+// BINARY Custom POSTFIX Custom : 9 (binary default)
+// UNARY POSTFIX Custom : 10 (postfix default)
+// UNARY PREFIX "!" "-" "+" "~" : 11 (prefix default)
+// BINARY "." : 12

@@ -1,6 +1,9 @@
 package ttmp.among.util;
 
 public interface ToPrettyString{
+	/**
+	 * Default indentation to be used if unspecified.
+	 */
 	String DEFAULT_INDENT = "  ";
 
 	/**

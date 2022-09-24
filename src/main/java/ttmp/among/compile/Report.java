@@ -50,25 +50,41 @@ public class Report{
 	@Nullable public LnCol getLineColumn(Source source){
 		return hasSourcePosition() ? source.getLnCol(sourcePosition) : null;
 	}
-	@Nullable public String getLineSnippet(Source source){
-		if(!hasSourcePosition()) return null;
-		StringBuilder stb = new StringBuilder();
-		// TODO gotta go sleep
-		stb.append("I NEED CLUSSY SNAKE");
-		return stb.toString();
-	}
 
 	public void print(Source source, Consumer<String> logger){
 		LnCol lc = getLineColumn(source);
-		String snippet = getLineSnippet(source);
 
 		logger.accept(lc!=null ? "["+lc+"] "+message : message);
 		if(exception!=null){
 			logger.accept(exception.toString());
 			exception.printStackTrace();
 		}
-		if(snippet!=null) logger.accept(snippet);
+		if(lc!=null){
+			logger.accept(" "+lc.line+" |"+getLineSnippet(sourcePosition, source));
+		}
 		for(String hint : this.hints) logger.accept("hint: "+hint);
+	}
+
+	public static String getLineSnippet(int sourcePosition, Source source){
+		int line = source.lineAt(sourcePosition);
+		int lineStart = source.lineStart(line);
+		int lineSize = source.lineSize(line);
+		int point = sourcePosition-lineStart;
+
+		if(lineSize>50){
+			lineStart = Math.max(lineStart, point-30);
+			lineSize = 50;
+		}
+
+		StringBuilder stb = new StringBuilder();
+		for(int i = 0; i<lineSize; i++){
+			int idx = lineStart+i;
+			if(idx==sourcePosition) stb.append("/* HERE >>> */");
+			int c = source.codePointAt(idx);
+			if(c!='\r'&&c!='\n') stb.appendCodePoint(c);
+		}
+		if(lineStart+lineSize<=sourcePosition) stb.append("  // <<< HERE");
+		return stb.toString();
 	}
 
 	public enum ReportType{

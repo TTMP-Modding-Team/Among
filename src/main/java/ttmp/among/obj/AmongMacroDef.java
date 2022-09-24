@@ -157,6 +157,16 @@ public final class AmongMacroDef implements ToPrettyString{
 		}
 	}
 
+	@Override public boolean equals(Object o){
+		if(this==o) return true;
+		if(o==null||getClass()!=o.getClass()) return false;
+		AmongMacroDef that = (AmongMacroDef)o;
+		return signature.equals(that.signature)&&parameter.equals(that.parameter)&&object.equals(that.object);
+	}
+	@Override public int hashCode(){
+		return Objects.hash(signature, parameter, object);
+	}
+
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
 		stb.append("def ");

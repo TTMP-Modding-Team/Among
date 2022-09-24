@@ -32,6 +32,7 @@ public final class AmongTokenizer{
 	private final List<AmongToken> tokens = new ArrayList<>();
 	private int tokenIndex;
 	private int lastSrcIndex;
+	private int lastTokensLeft;
 
 	public AmongTokenizer(Source source, AmongParser parser, AmongRoot root){
 		this.source = source;
@@ -98,6 +99,7 @@ public final class AmongTokenizer{
 		if(tokenIndex>0) tokens.subList(0, tokenIndex).clear();
 		tokenIndex = 0;
 		lastSrcIndex = srcIndex;
+		lastTokensLeft = tokens.size();
 	}
 
 	/**
@@ -116,7 +118,7 @@ public final class AmongTokenizer{
 	 */
 	public void reset(boolean discardTokens){
 		if(discardTokens){
-			tokens.clear();
+			tokens.subList(lastTokensLeft, tokens.size()).clear();
 			srcIndex = lastSrcIndex;
 		}
 		tokenIndex = 0;
@@ -205,7 +207,7 @@ public final class AmongTokenizer{
 	private String primitive(int closure){
 		StringBuilder stb = new StringBuilder();
 		while(true){
-			int c = nextCodePoint();
+			int c = nextCodePoint(true);
 			switch(c){
 				case EOF:
 					parser.reportError("Unterminated primitive", srcIndex);
@@ -290,8 +292,8 @@ public final class AmongTokenizer{
 
 	private void operation(boolean macro){
 		int start = srcIndex;
-		OperatorRegistry.Operator keyword = match(true);
-		OperatorRegistry.Operator operator = null;
+		OperatorRegistry.NameGroup keyword = match(true);
+		OperatorRegistry.NameGroup operator = null;
 
 		int nameStart = srcIndex;
 		int operatorStart = srcIndex;
@@ -325,19 +327,19 @@ public final class AmongTokenizer{
 		if(operator!=null) tokens.add(new AmongToken(TokenType.OPERATOR, operatorStart, operator.name()));
 	}
 
-	@Nullable private OperatorRegistry.Operator match(boolean keyword){
+	@Nullable private OperatorRegistry.NameGroup match(boolean keyword){
 		int prev = srcIndex;
-		Set<OperatorRegistry.Operator> set = keyword ?
+		Set<OperatorRegistry.NameGroup> set = keyword ?
 				root.operators().getKeywords(nextLiteralChar()) :
 				root.operators().getOperators(nextLiteralChar());
 		srcIndex = prev;
 		if(!set.isEmpty())
-			for(OperatorRegistry.Operator o : set)
+			for(OperatorRegistry.NameGroup o : set)
 				if(matches(o)) return o;
 		return null;
 	}
 
-	private boolean matches(OperatorRegistry.Operator operator){
+	private boolean matches(OperatorRegistry.NameGroup operator){
 		int prev = srcIndex;
 		for(int i = 0; i<operator.codePointLength(); i++){
 			if(operator.codePointAt(i)!=nextLiteralChar()){
@@ -349,6 +351,9 @@ public final class AmongTokenizer{
 	}
 
 	private int nextCodePoint(){
+		return nextCodePoint(false);
+	}
+	private int nextCodePoint(boolean ignoreComment){
 		while(true){
 			if(!source.isInBounds(srcIndex)) return EOF;
 			int c = source.codePointAt(srcIndex++);
@@ -362,17 +367,19 @@ public final class AmongTokenizer{
 				}
 				case '\r': if(source.codePointAt(srcIndex)=='\n') srcIndex++;
 				case '\n': return '\n';
-				case '/': switch(source.codePointAt(srcIndex)){
-					case '/':
-						lineComment();
-						continue;
-					case '*':
-						blockComment();
-						continue;
-					default: return '/';
-				}
-				default: return c;
+				case '/':
+					if(ignoreComment) break;
+					switch(source.codePointAt(srcIndex)){
+						case '/':
+							lineComment();
+							continue;
+						case '*':
+							blockComment();
+							continue;
+						default: return '/';
+					}
 			}
+			return c;
 		}
 	}
 

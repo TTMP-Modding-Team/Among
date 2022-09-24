@@ -32,9 +32,8 @@ list: expr ( ( BR+ | BR* "," BR* ) list? )?
 oper: operExpr ( BR* "," BR* operExpr? )?
 
 # OPERATORS
-# line breaks are not tokenized during operations
 
-operExpr: primary # defined by language
+operExpr: primary # defined by script
 
 primary: nameable | name
 

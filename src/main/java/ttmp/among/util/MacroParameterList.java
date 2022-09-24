@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -103,6 +104,16 @@ public final class MacroParameterList implements ToPrettyString{
 			}
 		}
 		return nonDefaultParamCount;
+	}
+
+	@Override public boolean equals(Object o){
+		if(this==o) return true;
+		if(o==null||getClass()!=o.getClass()) return false;
+		MacroParameterList that = (MacroParameterList)o;
+		return params.equals(that.params);
+	}
+	@Override public int hashCode(){
+		return Objects.hash(params);
 	}
 
 	@Override public String toString(){

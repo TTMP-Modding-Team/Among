@@ -62,13 +62,26 @@ public final class AmongOperatorDef{
 		return priority;
 	}
 
+	@Override public boolean equals(Object o){
+		if(this==o) return true;
+		if(o==null||getClass()!=o.getClass()) return false;
+		AmongOperatorDef that = (AmongOperatorDef)o;
+		return isKeyword()==that.isKeyword()&&
+				Double.compare(that.priority, priority)==0&&
+				name.equals(that.name)&&
+				type==that.type;
+	}
+	@Override public int hashCode(){
+		return Objects.hash(name, isKeyword(), type, priority);
+	}
+
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder().append("def ");
 		AmongUs.nameToString(stb, this.name);
 		stb.append(" as ")
 				.append(type==OperatorType.BINARY ? "binary" : type==OperatorType.POSTFIX ? "postfix" : "prefix")
 				.append(isKeyword ? " keyword" : " operator");
-		if(priority!=type.defaultPriority())
+		if(Double.compare(priority, type.defaultPriority())!=0)
 			stb.append(" : ").append(FORMAT.format(priority));
 		return stb.toString();
 	}
