@@ -1,0 +1,32 @@
+// Sample code
+((x-y)/2)
+
+/*
+[ / [[- [x, y]], 2]]  // Raw compilation result of the code above, notice the presence of single-element lists
+/ [- [x, y], 2]  // Compilation result with the option turned on
+*/
+
+// Multi-element operations, lists, empty operations and named operations are not affected
+((1, 2, 3) + [list] + () + fib(3))
+
+// Compilation result of the code above
+/*
++ [
+  + [
+    + [
+      [
+        1
+        2
+        3
+      ]
+      [
+        list
+      ]
+    ]
+    []
+  ]
+  fib [
+    3
+  ]
+]
+*/

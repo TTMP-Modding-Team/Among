@@ -1,0 +1,12 @@
+// 3: Operations
+{
+	// Fancy array with fancy syntax
+	// internally equivalent to "= [+ [1, 2], 3]"
+	// + and such are predefined operators that have predefined grammatical priorities
+	Operation: (1+2=3)
+	Op2: (a>b) // > [a, b]
+	Op3: (c^2 = a^2 + b^2) // = [^ [c, 2], + [^ [a, 2], ^ [b, 2]]]
+	Op4: (1+2*(3+4)) // + [1, * [2, + [3, 4]]]
+	// Unnamed, single-element operations are automatically collapsed during compilation
+	InsanelyNestedOperation: (((((((("This is fine.")))))))) // "This is fine."
+}

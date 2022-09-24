@@ -1,0 +1,9 @@
+// 1: Objects, Properties & Primitives
+{
+	Property: Value
+	P2: 123 // comment
+	P3: 1 2 3 // read as "1 2 3", excluding whitespaces at both starting and ending. Statements are separated by line breaks.
+	P4: "Except for this expression
+		|The line break inbetween is a part of this text msg"
+	"More complex key": :thanosdaddy:
+}

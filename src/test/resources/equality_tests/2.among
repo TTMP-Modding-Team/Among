@@ -1,0 +1,8 @@
+// 2: Obj & List
+{
+	Object: {}  // == ""{}
+	NamedObj: Named {}
+	List: [1, 2, 3] // == ""[1, 2, 3]
+	NamedList: Named [1, 2, 3]
+	ObjectWithField: {1:1, 2:2, 3:3}
+}

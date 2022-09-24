@@ -1,0 +1,58 @@
+// 5: Macros
+
+// Outside of object definition
+// This statement creates a "macro", which converts primitive with specific value or object/list/operation with specific name
+def Pikachu: Pokemon{Name: Pikachu, Type: [Electric]}
+{
+	Team: [Pikachu] // [Pokemon{Name: Pikachu, Type: [Electric]}]
+}
+
+
+// Object/List/Operation macros can have parameters
+
+def flip[a, b]: [$b, $a]
+def sq(x): ($x * $x)
+def hypercubed(x): (sq($x) * sq($x))
+{
+	BatMan: flip [man, bat] // [bat, man]
+	2: sq(sqrt(2)) // (sqrt(2) * sqrt(2))
+	16: hypercubed(2) // ((2 * 2) * (2 * 2))
+}
+
+
+// The first x refers to plaintext "x"
+// the second x refers to the parameter
+// the third x refers to plaintext "$x"
+def xxx[x]: [x, $x, "$x"]
+{
+	That's a lot of X's: xxx["Indeed!"] // [x, Indeed!, $x]
+}
+
+
+// Two macros are considered 'equal' and will override previous one if both are defined, if these conditions are met.
+//  - name is the same.
+//  - type is the same.
+//  macro parameter overloading is not a thing, get real
+
+
+// Obviously shits like this don't work
+def fib(a): (fib($a-2) + fib($a-1))
+{
+	Fib1: fib(1) // + [fib [- [1, 2]], fib [- [1, 1]]]
+}
+
+
+// Un-defining the macro! You only have to specify name and type (no params)
+undef fib()
+{
+	Fib1: fib(1) // fib [1]
+}
+
+
+// Here, have some more examples
+def vec(x, y, z): {X: $x, Y: $y, Z: $z}
+def FUNNY_NUMBER: 69420
+{
+	Vector1: vec(1, 2, 3) // {X: 1, Y: 2, Z: 3}
+	The Truth: FUNNY_NUMBER // 69420
+}

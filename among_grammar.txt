@@ -1,0 +1,54 @@
+among: BR*
+       ( "def" BR* def BR+
+       | "undef" BR* undef BR+
+       | nameable BR*
+       | complexPrimitive BR* )* EOF
+
+def: word BR* ( defMacro | defOperator )
+
+defMacro: ( "{" BR* defParam? BR* "}" BR*
+          | "(" BR* defParam? BR* ")" BR*
+          | "[" BR* defParam? BR* "]" BR* )?
+          ":" BR* expr
+defParam: paramName (BR* "=" BR* expr)? ( BR* "," BR* defParam? )?
+
+defOperator: "as" BR*
+             ( "binary" | "prefix" | "postfix" ) BR*
+             ( "operator" | "keyword" ) BR*
+             ( ":" BR* value )?  # Parsed as decimal value
+
+undef: ( "operator" | "keyword" )? BR* name
+     | name ( "{" BR* "}" | "[" BR* "]" | "(" BR* ")" )?
+
+expr: nameable | complexPrimitive | value
+
+nameable: name?
+          ( "{" BR* obj? BR* "}"
+          | "[" BR* list? BR* "]"
+          | "(" BR* oper? BR* ")" )
+
+obj: key BR* ":" expr (  ( BR+ | BR* "," BR* ) obj? )?
+list: expr ( ( BR+ | BR* "," BR* ) list? )?
+oper: operExpr ( BR* "," BR* operExpr? )?
+
+# OPERATORS
+# line breaks are not tokenized during operations
+
+operExpr: primary # defined by language
+
+primary: nameable | name
+
+# LEXER
+
+word: regex; [^\s:,{}\[\]()]+  # used in plain keywords, such as 'def' 'as' 'operator' and such
+name: simpleName | complexPrimitive
+key: simpleKey | complexPrimitive
+paramName: regex; ^[\s:,{}\[\]()=]+  # kek
+
+simpleName: regex; [^\s,{}\[\]()]+
+simpleKey: regex; [^:,{}\r\n]+
+complexPrimitive: ""\"" ( BR ( "\s"* "|" )? | ^( BR | "\"" ) )* "\""
+                | "'" ( BR ( "\s"* "|" )? | ^( BR | "'" ) )* "'"
+value: regex; ^[^"'][^,{}\[\]()\r\n]*
+
+BR: regex; \r \n? | \n

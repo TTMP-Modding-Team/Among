@@ -1,0 +1,5 @@
+// 4: Named Operations
+{
+	NamedOperation: Among (Us) // Among [Us]
+	2: (fib(a) = fib(a-2) + fib(a-1)) // = [fib [a], + [fib [- [a, 2]], fib [- [a, 1]]]]
+}

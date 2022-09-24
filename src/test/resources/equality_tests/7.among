@@ -1,0 +1,26 @@
+// 7: macro 2: the fucking assault of the edge cases
+// So basically I just ran into the theoretical issue while writing snippet code for documentation
+// lol
+
+// As seen below, name of the collections can be modified
+def name=name(name=name): $name [1, 2, 3]
+
+name=name(awsdsf) // awsdsf [1, 2, 3]
+
+
+// This code doesn't work, though. The compiler have no idea $op is supposed to be a binary operator
+/*
+def oper(a, b, op): ($a $op $b) // Compilation error
+
+(oper(1, 2, +) = 3) // User expects = [+ [1, 2], 3], gets slapped over
+*/
+// "correct" way to write it......
+def oper(a, b, op): $op [ $a, $b ]
+
+(oper(1, 2, "+") = 3) // = [+ [1, 2], 3]
+
+// Also you cannot use parameters in keys
+
+def bullshit(key, value): { $key: $value }
+bullshit(among, us) // User expects { among: us }, actual result is { $key: us }
+// Maybe it will be implemented in future?????? nah

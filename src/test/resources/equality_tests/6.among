@@ -1,0 +1,51 @@
+// 6: operators and keywords
+// Defines valid name as custom operator/keyword for parsing
+// The language is equipped with standard operators everyone can expect (arithmetic operators and other things)
+// def <operator|keyword> <name> as <binary|prefix|postfix> ( : <priority> )
+
+def ... as binary operator
+def eat as prefix keyword
+{
+	A: (a ... b) // ... [a, b],
+	B: (eat shit) // eat [shit]
+}
+
+// Operators and keywords behave differently with compound expressions - in short, keywords require exact match, while operators do not.
+
+{
+	Operator: (amo...gus) // ... [amo, gus], despite the expression being one primitive, the ... is considered as an operator.
+	Keyword: (great) // "great", the "eat" is not considered as a keyword.
+}
+
+// Complex names do not work
+
+// def "" as binary operator // nope
+// def "impostors among us" as postfix keyword // nope
+
+
+// 'priority' indicates which operators/keywords should be read first; which will determine the tree structure of the compiled operation.
+// operators/keywords with lower priority gets parsed earlier, and results closer to root of the node because of that.
+// operators/keywords with higher priority gets parsed later, and results closer to end side of the node.
+// thus, on actual interpretation, operators/keywords with higher priority gets evaluated earlier;
+// since you have to evaluate it from leaf to root (reverse order from compiling)
+
+// note that multiple operators/keywords with same type can share same priority
+// but not the ones with different types!
+
+// default operator priorities:
+
+// BINARY "=" : 0
+// BINARY "||" : 1
+// BINARY "&&" : 2
+// BINARY "==" "!=" : 3
+// BINARY ">" "<" ">=" "<=" : 4
+// BINARY "~" : 5
+// BINARY "|" : 6
+// BINARY "&" : 7
+// BINARY "+" "-" : 8
+// BINARY "*" "/" : 9
+// BINARY "^" "**" : 10
+// BINARY Custom POSTFIX Custom : 11 (binary default)
+// UNARY POSTFIX Custom : 12 (postfix default)
+// UNARY PREFIX "!" "-" "+" "~" : 13 (prefix default)
+// BINARY "." : 14

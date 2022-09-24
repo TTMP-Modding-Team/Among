@@ -1,0 +1,4 @@
+def macro(): This is macro
+
+macro()
+"macro"() // This isn't macro
