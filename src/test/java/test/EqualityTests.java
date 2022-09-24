@@ -3,16 +3,11 @@ package test;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import ttmp.among.obj.Among;
-import ttmp.among.util.Source;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static ttmp.among.obj.Among.*;
 
 public class EqualityTests{
@@ -138,12 +133,9 @@ public class EqualityTests{
 	}
 
 	private static DynamicTest simpleEqualityTest(String name, Among... expected){
-		return DynamicTest.dynamicTest(name, () -> {
-			String url = "equality_tests/"+name+".among";
-			InputStream file = Thread.currentThread().getContextClassLoader().getResourceAsStream(url);
-			assertNotNull(file, "File not found at '"+url+"'");
-			Source src = Source.read(new InputStreamReader(file, StandardCharsets.UTF_8));
-			assertArrayEquals(expected, TestUtil.make(src).objects().toArray(new Among[0]));
-		});
+		return DynamicTest.dynamicTest(name, () -> assertArrayEquals(expected,
+				TestUtil.make(TestUtil.sourceFrom("equality_tests", name))
+						.objects()
+						.toArray(new Among[0])));
 	}
 }

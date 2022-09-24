@@ -72,7 +72,7 @@ public class Report{
 		int point = sourcePosition-lineStart;
 
 		if(lineSize>50){
-			lineStart = Math.max(lineStart, point-30);
+			lineStart = Math.max(lineStart, sourcePosition-30);
 			lineSize = 50;
 		}
 
@@ -81,6 +81,7 @@ public class Report{
 			int idx = lineStart+i;
 			if(idx==sourcePosition) stb.append("/* HERE >>> */");
 			int c = source.codePointAt(idx);
+			if(c==Source.EOF) break;
 			if(c!='\r'&&c!='\n') stb.appendCodePoint(c);
 		}
 		if(lineStart+lineSize<=sourcePosition) stb.append("  // <<< HERE");

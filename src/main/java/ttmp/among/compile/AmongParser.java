@@ -144,7 +144,7 @@ public final class AmongParser{
 					return;
 			}
 		}
-		root.addMacro(new AmongMacroDef(name, type, params, expr(true)));
+		root.addMacro(new AmongMacroDef(name, type, params, exprOrError(true)));
 	}
 
 	private MacroParameterList defParam(AmongToken.TokenType closure){
@@ -163,7 +163,7 @@ public final class AmongParser{
 
 			Among def;
 			if(next.is(EQ)){
-				def = expr(false);
+				def = exprOrError(false);
 				next = tokenizer.next(true, TokenizationMode.PARAM);
 			}else def = null;
 			params.add(new MacroParameter(name, def));
@@ -297,7 +297,11 @@ public final class AmongParser{
 		root.operators().remove(name, keyword);
 	}
 
-	private Among expr(boolean macro){
+	private Among exprOrError(boolean macro){
+		Among among = expr(macro);
+		return among==null ? Among.value("ERROR") : among;
+	}
+	@Nullable private Among expr(boolean macro){
 		tokenizer.discard();
 		Among a = nameable(TokenizationMode.NAME, macro);
 		if(a!=null) return a;
@@ -305,7 +309,8 @@ public final class AmongParser{
 		AmongToken next = tokenizer.next(true, TokenizationMode.VALUE, macro);
 		if(!next.isLiteral()){
 			reportError("Expected value");
-			return Among.value("ERROR");
+			tokenizer.reset(true);
+			return null;
 		}
 		AmongPrimitive p = Among.value(next.expectLiteral());
 		if(next.is(PARAM_REF)) p.setParamRef(true);
@@ -365,7 +370,10 @@ public final class AmongParser{
 		L:
 		while(true){
 			AmongToken keyToken = tokenizer.next(true, TokenizationMode.KEY);
-			if(keyToken.is(R_BRACE)) break;
+			switch(keyToken.type){
+				case EOF: reportError("Unterminated object");
+				case R_BRACE: break L;
+			}
 			if(!keyToken.isLiteral()){
 				reportError("Expected property key");
 				if(tryToRecover(TokenizationMode.KEY, R_BRACE, true)) break;
@@ -378,12 +386,13 @@ public final class AmongParser{
 				else continue;
 			}
 			String key = keyToken.expectLiteral();
-			Among expr = expr(macro);
-
 			if(object.hasProperty(key))
 				report(engine.allowDuplicateObjectProperty ? ReportType.WARN : ReportType.ERROR,
 						"Property '"+key+"' is already defined", keyToken.start);
-			else object.setProperty(key, expr);
+
+			Among expr = exprOrError(macro);
+
+			if(!object.hasProperty(key)) object.setProperty(key, expr);
 			AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 			switch(next.type){
 				case BR:
@@ -412,7 +421,8 @@ public final class AmongParser{
 				case R_BRACKET: break L;
 			}
 			tokenizer.reset(true);
-			list.add(expr(macro));
+			Among expr = expr(macro);
+			if(expr!=null) list.add(expr);
 			AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 			switch(next.type){
 				case BR:
@@ -449,7 +459,7 @@ public final class AmongParser{
 				case R_PAREN: break L;
 				default:
 					reportError("Each term should be separated with ','");
-					if(tryToRecover(TokenizationMode.OPERATION, R_PAREN, true)) break;
+					tokenizer.reset();
 			}
 		}
 		return list;
@@ -623,15 +633,20 @@ public final class AmongParser{
 					this.recovering = prevRecovering;
 					return false; // continue from here (well, there might not be much to do if it's EOF lmao)
 				case COMMA:
-					if(returnOnComma) return false;
-					else continue;
+					if(returnOnComma){
+						this.recovering = prevRecovering;
+						return false;
+					}else continue;
 				case L_BRACE:
 				case L_BRACKET:
 				case L_PAREN:
 					tokenizer.reset();
 					nameable(TokenizationMode.NAME, false); // read object and throw it away
 					continue;
-				default: if(t==closure) return true;
+				default: if(t==closure){
+					this.recovering = prevRecovering;
+					return true;
+				}
 			}
 		}
 	}

@@ -1,0 +1,24 @@
+{
+  ,  // ERROR
+  HELLO RED IMPOSTOR FROM HIT GAME AMONG US: :AWergtadnfvkjvklbdd,
+  ,, This value should be present: ""  // ERROR
+  ,
+}
+
+[
+  ,, 1 ,  // DOUBLE ERROR
+  , 2,, 3,4,5,6  // DOUBLE ERROR!!!
+  7
+
+  8,:,
+]
+
+(
+  a
+  b  // ERROR?
+  c  // ERROR?? // no error ig
+)
+
+(
+  some people would legitimately write this, should i be bothered or not??????
+)
