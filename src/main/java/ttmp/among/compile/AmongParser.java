@@ -264,10 +264,10 @@ public final class AmongParser{
 				if(next.is(WORD, "as")){
 					switch(tokenizer.next(true, TokenizationMode.WORD).keywordOrEmpty()){
 						case "operator":
-							undefOperator(name, false);
+							root.operators().remove(name, false);
 							break;
 						case "keyword":
-							undefOperator(name, true);
+							root.operators().remove(name, true);
 							break;
 						default:
 							reportError("Expected 'operator' or 'keyword'");
@@ -291,16 +291,6 @@ public final class AmongParser{
 			reportError("Expected "+type);
 			tryToRecover(TokenizationMode.UNEXPECTED, type, false, false);
 		}
-	}
-
-	private void undefOperator(String name, boolean keyword){
-		AmongToken next = tokenizer.next(false, TokenizationMode.NAME);
-		if(!next.is(BR)){
-			reportError("Expected newline after undef statement");
-			skipUntilLineBreak();
-			return;
-		}
-		root.operators().remove(name, keyword);
 	}
 
 	private Among exprOrError(boolean macro){
@@ -519,6 +509,7 @@ public final class AmongParser{
 		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION, macro);
 		if(!next.isLiteral()){
 			reportError("Expected value");
+			tokenizer.reset();
 			return Among.value("ERROR");
 		}
 		AmongPrimitive p = Among.value(next.expectLiteral());

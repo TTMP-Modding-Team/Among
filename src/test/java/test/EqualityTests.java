@@ -58,7 +58,7 @@ public class EqualityTests{
 				namedList("areYouMacro"),
 				namedList("!!", "a", "b"),
 				namedList("!!", namedList("!!", "a"), "b"),
-				list("!!", "!!")));
+				list(namedList("!", namedList("!", "a")), namedList("!", namedList("!", "b")))));
 
 		list.add(simpleEqualityTest("1",
 				object().prop("Property", "Value")

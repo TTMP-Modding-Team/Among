@@ -85,7 +85,7 @@ public final class OperatorRegistry{
 		NameGroup op = operators.get(operatorName);
 		if(op!=null&&op.isKeyword==keyword){
 			operators.remove(operatorName);
-			if(operatorName.isEmpty()){
+			if(!operatorName.isEmpty()){
 				Map<Integer, Set<NameGroup>> m = keyword ?
 						keywordByStartingCodepoint :
 						operatorByStartingCodepoint;
