@@ -19,6 +19,6 @@ def !! as prefix operator
 
 (!! a !! b)  // !! [!! [a], [b]]
 
-undef operator !!
+undef !! as operator
 
 (!!, !!)  // [!!, !!]

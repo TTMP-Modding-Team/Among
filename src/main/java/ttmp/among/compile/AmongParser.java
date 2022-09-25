@@ -91,7 +91,7 @@ public final class AmongParser{
 	private void def(int startIndex){
 		AmongToken next = tokenizer.next(true, TokenizationMode.WORD);
 		if(!next.isLiteral()){
-			reportError("Invalid def statement");
+			reportError("Expected name");
 			tryToRecover(TokenizationMode.WORD);
 			return;
 		}
@@ -236,60 +236,54 @@ public final class AmongParser{
 	}
 
 	private void undef(){
-		AmongToken next = tokenizer.next(true, TokenizationMode.NAME);
-		if(next.is(NAME)){
-			tokenizer.discard();
-			AmongToken next2 = tokenizer.next(false, TokenizationMode.NAME);
-			if(next2.isLiteral()){
-				switch(next.expectLiteral()){
-					case "operator":
-						undefOperator(next2.expectLiteral(), false);
-						return;
-					case "keyword":
-						undefOperator(next2.expectLiteral(), true);
-						return;
-				}
-			}
-			tokenizer.reset();
-		}else if(!next.isLiteral()){
+		AmongToken next = tokenizer.next(true, TokenizationMode.WORD);
+		if(!next.isLiteral()){
 			reportError("Expected name");
-			skipUntilLineBreak();
+			tryToRecover(TokenizationMode.WORD);
 			return;
 		}
 		String name = next.expectLiteral();
-		tokenizer.discard();
 		next = tokenizer.next(false, TokenizationMode.WORD);
-		MacroType type;
 		switch(next.type){
+			case BR:
+				root.removeMacro(name, MacroType.CONST);
+				return;
 			case L_BRACE:
 				expectNext(R_BRACE);
-				next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
-				type = MacroType.OBJECT;
+				root.removeMacro(name, MacroType.OBJECT);
 				break;
 			case L_BRACKET:
 				expectNext(R_BRACKET);
-				next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
-				type = MacroType.LIST;
+				root.removeMacro(name, MacroType.LIST);
 				break;
 			case L_PAREN:
 				expectNext(R_PAREN);
-				next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
-				type = MacroType.OPERATION;
-				break;
-			case BR:
-				type = MacroType.CONST;
+				root.removeMacro(name, MacroType.OPERATION);
 				break;
 			default:
-				reportError("Expected '{', '[', '(' or line break");
-				skipUntilLineBreak();
-				return;
+				if(next.is(WORD, "as")){
+					switch(tokenizer.next(true, TokenizationMode.WORD).keywordOrEmpty()){
+						case "operator":
+							undefOperator(name, false);
+							break;
+						case "keyword":
+							undefOperator(name, true);
+							break;
+						default:
+							reportError("Expected 'operator' or 'keyword'");
+							skipUntilLineBreak();
+							return;
+					}
+				}else{
+					reportError("Expected '{', '[', '(' or line break");
+					skipUntilLineBreak();
+					return;
+				}
 		}
-		if(!next.is(BR)){
+		if(!tokenizer.next(false, TokenizationMode.UNEXPECTED).is(BR)){
 			reportError("Expected newline after undef statement");
 			skipUntilLineBreak();
-			return;
 		}
-		root.removeMacro(name, type);
 	}
 
 	private void expectNext(AmongToken.TokenType type){

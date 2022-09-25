@@ -17,8 +17,11 @@ defOperator: "as" BR*
              ( "operator" | "keyword" ) BR*
              ( ":" BR* value )?  # Parsed as decimal value
 
-undef: ( "operator" | "keyword" )? BR* name
-     | name ( "{" BR* "}" | "[" BR* "]" | "(" BR* ")" )?
+undef: name (
+         ( "{" BR* "}"
+         | "[" BR* "]"
+         | "(" BR* ")" )?
+       | "as" BR* ( "operator" | "keyword" ))
 
 expr: nameable | complexPrimitive | value
 
