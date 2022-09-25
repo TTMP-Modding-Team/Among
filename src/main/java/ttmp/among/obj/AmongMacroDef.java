@@ -1,5 +1,7 @@
 package ttmp.among.obj;
 
+import org.jetbrains.annotations.Nullable;
+import ttmp.among.compile.Report;
 import ttmp.among.exception.Sussy;
 import ttmp.among.util.AmongMacroDefBuilder;
 import ttmp.among.util.AmongUs;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 /**
  * Macro definitions. Snippet below shows macros with each type written in Among.
@@ -33,36 +36,32 @@ public final class AmongMacroDef implements ToPrettyString{
 
 	private final MacroSignature signature;
 	private final MacroParameterList parameter;
-	private final Among object;
+	private final Among template;
 	private final List<MacroReplacement> replacements;
-
-	// only initialized correctly in list/operation macros and only used on such instance
-	private final int nonDefaultParams;
 
 	/**
 	 * Creates new macro definition.
 	 *
-	 * @param name   Name of the macro
-	 * @param type   Type of the macro
-	 * @param params Parameters of the macro
-	 * @param object Result object of the macro; valid parameter references will be marked for replacements
+	 * @param name     Name of the macro
+	 * @param type     Type of the macro
+	 * @param params   Parameters of the macro
+	 * @param template Result object of the macro; valid parameter references will be marked for replacements
 	 * @throws NullPointerException If either of the parameters are {@code null}
-	 * @throws Sussy If one of the arguments are invalid
+	 * @throws Sussy                If one of the arguments are invalid
 	 */
-	public AmongMacroDef(String name, MacroType type, MacroParameterList params, Among object){
-		this(new MacroSignature(name, type), params, object);
+	public AmongMacroDef(String name, MacroType type, MacroParameterList params, Among template){
+		this(new MacroSignature(name, type), params, template);
 	}
 	/**
 	 * Creates new macro definition.
 	 *
-	 * @param sig    Signature of the macro
-	 * @param params Parameters of the macro
-	 * @param object Result object of the macro; valid parameter references will be marked for replacements
+	 * @param sig      Signature of the macro
+	 * @param params   Parameters of the macro
+	 * @param template Result object of the macro; valid parameter references will be marked for replacements
 	 * @throws NullPointerException If either of the parameters are {@code null}
-	 * @throws Sussy If one of the arguments are invalid
+	 * @throws Sussy                If one of the arguments are invalid
 	 */
-	public AmongMacroDef(MacroSignature sig, MacroParameterList params, Among object){
-		int nonDefaultParams = 0;
+	public AmongMacroDef(MacroSignature sig, MacroParameterList params, Among template){
 		switch(sig.type()){
 			case CONST:
 				if(!params.isEmpty())
@@ -70,14 +69,12 @@ public final class AmongMacroDef implements ToPrettyString{
 				break;
 			case LIST:
 			case OPERATION:
-				nonDefaultParams = params.checkConsecutiveOptionalParams();
-				break;
+				params.checkConsecutiveOptionalParams();
 		}
 		this.signature = sig;
 		this.parameter = params;
-		this.object = Objects.requireNonNull(object);
-		this.replacements = replacementFromObject(this.parameter, object);
-		this.nonDefaultParams = nonDefaultParams;
+		this.template = Objects.requireNonNull(template);
+		this.replacements = replacementFromObject(this.parameter, template);
 	}
 
 	public MacroSignature signature(){
@@ -106,35 +103,112 @@ public final class AmongMacroDef implements ToPrettyString{
 	}
 
 	/**
-	 * Applies this macro to given object. The object will not be modified; either new object or fixed 'constant' object
-	 * will be given, based on context.<br>
-	 * As a const object could be
+	 * Applies this macro to given object. The argument object will not be modified; either new object or fixed
+	 * 'constant' object will be given, based on context.<br>
+	 * This method always return new instance of the object. If you do not expect the result to be modified afterwards,
+	 * you may specify {@code copyConstant} to be {@code false} for both faster and memory-efficient operation.
 	 *
-	 * @return Template object itself (if def is constant), or deep copy of it
+	 * @param argument Argument object
+	 * @return Among object with macro applied
+	 * @throws NullPointerException If {@code argument == null} and {@code isConstant() == false}
+	 * @throws Sussy                If argument provided is invalid
+	 * @see AmongMacroDef#apply(Among, boolean)
 	 */
-	public Among apply(Among among){
-		return apply(among, false);
+	public Among apply(Among argument){
+		return apply(argument, true);
 	}
 	/**
-	 * @return Template object itself (if def is constant and {@code copyConstant == false}), or deep copy of it
+	 * Applies this macro to given object. The argument object will not be modified; either new object or fixed
+	 * 'constant' object will be given, based on context.<br>
+	 * If {@code copyConstant} is {@code false}, and this macro is constant, this method will return the template
+	 * object itself without copying. As the instance is shared among macro itself and possibly many other places where
+	 * macro is used, modifying the result will bring consequences. This is intentional design choice to enable users
+	 * to avoid possibly expensive deep copy process on right situations. Set {@code copyConstant} to {@code true} if
+	 * you expect the object to be modified afterwards; otherwise you may set {@code copyConstant} to {@code false} for
+	 * both faster and memory-efficient operation.
+	 *
+	 * @param argument     Argument object
+	 * @param copyConstant If {@code true}, constant macro will return deep copy of template.
+	 * @return Template object itself if {@code isConstant() == true && copyConstant == false}; deep copy of it otherwise
+	 * @throws NullPointerException If {@code argument == null} and {@code isConstant() == false}
+	 * @throws Sussy                If argument provided is invalid
+	 * @see AmongMacroDef#apply(Among, boolean, BiConsumer)
 	 */
-	public Among apply(Among among, boolean copyConstant){
-		if(isConstant()) return copyConstant ? object.copy() : object;
-		Among[] args = toArgs(among);
-		Among o = object.copy();
+	public Among apply(Among argument, boolean copyConstant){
+		return apply(argument, copyConstant, null);
+	}
+	/**
+	 * Applies this macro to given object. The argument object will not be modified; either new object or fixed
+	 * 'constant' object will be given, based on context.<br>
+	 * If {@code copyConstant} is {@code false}, and this macro is constant, this method will return the template
+	 * object itself without copying. As the instance is shared among macro itself and possibly many other places where
+	 * macro is used, modifying the result will bring consequences. This is intentional design choice to enable users
+	 * to avoid possibly expensive deep copy process on right situations. Set {@code copyConstant} to {@code true} if
+	 * you expect the object to be modified afterwards; otherwise you may set {@code copyConstant} to {@code false} for
+	 * both faster and memory-efficient operation.
+	 *
+	 * @param argument      Argument object
+	 * @param copyConstant  If {@code true}, constant macro will return deep copy of template.
+	 * @param reportHandler Optional report handler for analyzing any compilation issues. Presence of the report handler
+	 *                      does not change process.
+	 * @return Template object itself if {@code isConstant() == true && copyConstant == false}; deep copy of it otherwise
+	 * @throws NullPointerException If {@code argument == null} and {@code isConstant() == false}
+	 * @throws Sussy                If argument provided is invalid
+	 * @see AmongMacroDef#apply(Among, boolean, BiConsumer)
+	 */
+	public Among apply(Among argument, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+		if(reportHandler!=null) analyzeAndReport(argument, reportHandler);
+		if(isConstant()) return copyConstant ? template.copy() : template;
+		Among[] args = toArgs(argument);
+		Among o = template.copy();
 		for(MacroReplacement r : replacements)
 			o = r.apply(args, o);
 		return o;
 	}
 
-	private Among[] toArgs(Among among){
+	private void analyzeAndReport(Among argument, BiConsumer<Report.ReportType, String> reportHandler){
+		switch(this.type()){
+			case CONST: return; // nothing to tell ig
+			case OBJECT:{
+				if(!argument.isObj()){
+					reportHandler.accept(Report.ReportType.ERROR, "Expected object as argument");
+					return;
+				}
+				AmongObject o = argument.asObj();
+				for(int i = 0; i<this.parameter.size(); i++){
+					MacroParameter p = this.parameter.paramAt(i);
+					if(p.defaultValue()==null&&!o.hasProperty(p.name()))
+						reportHandler.accept(Report.ReportType.ERROR, "Missing argument '"+p.name()+"'");
+				}
+				for(String key : argument.asObj().properties().keySet())
+					if(this.parameter.indexOf(key)==-1)
+						reportHandler.accept(Report.ReportType.WARN, "Unused argument '"+key+"'");
+				return;
+			}
+			case LIST: case OPERATION:{
+				if(!argument.isList()){
+					reportHandler.accept(Report.ReportType.ERROR, "Expected list as argument");
+					return;
+				}
+				AmongList l = argument.asList();
+				if(l.size()<parameter.requiredParameters())
+					reportHandler.accept(Report.ReportType.ERROR, "Not enough parameters: minimum of "+parameter.requiredParameters()+" expected, "+l.size()+" provided");
+				else if(l.size()>parameter.size())
+					reportHandler.accept(Report.ReportType.WARN, "Unused parameters: maximum of "+parameter.requiredParameters()+" expected, "+l.size()+" provided");
+				return;
+			}
+			default: throw new IllegalStateException("Unreachable");
+		}
+	}
+
+	private Among[] toArgs(Among argument){
 		switch(this.type()){
 			case CONST: return new Among[0];
 			case OBJECT:{
-				AmongObject o = among.asObj();
+				AmongObject o = argument.asObj();
 				List<Among> args = new ArrayList<>();
 				for(int i = 0; i<this.parameter.size(); i++){
-					MacroParameter p = this.parameter.getParam(i);
+					MacroParameter p = this.parameter.paramAt(i);
 					Among val = o.getProperty(p.name());
 					if(val==null){
 						if(p.defaultValue()!=null) val = p.defaultValue();
@@ -144,13 +218,15 @@ public final class AmongMacroDef implements ToPrettyString{
 				}
 				return args.toArray(new Among[0]);
 			}
-			case LIST:
-			case OPERATION:{
-				AmongList l = among.asList();
+			case LIST: case OPERATION:{
+				AmongList l = argument.asList();
 				List<Among> args = new ArrayList<>();
-				if(l.size()<nonDefaultParams) throw new Sussy("Not enough parameters");
-				for(int i = 0, j = Math.min(parameter.size(), l.size()); i<j; i++)
-					args.add(l.get(i));
+				if(l.size()<parameter.requiredParameters())
+					throw new Sussy("Not enough parameters: minimum of "+parameter.requiredParameters()+" expected, "+l.size()+" provided");
+				for(int i=0; i<parameter.size(); i++)
+					args.add(i<l.size() ?
+							l.get(i) :
+							Objects.requireNonNull(parameter.paramAt(i).defaultValue()));
 				return args.toArray(new Among[0]);
 			}
 			default: throw new IllegalStateException("Unreachable");
@@ -161,10 +237,10 @@ public final class AmongMacroDef implements ToPrettyString{
 		if(this==o) return true;
 		if(o==null||getClass()!=o.getClass()) return false;
 		AmongMacroDef that = (AmongMacroDef)o;
-		return signature.equals(that.signature)&&parameter.equals(that.parameter)&&object.equals(that.object);
+		return signature.equals(that.signature)&&parameter.equals(that.parameter)&&template.equals(that.template);
 	}
 	@Override public int hashCode(){
-		return Objects.hash(signature, parameter, object);
+		return Objects.hash(signature, parameter, template);
 	}
 
 	@Override public String toString(){
@@ -182,7 +258,7 @@ public final class AmongMacroDef implements ToPrettyString{
 				stb.append("(").append(parameter).append(")");
 				break;
 		}
-		return stb.append(" : ").append(object).toString();
+		return stb.append(" : ").append(template).toString();
 	}
 	@Override public String toPrettyString(int indents, String indent){
 		StringBuilder stb = new StringBuilder();
@@ -199,7 +275,7 @@ public final class AmongMacroDef implements ToPrettyString{
 				stb.append("(").append(parameter.toPrettyString(indents, indent)).append(")");
 				break;
 		}
-		return stb.append(" : ").append(object.toPrettyString(indents, indent)).toString();
+		return stb.append(" : ").append(template.toPrettyString(indents, indent)).toString();
 	}
 
 	public static List<MacroReplacement> replacementFromObject(MacroParameterList params, Among object){

@@ -3,6 +3,8 @@ package ttmp.among;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.AmongParser;
 import ttmp.among.compile.CompileResult;
+import ttmp.among.obj.Among;
+import ttmp.among.obj.AmongMacroDef;
 import ttmp.among.obj.AmongOperatorDef;
 import ttmp.among.obj.AmongRoot;
 import ttmp.among.util.OperatorRegistry;
@@ -62,6 +64,17 @@ public final class AmongEngine{
 	 * @see OperatorRegistry#add(AmongOperatorDef)
 	 */
 	public boolean allowInvalidOperatorRegistration = false;
+
+	/**
+	 * If enabled, constant macro will return deep copied object, rather than template itself. Disabling this option
+	 * makes the same instance to be shared between each macro usage along with the macro itself, avoiding potentially
+	 * expensive deep copy operation and saving memory. But, modifying the compilation result poses a risk of undefined
+	 * behavior, due to the possibility of instance being shared across multiple places.<br>
+	 * It is advised to disable this option only if the result is not expected to be modified afterwards.
+	 *
+	 * @see AmongMacroDef#apply(Among, boolean)
+	 */
+	public boolean copyMacroConstant = true;
 
 	/**
 	 * Reads and parses the source into newly created {@link AmongRoot}.

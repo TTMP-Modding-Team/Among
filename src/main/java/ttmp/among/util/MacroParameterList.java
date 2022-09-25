@@ -5,6 +5,7 @@ import ttmp.among.obj.AmongMacroDef;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,15 +53,15 @@ public final class MacroParameterList implements ToPrettyString{
 	private MacroParameterList(){}
 	private MacroParameterList(MacroParameter... parameters){
 		for(MacroParameter p : parameters){
-			if(nameToIndex.putIfAbsent(p.name(), params.size())!=null)
-				throw new Sussy("Duplicated registration of parameter with name of '"+p.name()+"'");
+			if(nameToIndex.put(p.name(), params.size())!=null)
+				throw new Sussy("Duplicated parameter '"+p.name()+"'");
 			params.add(p);
 		}
 	}
 	private MacroParameterList(Collection<MacroParameter> parameters){
 		for(MacroParameter p : parameters){
-			if(nameToIndex.putIfAbsent(p.name(), params.size())!=null)
-				throw new Sussy("Duplicated registration of parameter with name of '"+p.name()+"'");
+			if(nameToIndex.put(p.name(), params.size())!=null)
+				throw new Sussy("Duplicated parameter '"+p.name()+"'");
 			params.add(p);
 		}
 	}
@@ -72,11 +73,24 @@ public final class MacroParameterList implements ToPrettyString{
 		return params.isEmpty();
 	}
 
-	public MacroParameter getParam(int index){
+	/**
+	 * @return Unmodifiable view of all parameter names mapped to their respective index
+	 */
+	public Map<String, Integer> parameters(){
+		return Collections.unmodifiableMap(nameToIndex);
+	}
+
+	/**
+	 * @param index Index of the parameter
+	 * @return Parameter at specified index
+	 * @throws IndexOutOfBoundsException If {@code index < 0 || index >= size()}
+	 */
+	public MacroParameter paramAt(int index){
 		return params.get(index);
 	}
 	/**
 	 * @return Index of the parameter with given name, or {@code -1} if there isn't
+	 * @throws NullPointerException If {@code paramName == null}
 	 */
 	public int indexOf(String paramName){
 		Integer i = nameToIndex.get(paramName);
@@ -84,26 +98,60 @@ public final class MacroParameterList implements ToPrettyString{
 	}
 
 	/**
-	 * Checks for consecutive optional parameters; used for list/operation macros.
+	 * Checks for consecutive optional parameters. This check is only done for list/operation macros.<br>
+	 * Being 'consecutive' refers to optional parameters being at the end of the parameter list; see the snippet below.
+	 * <pre>
+	 * def macro1[param1, param2, param3]: stub  // consecutive
+	 * def macro2[param1, param2, param3 = defaultValue]: stub  // consecutive
+	 * def macro3[param1, param2 = defaultValue, param3 = defaultValue]: stub  // consecutive
+	 * def macro4[param1 = defaultValue, param2 = defaultValue, param3 = defaultValue]: stub  // consecutive
+	 * def macro5[param1 = defaultValue, param2, param3]: stub  // NOT consecutive, will produce error
+	 * def macro6[param1, param2 = defaultValue, param3]: stub  // NOT consecutive, will produce error
+	 * def macro7[]: stub  // consecutive
+	 * </pre>
+	 * As mentioned above, this check is only done for list/operation macros; it is because the parameters are
+	 * identified by their index. Same rule does not apply for object macros; As their parameters are based on
+	 * unordered
+	 * properties.
+	 * <pre>
+	 * def macro1{param1 = defaultValue, param2, param3}: stub  // NOT consecutive, but does not produce error
 	 *
-	 * @return Number of required parameters (non-default parameters)
+	 * macro1{
+	 *     param1: "Parameter 1"
+	 *     param2: "Parameter 2"
+	 *     param3: "Parameter 3"
+	 * }
+	 * </pre>
+	 * Note that {@link MacroParameterList} does not hold information about underlying macro type; calling this method
+	 * for parameter list inside {@link MacroType#OBJECT} macro may still throw exception.
+	 *
+	 * @throws Sussy If optional parameters are not defined at the end of the list
 	 */
-	public int checkConsecutiveOptionalParams(){
+	public void checkConsecutiveOptionalParams(){
 		boolean defaultParamSeen = false;
-		int nonDefaultParamCount = 0;
-		for(int i = 0; i<params.size(); i++){
-			MacroParameter p = params.get(i);
+		for(MacroParameter p : params){
 			if(defaultParamSeen){
 				if(p.defaultValue()==null)
 					throw new Sussy("Non-object macros should have consecutive optional parameters (i.e. Needs to have all optional parameters at the end of the parameter list, not in between)");
-			}else{
-				if(p.defaultValue()!=null){
-					defaultParamSeen = true;
-					nonDefaultParamCount = i;
-				}
-			}
+			}else if(p.defaultValue()!=null)
+				defaultParamSeen = true;
 		}
-		return nonDefaultParamCount;
+	}
+
+	private int requiredParameterSize = -1;
+
+	/**
+	 * Returns number of required parameters.
+	 *
+	 * @return Number of required parameters
+	 */
+	public int requiredParameters(){
+		if(requiredParameterSize<0){
+			requiredParameterSize = 0;
+			for(MacroParameter p : this.params)
+				if(p.defaultValue()==null) requiredParameterSize++;
+		}
+		return requiredParameterSize;
 	}
 
 	@Override public boolean equals(Object o){

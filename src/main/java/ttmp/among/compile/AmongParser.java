@@ -19,7 +19,9 @@ import ttmp.among.util.OperatorType;
 import ttmp.among.util.Source;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static ttmp.among.compile.AmongToken.TokenType.*;
 
@@ -144,21 +146,30 @@ public final class AmongParser{
 					return;
 			}
 		}
-		root.addMacro(new AmongMacroDef(name, type, params, exprOrError(true)));
+		Among expr = exprOrError(true);
+		if(params!=null)
+			root.addMacro(new AmongMacroDef(name, type, params, expr));
 	}
 
-	private MacroParameterList defParam(AmongToken.TokenType closure){
+	@Nullable private MacroParameterList defParam(AmongToken.TokenType closure){
 		List<MacroParameter> params = new ArrayList<>();
+		Set<String> nameSet = new HashSet<>();
+		boolean invalid = false;
 		while(true){
 			AmongToken next = tokenizer.next(true, TokenizationMode.PARAM);
 			if(next.is(closure)) break;
 			if(next.is(EOF)) break; // It will be reported in defMacro()
 			if(!next.is(PARAM_NAME)){
 				reportError("Expected parameter name");
+				invalid = true;
 				if(tryToRecover(TokenizationMode.PARAM, closure, true)) break;
 				else continue;
 			}
 			String name = next.expectLiteral();
+			if(!nameSet.add(name)){
+				reportError("Duplicated parameter '"+name+"'");
+				invalid = true;
+			}
 			next = tokenizer.next(true, TokenizationMode.PARAM);
 
 			Among def;
@@ -166,15 +177,16 @@ public final class AmongParser{
 				def = exprOrError(false);
 				next = tokenizer.next(true, TokenizationMode.PARAM);
 			}else def = null;
-			params.add(new MacroParameter(name, def));
+			if(!invalid) params.add(new MacroParameter(name, def));
 
 			if(next.is(closure)) break;
 			else if(!next.is(COMMA)){
 				reportError("Expected ',' or "+closure.friendlyName());
+				invalid = true;
 				if(tryToRecover(TokenizationMode.PARAM, closure, true)) break;
 			}
 		}
-		return MacroParameterList.of(params);
+		return invalid ? null : MacroParameterList.of(params);
 	}
 
 	private void defOperator(String name, int startIndex){
@@ -314,7 +326,7 @@ public final class AmongParser{
 		}
 		AmongPrimitive p = Among.value(next.expectLiteral());
 		if(next.is(PARAM_REF)) p.setParamRef(true);
-		return next.is(COMPLEX_PRIMITIVE) ? p : primitiveMacro(p);
+		return next.is(COMPLEX_PRIMITIVE) ? p : primitiveMacro(p, next.start);
 	}
 
 	@Nullable private Among nameable(TokenizationMode mode, boolean macro){
@@ -330,19 +342,19 @@ public final class AmongParser{
 				switch(tokenizer.next(false, mode, macro).type){
 					case L_BRACE:{
 						AmongObject o = obj(next.expectLiteral(), macro);
-						if(applyMacro&&!paramRef) return objectMacro(o);
+						if(applyMacro&&!paramRef) return objectMacro(o, next.start);
 						else nameable = o;
 						break;
 					}
 					case L_BRACKET:{
 						AmongList l = list(next.expectLiteral(), macro);
-						if(applyMacro&&!paramRef) return listMacro(l);
+						if(applyMacro&&!paramRef) return listMacro(l, next.start);
 						else nameable = l;
 						break;
 					}
 					case L_PAREN:{
 						AmongList o = oper(next.expectLiteral(), macro);
-						if(applyMacro&&!paramRef) return operationMacro(o);
+						if(applyMacro&&!paramRef) return operationMacro(o, next.start);
 						else nameable = engine.collapseUnaryOperation&&!o.hasName()&&o.size()==1 ? o.get(0) : o;
 						break;
 					}
@@ -477,7 +489,7 @@ public final class AmongParser{
 						if(next.isOperatorOrKeyword()){
 							AmongOperatorDef op = group.get(next.expectLiteral());
 							if(op!=null){
-								a = operationMacro(Among.namedList(op.name(), a, operationExpression(operators, i+1, macro)));
+								a = operationMacro(Among.namedList(op.name(), a, operationExpression(operators, i+1, macro)), next.start);
 								continue;
 							}
 						}
@@ -493,7 +505,7 @@ public final class AmongParser{
 						if(next.isOperatorOrKeyword()){
 							AmongOperatorDef op = group.get(next.expectLiteral());
 							if(op!=null){
-								a = operationMacro(Among.namedList(op.name(), a));
+								a = operationMacro(Among.namedList(op.name(), a), next.start);
 								continue;
 							}
 						}
@@ -517,7 +529,7 @@ public final class AmongParser{
 		}
 		AmongPrimitive p = Among.value(next.expectLiteral());
 		if(next.is(PARAM_REF)) p.setParamRef(true);
-		return next.is(COMPLEX_PRIMITIVE) ? p : primitiveMacro(p);
+		return next.is(COMPLEX_PRIMITIVE) ? p : primitiveMacro(p, next.start);
 	}
 
 	private Among prefix(List<OperatorRegistry.PriorityGroup> operators, int i, boolean macro){
@@ -525,43 +537,49 @@ public final class AmongParser{
 		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION, macro);
 		if(next.isOperatorOrKeyword()){
 			AmongOperatorDef op = operators.get(i).get(next.expectLiteral());
-			if(op!=null) return operationMacro(Among.namedList(op.name(), prefix(operators, i, macro)));
+			if(op!=null) return operationMacro(Among.namedList(op.name(), prefix(operators, i, macro)), next.start);
 		}
 		tokenizer.reset();
 		return operationExpression(operators, i+1, macro);
 	}
 
-	private Among primitiveMacro(AmongPrimitive primitive){ // TODO exception handling
-		AmongMacroDef def = root.searchMacro(primitive.getValue(), MacroType.CONST);
-		return def!=null ? def.apply(primitive) : primitive;
+	private Among primitiveMacro(AmongPrimitive primitive, int sourcePosition){
+		return macro(primitive, primitive.getValue(), MacroType.CONST, sourcePosition);
 	}
-	private Among objectMacro(AmongObject object){
-		AmongMacroDef def = root.searchMacro(object.getName(), MacroType.OBJECT);
-		return def!=null ? def.apply(object) : object;
+	private Among objectMacro(AmongObject object, int sourcePosition){
+		return macro(object, object.getName(), MacroType.OBJECT, sourcePosition);
 	}
-	private Among listMacro(AmongList list){
-		AmongMacroDef def = root.searchMacro(list.getName(), MacroType.LIST);
-		return def!=null ? def.apply(list) : list;
+	private Among listMacro(AmongList list, int sourcePosition){
+		return macro(list, list.getName(), MacroType.LIST, sourcePosition);
 	}
-	private Among operationMacro(AmongList operation){
-		AmongMacroDef def = root.searchMacro(operation.getName(), MacroType.OPERATION);
-		return def!=null ? def.apply(operation) : operation;
+	private Among operationMacro(AmongList operation, int sourcePosition){
+		return macro(operation, operation.getName(), MacroType.OPERATION, sourcePosition);
+	}
+	private Among macro(Among target, String macroName, MacroType macroType, int sourcePosition){
+		AmongMacroDef def = root.searchMacro(macroName, macroType);
+		if(def==null) return target;
+		try{
+			return def.apply(target, engine.copyMacroConstant,
+					(t, s) -> report(t, s, sourcePosition));
+		}catch(Sussy sussy){
+			return Among.value("ERROR");
+		}
 	}
 
 	void reportWarning(String message, String... hints){
 		report(ReportType.WARN, message);
 	}
-	void reportError(String message, String... hints){
-		report(ReportType.ERROR, message);
-	}
 	void reportWarning(String message, int srcIndex, String... hints){
 		report(ReportType.WARN, message, srcIndex, hints);
 	}
-	void reportError(String message, int srcIndex, String... hints){
-		report(ReportType.ERROR, message, srcIndex, hints);
-	}
 	void reportWarning(String message, @Nullable Throwable ex, String... hints){
 		report(ReportType.WARN, message, ex, hints);
+	}
+	void reportError(String message, String... hints){
+		report(ReportType.ERROR, message);
+	}
+	void reportError(String message, int srcIndex, String... hints){
+		report(ReportType.ERROR, message, srcIndex, hints);
 	}
 	void reportError(String message, @Nullable Throwable ex, String... hints){
 		report(ReportType.ERROR, message, ex, hints);
