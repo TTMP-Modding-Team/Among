@@ -115,7 +115,7 @@ public class AmongObject extends AmongNamed{
 	@Override public void walk(AmongWalker visitor, NodePath path){
 		if(visitor.walk(this, path))
 			for(Map.Entry<String, Among> e : this.properties.entrySet())
-				e.getValue().walk(visitor, new NodePath(path, e.getKey()));
+				e.getValue().walk(visitor, path.subPath(e.getKey()));
 	}
 
 	@Override public AmongObject copy(){

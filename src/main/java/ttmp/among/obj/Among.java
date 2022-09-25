@@ -164,7 +164,7 @@ public abstract class Among implements ToPrettyString{
 	 * @param visitor Specific operation to be performed on each node
 	 */
 	public final void walk(AmongWalker visitor){
-		walk(visitor, NodePath.EMPTY);
+		walk(visitor, NodePath.of());
 	}
 
 	/**

@@ -105,7 +105,7 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 		if(visitor.walk(this, path)){
 			List<Among> amongs = this.values;
 			for(int i = 0; i<amongs.size(); i++)
-				amongs.get(i).walk(visitor, new NodePath(path, i));
+				amongs.get(i).walk(visitor, path.subPath(i));
 		}
 	}
 

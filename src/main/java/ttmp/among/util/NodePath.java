@@ -18,31 +18,44 @@ import java.util.stream.Collectors;
  * Object representing relative path in node structure of {@link Among} instances.<br>
  * In a nutshell, it is an array of either {@code String} (property) or {@code int} (index)s. The properties are used to
  * access properties of {@link AmongObject} instances, and the indices are used to access elements of {@link
- * AmongList}.
+ * AmongList} instances.
  */
 public final class NodePath implements Iterable<NodePath.Element>{
+	private static final NodePath EMPTY = new NodePath();
+
 	/**
-	 * Empty path. (meaning it has 0 (zero) elements(meaning it points to the node itself))
+	 * Returns path instance with zero elements. Empty path represents the base object itself.
+	 *
+	 * @return Empty path
 	 */
-	public static final NodePath EMPTY = new NodePath(); // TODO encapsulate constructors
+	public static NodePath of(){
+		return EMPTY;
+	}
+	/**
+	 * Returns path instance with given elements.
+	 *
+	 * @param path Relative path of the node
+	 * @return Path with given path
+	 * @throws NullPointerException If either {@code path} or one of its elements are {@code null}
+	 */
+	public static NodePath of(Element... path){
+		return path.length==0 ? EMPTY : new NodePath(path);
+	}
 
 	private final Element[] path;
 
-	public NodePath(Element... path){
+	private NodePath(){
+		this.path = new Element[0];
+	}
+	private NodePath(Element... path){
 		this.path = path.clone();
 		for(Element e : this.path)
 			Objects.requireNonNull(e);
 	}
-	public NodePath(NodePath path, String property){
-		this(path, new Property(property));
-	}
-	public NodePath(NodePath path, int index){
-		this(path, new Index(index));
-	}
-	public NodePath(NodePath path, Element... subpath){
+	private NodePath(NodePath path, Element... subPath){
 		List<Element> list = new ArrayList<>();
 		Collections.addAll(list, path.path);
-		Collections.addAll(list, subpath);
+		Collections.addAll(list, subPath);
 		this.path = list.toArray(new Element[0]);
 		for(Element e : this.path)
 			Objects.requireNonNull(e);
@@ -101,6 +114,36 @@ public final class NodePath implements Iterable<NodePath.Element>{
 			path[path.length-1].set(a, element);
 			return true;
 		}else return false;
+	}
+
+	/**
+	 * Constructs new path instance with sub path. One property element will be added after the end this path.
+	 *
+	 * @param property Property to be added after the end
+	 * @return Path with {@code property} added
+	 * @throws NullPointerException If {@code property == null}
+	 */
+	public NodePath subPath(String property){
+		return subPath(new Property(property));
+	}
+	/**
+	 * Constructs new path instance with sub path. One index element will be added after the end this path.
+	 *
+	 * @param index Index to be added after the end
+	 * @return Path with {@code index} added
+	 */
+	public NodePath subPath(int index){
+		return subPath(new Index(index));
+	}
+	/**
+	 * Constructs new path instance with sub path. The sub path will be added after the end this path.
+	 *
+	 * @param subPath Path to be added after the end
+	 * @return Path with {@code subPath} added
+	 * @throws NullPointerException If either {@code subPath} or one of its elements are {@code null}
+	 */
+	public NodePath subPath(Element... subPath){
+		return subPath.length==0 ? this : new NodePath(this, subPath);
 	}
 
 	@Override public Iterator<Element> iterator(){
