@@ -15,6 +15,8 @@ public class ErrorTests{
 		list.add(errorTest("unterminated3"));
 		list.add(errorTest("expectValue1"));
 		list.add(errorTest("invalidCharEscape"));
+		list.add(errorTest("invalidMacro"));
+		list.add(errorTest("invalidStatement"));
 		return list;
 	}
 

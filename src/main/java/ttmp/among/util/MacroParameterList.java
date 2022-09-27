@@ -98,8 +98,8 @@ public final class MacroParameterList implements ToPrettyString{
 	}
 
 	/**
-	 * Checks for consecutive optional parameters. This check is only done for list/operation macros.<br>
-	 * Being 'consecutive' refers to optional parameters being at the end of the parameter list; see the snippet below.
+	 * Returns whether this parameter list has consecutive optional parameters. Being 'consecutive' refers to all
+	 * optional parameters being placed at the end of the parameter list; see the snippet below.
 	 * <pre>
 	 * macro macro1[param1, param2, param3]: stub  // consecutive
 	 * macro macro2[param1, param2, param3 = defaultValue]: stub  // consecutive
@@ -122,20 +122,19 @@ public final class MacroParameterList implements ToPrettyString{
 	 *     param3: "Parameter 3"
 	 * }
 	 * </pre>
-	 * Note that {@link MacroParameterList} does not hold information about underlying macro type; calling this method
-	 * for parameter list inside {@link MacroType#OBJECT} macro may still throw exception.
 	 *
-	 * @throws Sussy If optional parameters are not defined at the end of the list
+	 * @return Whether this parameter list has consecutive optional parameters
 	 */
-	public void checkConsecutiveOptionalParams(){
+	public boolean hasConsecutiveOptionalParams(){
 		boolean defaultParamSeen = false;
 		for(MacroParameter p : params){
 			if(defaultParamSeen){
 				if(p.defaultValue()==null)
-					throw new Sussy("Non-object macros should have consecutive optional parameters (i.e. Needs to have all optional parameters at the end of the parameter list, not in between)");
+					return false;
 			}else if(p.defaultValue()!=null)
 				defaultParamSeen = true;
 		}
+		return true;
 	}
 
 	private int requiredParameterSize = -1;

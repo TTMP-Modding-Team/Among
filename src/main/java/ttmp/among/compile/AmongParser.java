@@ -6,11 +6,11 @@ import ttmp.among.compile.Report.ReportType;
 import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
-import ttmp.among.obj.MacroDefinition;
 import ttmp.among.obj.AmongObject;
-import ttmp.among.obj.OperatorDefinition;
 import ttmp.among.obj.AmongPrimitive;
 import ttmp.among.obj.AmongRoot;
+import ttmp.among.obj.MacroDefinition;
+import ttmp.among.obj.OperatorDefinition;
 import ttmp.among.util.MacroParameter;
 import ttmp.among.util.MacroParameterList;
 import ttmp.among.util.MacroType;
@@ -63,7 +63,7 @@ public final class AmongParser{
 			AmongToken next = tokenizer.next(true, TokenizationMode.WORD);
 			if(next.is(EOF)) return;
 			switch(next.keywordOrEmpty()){
-				case "macro": macroDefinition(); continue;
+				case "macro": macroDefinition(next.start); continue;
 				case "operator": operatorDefinition(next.start, false); continue;
 				case "keyword": operatorDefinition(next.start, true); continue;
 				case "undef": switch(tokenizer.next(true, TokenizationMode.WORD).keywordOrEmpty()){
@@ -81,8 +81,8 @@ public final class AmongParser{
 			if(a==null){
 				next = tokenizer.next(true, TokenizationMode.NAME);
 				if(!next.is(COMPLEX_PRIMITIVE)){
-					reportError("Top level statements can only be macro statement, operator statement," +
-							" keyword statement, undef statement, named/unnamed collections," +
+					reportError("Top level statements can only be macro/operator/"+
+							"keyword definition, undef statement, named/unnamed collections,"+
 							" or primitives denoted with ' or \"");
 					tryToRecover(TokenizationMode.NAME);
 					continue;
@@ -94,29 +94,33 @@ public final class AmongParser{
 	}
 
 	@Nullable private String definitionName(TokenizationMode mode){
+		tokenizer.discard();
 		AmongToken next = tokenizer.next(true, mode);
 		if(!next.isLiteral()){
 			reportError("Expected name");
+			tokenizer.reset();
 			tryToRecover(mode);
 			return null;
 		}
 		return next.expectLiteral();
 	}
 
-	private void macroDefinition(){
+	private void macroDefinition(int startIndex){
 		String name = definitionName(TokenizationMode.WORD);
 		if(name==null) return;
+		tokenizer.discard();
 		switch(tokenizer.next(true, TokenizationMode.WORD).type){
-			case COLON: macroDefinition(name, MacroType.CONST); break;
-			case L_BRACE: macroDefinition(name, MacroType.OBJECT); break;
-			case L_BRACKET: macroDefinition(name, MacroType.LIST); break;
-			case L_PAREN: macroDefinition(name, MacroType.OPERATION); break;
+			case COLON: macroDefinition(startIndex, name, MacroType.CONST); break;
+			case L_BRACE: macroDefinition(startIndex, name, MacroType.OBJECT); break;
+			case L_BRACKET: macroDefinition(startIndex, name, MacroType.LIST); break;
+			case L_PAREN: macroDefinition(startIndex, name, MacroType.OPERATION); break;
 			default:
 				reportError("Invalid macro statement; expected '{', '[', '(' or ':'");
+				tokenizer.reset();
 				tryToRecover(TokenizationMode.WORD);
 		}
 	}
-	private void macroDefinition(String name, MacroType type){
+	private void macroDefinition(int startIndex, String name, MacroType type){
 		MacroParameterList params;
 		if(type==MacroType.CONST) params = MacroParameterList.of();
 		else{
@@ -126,25 +130,28 @@ public final class AmongParser{
 				case OPERATION: params = macroParam(R_PAREN); break;
 				default: throw new IllegalStateException("Unreachable");
 			}
-			switch(tokenizer.next(true, TokenizationMode.UNEXPECTED).type){
-				case COLON: break;
-				case EOF:
-					reportError("Incomplete macro statement");
-					return;
-				default:
-					reportError("Expected ':' after parameter definition");
-					tryToRecover(TokenizationMode.NAME);
-					return;
+			tokenizer.discard();
+			if(!tokenizer.next(true, TokenizationMode.UNEXPECTED).is(COLON)){
+				reportError("Expected ':' after parameter definition");
+				tokenizer.reset();
+				tryToRecover(TokenizationMode.NAME);
+				return;
 			}
 		}
 		Among expr = exprOrError(true);
+		tokenizer.discard();
 		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 		if(!next.is(BR)&&!next.is(EOF)){
 			reportError("Expected newline after macro statement");
-			skipUntilLineBreak();
+			tokenizer.reset();
+			tryToRecover(TokenizationMode.WORD);
 		}
-		if(params!=null)
-			root.addMacro(new MacroDefinition(name, type, params, expr));
+		if(params!=null){
+			if((type==MacroType.LIST||type==MacroType.OPERATION)&&!params.hasConsecutiveOptionalParams())
+				reportError("Optional parameters of "+(type==MacroType.LIST ? "list" : "operation")+
+						" macro should be consecutive, placed at end of the parameter list", startIndex);
+			else root.addMacro(new MacroDefinition(name, type, params, expr));
+		}
 	}
 
 	@Nullable private MacroParameterList macroParam(AmongToken.TokenType closure){

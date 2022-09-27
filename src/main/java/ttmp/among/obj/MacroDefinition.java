@@ -3,9 +3,9 @@ package ttmp.among.obj;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.Report;
 import ttmp.among.exception.Sussy;
-import ttmp.among.util.MacroDefinitionBuilder;
 import ttmp.among.util.AmongUs;
 import ttmp.among.util.AmongWalker;
+import ttmp.among.util.MacroDefinitionBuilder;
 import ttmp.among.util.MacroParameter;
 import ttmp.among.util.MacroParameterList;
 import ttmp.among.util.MacroReplacement;
@@ -67,9 +67,10 @@ public final class MacroDefinition implements ToPrettyString{
 				if(!params.isEmpty())
 					throw new Sussy("Constant definitions cannot have parameter");
 				break;
-			case LIST:
-			case OPERATION:
-				params.checkConsecutiveOptionalParams();
+			case LIST: case OPERATION:
+				if(!params.hasConsecutiveOptionalParams())
+					throw new Sussy("Optional parameters of "+(sig.type()==MacroType.LIST ? "list" : "operation")+
+							" macro should be consecutive, placed at end of the parameter list");
 		}
 		this.signature = sig;
 		this.parameter = params;
@@ -223,7 +224,7 @@ public final class MacroDefinition implements ToPrettyString{
 				List<Among> args = new ArrayList<>();
 				if(l.size()<parameter.requiredParameters())
 					throw new Sussy("Not enough parameters: minimum of "+parameter.requiredParameters()+" expected, "+l.size()+" provided");
-				for(int i=0; i<parameter.size(); i++)
+				for(int i = 0; i<parameter.size(); i++)
 					args.add(i<l.size() ?
 							l.get(i) :
 							Objects.requireNonNull(parameter.paramAt(i).defaultValue()));

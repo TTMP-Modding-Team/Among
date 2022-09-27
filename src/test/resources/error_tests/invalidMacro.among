@@ -1,0 +1,35 @@
+macro "don't do this": "ok" {   // ig this is not error
+  This shouldn't matter: yea
+}
+
+macro "don't do this" "now it should error the shit out": "ok" {  // ERROR
+  This shouldn't matter: yea
+}
+
+macro .
+
+macro notConsecutive[par1=default, par2]: [  // ERROR
+  $par1
+  $par2
+]
+
+macro m: {  // ERROR
+  p1: 1
+  p2: 2
+} {
+  p1: 1
+  p2: 2
+}
+
+
+macro notConsecutive{par1=default, par2}: [
+  $par1
+  $par2
+]
+
+undef macro . ()()  // ERROR
+
+macro : : {}  // ERROR
+
+
+macro incomplete()  // ERROR
