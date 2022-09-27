@@ -15,7 +15,7 @@ public class AmongMacroDefBuilder{
 	@Nullable private String name;
 	@Nullable private MacroType type;
 	private final List<MacroParameter> parameters = new ArrayList<>();
-	@Nullable private Among object;
+	@Nullable private Among template;
 
 	public AmongMacroDefBuilder signature(String name, MacroType type){
 		this.name = name;
@@ -31,8 +31,8 @@ public class AmongMacroDefBuilder{
 		return this;
 	}
 
-	public AmongMacroDefBuilder object(Among object){
-		this.object = object;
+	public AmongMacroDefBuilder template(Among template){
+		this.template = template;
 		return this;
 	}
 
@@ -45,7 +45,7 @@ public class AmongMacroDefBuilder{
 	public AmongMacroDef build(){
 		if(name==null) throw new Sussy("Name not defined");
 		if(type==null) throw new Sussy("Type not defined");
-		if(object==null) throw new Sussy("Object not defined");
-		return new AmongMacroDef(name, type, MacroParameterList.of(parameters), object);
+		if(template==null) throw new Sussy("Object not defined");
+		return new AmongMacroDef(name, type, MacroParameterList.of(parameters), template);
 	}
 }
