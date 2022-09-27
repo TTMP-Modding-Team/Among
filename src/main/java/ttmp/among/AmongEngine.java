@@ -88,7 +88,7 @@ public class AmongEngine{
 	/**
 	 * Specifies error handling behavior for invalid unicode escape. It specifically refers to invalid trailing value
 	 * for {@code \u005Cu} and {@code \u005CU} notation, which should be a hexadecimal with 4 characters (for {@code
-	 * \u005Cu}) and 8 characters (for {@code \u005CU}). This behavior is also used when the codepoint supplied by
+	 * \u005Cu}) and 6 characters (for {@code \u005CU}). This behavior is also used when the codepoint supplied by
 	 * {@code \u005CU} notation is outside the unicode definition (larger than {@code 10FFFF}).<br>
 	 * Regardless of the setting, the compiler will process the input as the {@code \u005Cu} notation never existed;
 	 * for example, invalid input {@code '\u005Cuabcd'} will produce {@code 'uabcd'}.<br>

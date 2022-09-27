@@ -35,7 +35,8 @@ public class EqualityTests{
 						"Yellow, black. Yellow, black.\n"+
 						"Ooh, black and yellow!\n"+
 						"Let's shake it up a l\n"),
-				value("Look ma, I'm on TV!")));
+				value("Look ma, I'm on TV!"),
+				value("\b\f\n\r\t\u0060\uD828\uDC90")));
 		list.add(simpleEqualityTest("macroTest",
 				value("This is macro"),
 				namedList("macro1"),

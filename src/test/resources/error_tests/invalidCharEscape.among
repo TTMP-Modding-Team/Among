@@ -2,9 +2,9 @@
 "\uasdb"  // ERROR
 "\uxxxx\ux1234"  // ERROR
 "\Uxxxx"  // ERROR
-"\U12345678"  // ERROR
+"\U123456"  // ERROR
 "\uFFFFFF"
-"\U000AaAaA"
+"\U0AaAaA"
 
 "\uabcd\uef12\u3456\u7890"
 "\

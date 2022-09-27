@@ -418,8 +418,10 @@ public final class AmongTokenizer{
 			case 'n': return '\n';
 			case 't': return '\t';
 			case 'r': return '\r';
+			case 'b': return '\b';
+			case 'f': return '\f';
 			case 'u': return hex(4); // \ uxxxx // wait, why is this compilation error??????????
-			case 'U': return hex(8); // \Uxxxxxxxx
+			case 'U': return hex(6); // \Uxxxxxx
 			default: return c2; // just append trailing character
 		}
 	}
