@@ -101,20 +101,20 @@ public final class MacroParameterList implements ToPrettyString{
 	 * Checks for consecutive optional parameters. This check is only done for list/operation macros.<br>
 	 * Being 'consecutive' refers to optional parameters being at the end of the parameter list; see the snippet below.
 	 * <pre>
-	 * def macro1[param1, param2, param3]: stub  // consecutive
-	 * def macro2[param1, param2, param3 = defaultValue]: stub  // consecutive
-	 * def macro3[param1, param2 = defaultValue, param3 = defaultValue]: stub  // consecutive
-	 * def macro4[param1 = defaultValue, param2 = defaultValue, param3 = defaultValue]: stub  // consecutive
-	 * def macro5[param1 = defaultValue, param2, param3]: stub  // NOT consecutive, will produce error
-	 * def macro6[param1, param2 = defaultValue, param3]: stub  // NOT consecutive, will produce error
-	 * def macro7[]: stub  // consecutive
+	 * macro macro1[param1, param2, param3]: stub  // consecutive
+	 * macro macro2[param1, param2, param3 = defaultValue]: stub  // consecutive
+	 * macro macro3[param1, param2 = defaultValue, param3 = defaultValue]: stub  // consecutive
+	 * macro macro4[param1 = defaultValue, param2 = defaultValue, param3 = defaultValue]: stub  // consecutive
+	 * macro macro5[param1 = defaultValue, param2, param3]: stub  // NOT consecutive, will produce error
+	 * macro macro6[param1, param2 = defaultValue, param3]: stub  // NOT consecutive, will produce error
+	 * macro macro7[]: stub  // consecutive
 	 * </pre>
 	 * As mentioned above, this check is only done for list/operation macros; it is because the parameters are
 	 * identified by their index. Same rule does not apply for object macros; As their parameters are based on
 	 * unordered
 	 * properties.
 	 * <pre>
-	 * def macro1{param1 = defaultValue, param2, param3}: stub  // NOT consecutive, but does not produce error
+	 * macro macro1{param1 = defaultValue, param2, param3}: stub  // NOT consecutive, but does not produce error
 	 *
 	 * macro1{
 	 *     param1: "Parameter 1"

@@ -131,8 +131,7 @@ public final class AmongTokenizer{
 	private void read(TokenizationMode mode, boolean macro){
 		while(true){
 			int idx = srcIndex;
-			int c = nextCodePoint();
-			switch(c){
+			switch(nextCodePoint()){
 				case EOF: return;
 				case ' ': case '\t': continue;
 				case '\n':
@@ -185,24 +184,12 @@ public final class AmongTokenizer{
 			}
 			srcIndex = idx;
 			switch(mode){
-				case WORD:
-					tokens.add(new AmongToken(TokenType.WORD, idx, word(true, false)));
-					return;
-				case NAME:
-					tokens.add(new AmongToken(macro&&c=='$' ? TokenType.PARAM_REF : TokenType.NAME, idx, word(false, false)));
-					return;
-				case KEY:
-					tokens.add(new AmongToken(macro&&c=='$' ? TokenType.PARAM_REF : TokenType.KEY, idx, multipleWords(true)));
-					return;
-				case PARAM:
-					tokens.add(new AmongToken(macro&&c=='$' ? TokenType.PARAM_REF : TokenType.PARAM_NAME, idx, word(false, true)));
-					return;
-				case VALUE:
-					tokens.add(new AmongToken(macro&&c=='$' ? TokenType.PARAM_REF : TokenType.VALUE, idx, multipleWords(false)));
-					return;
-				case OPERATION:
-					operation(macro);
-					return;
+				case WORD: tokens.add(word(false, true, false)); return;
+				case NAME: tokens.add(word(macro, false, false)); return;
+				case KEY: tokens.add(multipleWords(macro, true)); return;
+				case PARAM: tokens.add(word(macro, false, true)); return;
+				case VALUE: tokens.add(multipleWords(macro, false)); return;
+				case OPERATION: operation(macro); return;
 			}
 		}
 	}
@@ -241,8 +228,10 @@ public final class AmongTokenizer{
 		}
 	}
 
-	private String word(boolean word, boolean param){
+	private AmongToken word(boolean macro, boolean word, boolean param){
 		StringBuilder stb = new StringBuilder();
+		int start = srcIndex;
+		boolean isParamRef = macro&&source.codePointAt(srcIndex)=='$';
 		int prev;
 		L:
 		while(true){
@@ -250,6 +239,7 @@ public final class AmongTokenizer{
 			int c = nextCodePoint();
 			switch(c){
 				case '\\':
+					if(word) word = false;
 					stb.appendCodePoint(backslash());
 					continue;
 				case '=':
@@ -257,7 +247,7 @@ public final class AmongTokenizer{
 					else break;
 				case ':':
 					if(word) break L;
-					else break;
+					break;
 				case EOF: case ' ': case '\t': case '\n': case ',':
 				case '{': case '}': case '[': case ']': case '(': case ')':
 					break L;
@@ -265,11 +255,15 @@ public final class AmongTokenizer{
 			stb.appendCodePoint(c);
 		}
 		srcIndex = prev;
-		return stb.toString();
+		return new AmongToken(
+				isParamRef ? TokenType.PARAM_REF : word ? TokenType.WORD : param ? TokenType.PARAM_NAME : TokenType.NAME,
+				start, stb.toString());
 	}
 
-	private String multipleWords(boolean key){
+	private AmongToken multipleWords(boolean macro, boolean key){
 		StringBuilder stb = new StringBuilder();
+		int start = srcIndex;
+		boolean isParamRef = macro&&source.codePointAt(srcIndex)=='$';
 		int lastNonWhitespaceSeen = srcIndex;
 		int prev;
 		L:
@@ -290,7 +284,8 @@ public final class AmongTokenizer{
 			lastNonWhitespaceSeen = srcIndex;
 		}
 		srcIndex = prev;
-		return stb.toString();
+		return new AmongToken(isParamRef ? TokenType.PARAM_REF : key ? TokenType.KEY : TokenType.VALUE,
+				start, stb.toString());
 	}
 
 	private void operation(boolean macro){

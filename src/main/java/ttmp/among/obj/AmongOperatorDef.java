@@ -9,8 +9,8 @@ import java.util.Objects;
 /**
  * Operator definitions. Snippet below shows various operator definitions written in Among.
  * <pre>
- * def ... as postfix operator
- * def is as binary keyword
+ * operator ... as postfix
+ * keyword is as binary
  * </pre>
  */
 public final class AmongOperatorDef{
@@ -76,11 +76,10 @@ public final class AmongOperatorDef{
 	}
 
 	@Override public String toString(){
-		StringBuilder stb = new StringBuilder().append("def ");
+		StringBuilder stb = new StringBuilder().append(isKeyword ? "keyword " : "operator ");
 		AmongUs.nameToString(stb, this.name);
 		stb.append(" as ")
-				.append(type==OperatorType.BINARY ? "binary" : type==OperatorType.POSTFIX ? "postfix" : "prefix")
-				.append(isKeyword ? " keyword" : " operator");
+				.append(type==OperatorType.BINARY ? "binary" : type==OperatorType.POSTFIX ? "postfix" : "prefix");
 		if(Double.compare(priority, type.defaultPriority())!=0)
 			stb.append(" : ").append(FORMAT.format(priority));
 		return stb.toString();

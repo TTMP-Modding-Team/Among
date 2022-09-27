@@ -1,10 +1,10 @@
 // 6: operators and keywords
 // Defines valid name as custom operator/keyword for parsing
 // The language is equipped with standard operators everyone can expect (arithmetic operators and other things)
-// def <operator|keyword> <name> as <binary|prefix|postfix> ( : <priority> )
+// <operator|keyword> <name> as <binary|prefix|postfix> ( : <priority> )
 
-def ... as binary operator
-def eat as prefix keyword
+operator ... as binary
+keyword eat as prefix
 {
 	A: (a ... b) // ... [a, b],
 	B: (eat shit) // eat [shit]
@@ -19,8 +19,8 @@ def eat as prefix keyword
 
 // Complex names do not work
 
-// def "" as binary operator // nope
-// def "impostors among us" as postfix keyword // nope
+// operator "" as binary // nope
+// operator "impostors among us" as postfix // nope
 
 
 // 'priority' indicates which operators/keywords should be read first; which will determine the tree structure of the compiled operation.

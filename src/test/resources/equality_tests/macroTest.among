@@ -1,15 +1,15 @@
-def macro(): This is macro
+macro macro1(): This is macro
 
-macro()
-"macro"() // This isn't macro
+macro1()
+"macro1"() // This isn't macro
 
-def macro2{param}: $param
+macro macro2{param}: $param
 
 {
   Macro: macro2 { param: "Hi!" }  // "Hi!"
 }
 
-def nestedMacro[param1, param2]: ( macro2 { param: $param1 } * macro2 { param: $param2} )
+macro nestedMacro[param1, param2]: ( macro2 { param: $param1 } * macro2 { param: $param2} )
 
 {
   Macro: nestedMacro[ "amo" , "gus" ]  // * [ amo, gus ]

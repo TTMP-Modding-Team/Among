@@ -38,7 +38,7 @@ public class EqualityTests{
 				value("Look ma, I'm on TV!")));
 		list.add(simpleEqualityTest("macroTest",
 				value("This is macro"),
-				namedList("macro"),
+				namedList("macro1"),
 				object().prop("Macro", "Hi!"),
 				object().prop("Macro", namedList("*", "amo", "gus"))));
 		list.add(simpleEqualityTest("collapseUnaryOperation",

@@ -23,10 +23,10 @@ import java.util.function.BiConsumer;
 /**
  * Macro definitions. Snippet below shows macros with each type written in Among.
  * <pre>
- * def macro : "Hello!"
- * def macro{} : "Hello!"
- * def macro[] : "Hello!"
- * def macro() : "Hello!"
+ * macro macro : "Hello!"
+ * macro macro{} : "Hello!"
+ * macro macro[] : "Hello!"
+ * macro macro() : "Hello!"
  * </pre>
  */
 public final class AmongMacroDef implements ToPrettyString{
@@ -245,7 +245,7 @@ public final class AmongMacroDef implements ToPrettyString{
 
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
-		stb.append("def ");
+		stb.append("macro ");
 		AmongUs.nameToString(stb, name());
 		switch(this.type()){
 			case OBJECT:
@@ -262,7 +262,7 @@ public final class AmongMacroDef implements ToPrettyString{
 	}
 	@Override public String toPrettyString(int indents, String indent){
 		StringBuilder stb = new StringBuilder();
-		stb.append("def ");
+		stb.append("macro ");
 		AmongUs.nameToPrettyString(stb, name(), indents, indent);
 		switch(this.type()){
 			case OBJECT:

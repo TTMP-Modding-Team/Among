@@ -5,7 +5,7 @@ package ttmp.among.compile;
  * Literals can be read as separate expressions or one expression, depending on the context; snippet below shows the
  * example of such behavior.
  * <pre>
- * def name=name(name=name): $name { name=name: ( name=name ) }
+ * macro name=name(name=name): $name { name=name: ( name=name ) }
  * </pre>
  * <ul>
  *     <li>The first {@code 'name=name'} in definition name is read with {@link TokenizationMode#NAME},
@@ -27,13 +27,13 @@ public enum TokenizationMode{
 	 */
 	UNEXPECTED,
 	/**
-	 * Any encountered literals will be parsed as words; see grammar for specific definition.
-	 */
-	WORD,
-	/**
 	 * Any encountered literals will be parsed as names; see grammar for specific definition.
 	 */
 	NAME,
+	/**
+	 * Any encountered literals will be parsed as names. Literals with no backslashes will be parsed as words.
+	 */
+	WORD,
 	/**
 	 * Any encountered literals will be parsed as keys; see grammar for specific definition.<br>
 	 * '(', ')', '[' and ']' tokens are not parsed in this mode, as they are part of the key.

@@ -1,24 +1,24 @@
-def areYouMacro(): Yes\, I am a macro\, indeed......
+macro areYouMacro(): Yes\, I am a macro\, indeed......
 
 areYouMacro()  // Yes
 
-undef areYouMacro  // no-op
+undef macro areYouMacro  // no-op
 
 areYouMacro()  // Yes
 
-undef areYouMacro()  // actual undef
+undef macro areYouMacro()  // actual undef
 
 areYouMacro()  // No
 
 
-def !! as binary operator
+operator !! as binary
 
 (a !! b)  // !! [a, b]
 
-def !! as prefix operator
+operator !! as prefix
 
 (!! a !! b)  // !! [!! [a], [b]]
 
-undef !! as operator
+undef operator !!
 
 (!! a, !! b)  // [! [! [a], ! [! [b]]]

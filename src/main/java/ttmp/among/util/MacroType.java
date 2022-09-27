@@ -5,10 +5,10 @@ import ttmp.among.obj.AmongMacroDef;
 /**
  * Types of macro. Snippet below shows macros with each type written in Among.
  * <pre>
- * def macro : "Hello!"  // CONST
- * def macro{} : "Hello!"  // OBJECT
- * def macro[] : "Hello!"  // LIST
- * def macro() : "Hello!"  // OPERATION
+ * macro macro : "Hello!"  // CONST
+ * macro macro{} : "Hello!"  // OBJECT
+ * macro macro[] : "Hello!"  // LIST
+ * macro macro() : "Hello!"  // OPERATION
  * </pre>
  */
 public enum MacroType{

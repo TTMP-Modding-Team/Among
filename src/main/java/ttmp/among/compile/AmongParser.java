@@ -57,19 +57,22 @@ public final class AmongParser{
 		return new CompileResult(tokenizer.source(), root, reports);
 	}
 
-
 	private void among(){
 		while(true){
 			tokenizer.discard();
 			AmongToken next = tokenizer.next(true, TokenizationMode.WORD);
 			if(next.is(EOF)) return;
-			if(next.is(WORD)){
-				switch(next.expectLiteral()){
-					case "def":
-						def(next.start);
-						continue;
-					case "undef":
-						undef();
+			switch(next.keywordOrEmpty()){
+				case "macro": macroDefinition(); continue;
+				case "operator": operatorDefinition(next.start, false); continue;
+				case "keyword": operatorDefinition(next.start, true); continue;
+				case "undef": switch(tokenizer.next(true, TokenizationMode.WORD).keywordOrEmpty()){
+					case "macro": undefMacro(); continue;
+					case "operator": undefOperation(false); continue;
+					case "keyword": undefOperation(true); continue;
+					default:
+						reportError("Expected 'macro', 'operator' or 'keyword'");
+						skipUntilLineBreak();
 						continue;
 				}
 			}
@@ -78,7 +81,9 @@ public final class AmongParser{
 			if(a==null){
 				next = tokenizer.next(true, TokenizationMode.NAME);
 				if(!next.is(COMPLEX_PRIMITIVE)){
-					reportError("Top level statements can only be def statement, undef statement, named/unnamed collections, or primitives denoted with ' or \"");
+					reportError("Top level statements can only be macro statement, operator statement," +
+							" keyword statement, undef statement, named/unnamed collections," +
+							" or primitives denoted with ' or \"");
 					tryToRecover(TokenizationMode.NAME);
 					continue;
 				}
@@ -88,57 +93,43 @@ public final class AmongParser{
 		}
 	}
 
-	private void def(int startIndex){
-		AmongToken next = tokenizer.next(true, TokenizationMode.WORD);
+	@Nullable private String definitionName(TokenizationMode mode){
+		AmongToken next = tokenizer.next(true, mode);
 		if(!next.isLiteral()){
 			reportError("Expected name");
-			tryToRecover(TokenizationMode.WORD);
-			return;
+			tryToRecover(mode);
+			return null;
 		}
-		String name = next.expectLiteral();
-		next = tokenizer.next(true, TokenizationMode.WORD);
-		switch(next.type){
-			case COLON:
-				defMacro(name, MacroType.CONST);
-				break;
-			case L_BRACE:
-				defMacro(name, MacroType.OBJECT);
-				break;
-			case L_BRACKET:
-				defMacro(name, MacroType.LIST);
-				break;
-			case L_PAREN:
-				defMacro(name, MacroType.OPERATION);
-				break;
-			default:
-				if(next.is(WORD, "as")) defOperator(name, startIndex);
-				else{
-					reportError("Invalid def statement; expected '{', '[', '(', ':' (macro definitions) or 'as' (operator definition)");
-					tryToRecover(TokenizationMode.WORD);
-				}
-		}
+		return next.expectLiteral();
 	}
 
-	private void defMacro(String name, MacroType type){
+	private void macroDefinition(){
+		String name = definitionName(TokenizationMode.WORD);
+		if(name==null) return;
+		switch(tokenizer.next(true, TokenizationMode.WORD).type){
+			case COLON: macroDefinition(name, MacroType.CONST); break;
+			case L_BRACE: macroDefinition(name, MacroType.OBJECT); break;
+			case L_BRACKET: macroDefinition(name, MacroType.LIST); break;
+			case L_PAREN: macroDefinition(name, MacroType.OPERATION); break;
+			default:
+				reportError("Invalid macro statement; expected '{', '[', '(' or ':'");
+				tryToRecover(TokenizationMode.WORD);
+		}
+	}
+	private void macroDefinition(String name, MacroType type){
 		MacroParameterList params;
 		if(type==MacroType.CONST) params = MacroParameterList.of();
 		else{
 			switch(type){
-				case OBJECT:
-					params = defParam(R_BRACE);
-					break;
-				case LIST:
-					params = defParam(R_BRACKET);
-					break;
-				case OPERATION:
-					params = defParam(R_PAREN);
-					break;
+				case OBJECT: params = macroParam(R_BRACE); break;
+				case LIST: params = macroParam(R_BRACKET); break;
+				case OPERATION: params = macroParam(R_PAREN); break;
 				default: throw new IllegalStateException("Unreachable");
 			}
 			switch(tokenizer.next(true, TokenizationMode.UNEXPECTED).type){
 				case COLON: break;
 				case EOF:
-					reportError("Incomplete def statement");
+					reportError("Incomplete macro statement");
 					return;
 				default:
 					reportError("Expected ':' after parameter definition");
@@ -147,11 +138,16 @@ public final class AmongParser{
 			}
 		}
 		Among expr = exprOrError(true);
+		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
+		if(!next.is(BR)&&!next.is(EOF)){
+			reportError("Expected newline after macro statement");
+			skipUntilLineBreak();
+		}
 		if(params!=null)
 			root.addMacro(new AmongMacroDef(name, type, params, expr));
 	}
 
-	@Nullable private MacroParameterList defParam(AmongToken.TokenType closure){
+	@Nullable private MacroParameterList macroParam(AmongToken.TokenType closure){
 		List<MacroParameter> params = new ArrayList<>();
 		Set<String> nameSet = new HashSet<>();
 		boolean invalid = false;
@@ -172,12 +168,12 @@ public final class AmongParser{
 			}
 			next = tokenizer.next(true, TokenizationMode.PARAM);
 
-			Among def;
+			Among defaultValue;
 			if(next.is(EQ)){
-				def = exprOrError(false);
+				defaultValue = exprOrError(false);
 				next = tokenizer.next(true, TokenizationMode.PARAM);
-			}else def = null;
-			if(!invalid) params.add(new MacroParameter(name, def));
+			}else defaultValue = null;
+			if(!invalid) params.add(new MacroParameter(name, defaultValue));
 
 			if(next.is(closure)) break;
 			else if(!next.is(COMMA)){
@@ -189,62 +185,50 @@ public final class AmongParser{
 		return invalid ? null : MacroParameterList.of(params);
 	}
 
-	private void defOperator(String name, int startIndex){
+	private void operatorDefinition(int startIndex, boolean keyword){
+		String name = definitionName(TokenizationMode.WORD);
+		if(name==null) return;
 		OperatorType type;
-		switch(tokenizer.next(true, TokenizationMode.NAME).keywordOrEmpty()){
-			case "binary":
-				type = OperatorType.BINARY;
-				break;
-			case "prefix":
-				type = OperatorType.PREFIX;
-				break;
-			case "postfix":
-				type = OperatorType.POSTFIX;
-				break;
+		if(!tokenizer.next(true, TokenizationMode.WORD).is(WORD, "as")){
+			reportError("Expected 'as'");
+			skipUntilLineBreak();
+			return;
+		}
+		switch(tokenizer.next(true, TokenizationMode.WORD).keywordOrEmpty()){
+			case "binary": type = OperatorType.BINARY; break;
+			case "prefix": type = OperatorType.PREFIX; break;
+			case "postfix": type = OperatorType.POSTFIX; break;
 			default:
 				reportError("Expected keyword; 'binary', 'prefix' or 'postfix'");
 				skipUntilLineBreak();
 				return;
 		}
-		boolean isKeyword;
-		switch(tokenizer.next(true, TokenizationMode.NAME).keywordOrEmpty()){
-			case "operator":
-				isKeyword = false;
-				break;
-			case "keyword":
-				isKeyword = true;
-				break;
-			default:
-				reportError("Expected keyword; 'operator' or 'keyword'");
-				skipUntilLineBreak();
-				return;
-		}
-
 		tokenizer.discard();
 		double priority = Double.NaN;
-		AmongToken next = tokenizer.next(true, TokenizationMode.UNEXPECTED);
+		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 		if(next.is(COLON)){
 			priority = tokenizer.next(true, TokenizationMode.VALUE)
 					.asNumber();
 			if(Double.isNaN(priority)) reportError("Expected number");
 		}else tokenizer.reset(next.is(ERROR));
-		AmongOperatorDef def = new AmongOperatorDef(name, isKeyword, type, priority);
-		OperatorRegistry.RegistrationResult result = root.operators().add(def);
+		next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
+		if(!next.is(BR)&&!next.is(EOF)){
+			reportError("Expected newline after "+(keyword ? "keyword" : "operator")+" statement");
+			skipUntilLineBreak();
+			return;
+		}
+		AmongOperatorDef operator = new AmongOperatorDef(name, keyword, type, priority);
+		OperatorRegistry.RegistrationResult result = root.operators().add(operator);
 		if(!result.isSuccess())
 			report(engine.allowInvalidOperatorRegistration ?
 							ReportType.WARN : ReportType.ERROR,
-					result.message(def), startIndex);
+					result.message(operator), startIndex);
 	}
 
-	private void undef(){
-		AmongToken next = tokenizer.next(true, TokenizationMode.WORD);
-		if(!next.isLiteral()){
-			reportError("Expected name");
-			tryToRecover(TokenizationMode.WORD);
-			return;
-		}
-		String name = next.expectLiteral();
-		next = tokenizer.next(false, TokenizationMode.WORD);
+	private void undefMacro(){
+		String name = definitionName(TokenizationMode.NAME);
+		if(name==null) return;
+		AmongToken next = tokenizer.next(false, TokenizationMode.WORD);
 		switch(next.type){
 			case BR:
 				root.removeMacro(name, MacroType.CONST);
@@ -262,26 +246,23 @@ public final class AmongParser{
 				root.removeMacro(name, MacroType.OPERATION);
 				break;
 			default:
-				if(next.is(WORD, "as")){
-					switch(tokenizer.next(true, TokenizationMode.WORD).keywordOrEmpty()){
-						case "operator":
-							root.operators().remove(name, false);
-							break;
-						case "keyword":
-							root.operators().remove(name, true);
-							break;
-						default:
-							reportError("Expected 'operator' or 'keyword'");
-							skipUntilLineBreak();
-							return;
-					}
-				}else{
-					reportError("Expected '{', '[', '(' or line break");
-					skipUntilLineBreak();
-					return;
-				}
+				reportError("Expected '{', '[', '(' or line break");
+				skipUntilLineBreak();
+				return;
 		}
-		if(!tokenizer.next(false, TokenizationMode.UNEXPECTED).is(BR)){
+		next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
+		if(!next.is(BR)&&!next.is(EOF)){
+			reportError("Expected newline after undef statement");
+			skipUntilLineBreak();
+		}
+	}
+
+	private void undefOperation(boolean keyword){
+		String name = definitionName(TokenizationMode.NAME);
+		if(name==null) return;
+		root.operators().remove(name, keyword);
+		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
+		if(!next.is(BR)&&!next.is(EOF)){
 			reportError("Expected newline after undef statement");
 			skipUntilLineBreak();
 		}
@@ -543,10 +524,10 @@ public final class AmongParser{
 		return macro(operation, operation.getName(), MacroType.OPERATION, sourcePosition);
 	}
 	private Among macro(Among target, String macroName, MacroType macroType, int sourcePosition){
-		AmongMacroDef def = root.searchMacro(macroName, macroType);
-		if(def==null) return target;
+		AmongMacroDef macro = root.searchMacro(macroName, macroType);
+		if(macro==null) return target;
 		try{
-			return def.apply(target, engine.copyMacroConstant,
+			return macro.apply(target, engine.copyMacroConstant,
 					(t, s) -> report(t, s, sourcePosition));
 		}catch(Sussy sussy){
 			return Among.value("ERROR");

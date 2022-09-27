@@ -33,7 +33,7 @@ public final class AmongToken{
 	}
 
 	public String keywordOrEmpty(){
-		return !is(TokenType.COMPLEX_PRIMITIVE)&&literal!=null ? literal : "";
+		return is(TokenType.WORD)&&literal!=null ? literal : "";
 	}
 
 	public boolean is(TokenType type){

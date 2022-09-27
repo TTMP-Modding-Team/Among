@@ -1,27 +1,26 @@
 among: BR*
-       ( "def" BR* def BR+
+       ( "macro" BR* macroDefinition BR
+       | ( "operator" | "keyword" ) BR* operatorDefinition BR
        | "undef" BR* undef BR+
        | nameable BR*
        | complexPrimitive BR* )* EOF
 
-def: word BR* ( defMacro | defOperator )
+macroDefinition: word BR*
+                 ( "{" BR* macroParam? BR* "}" BR*
+                 | "(" BR* macroParam? BR* ")" BR*
+                 | "[" BR* macroParam? BR* "]" BR* )?
+                 ":" BR* expr
+macroParam: paramName (BR* "=" BR* expr)? ( BR* "," BR* defParam? )?
 
-defMacro: ( "{" BR* defParam? BR* "}" BR*
-          | "(" BR* defParam? BR* ")" BR*
-          | "[" BR* defParam? BR* "]" BR* )?
-          ":" BR* expr
-defParam: paramName (BR* "=" BR* expr)? ( BR* "," BR* defParam? )?
+operatorDefinition: word BR* "as" BR*
+                    ( "binary" | "prefix" | "postfix" )
+                    ( ":" BR* value )?  # Parsed as decimal value
 
-defOperator: "as" BR*
-             ( "binary" | "prefix" | "postfix" ) BR*
-             ( "operator" | "keyword" ) BR*
-             ( ":" BR* value )?  # Parsed as decimal value
-
-undef: name (
-         ( "{" BR* "}"
-         | "[" BR* "]"
-         | "(" BR* ")" )?
-       | "as" BR* ( "operator" | "keyword" ))
+undef: "macro" BR* name
+       ( "{" BR* "}"
+       | "[" BR* "]"
+       | "(" BR* ")" )?
+     | ( "operator" | "keyword" ) BR* name
 
 expr: nameable | complexPrimitive | value
 
@@ -42,7 +41,7 @@ primary: nameable | name
 
 # LEXER
 
-word: regex; [^\s:,{}\[\]()]+  # used in plain keywords, such as 'def' 'as' 'operator' and such
+word: regex; [^\s:,{}\[\]()]+  # used in plain keywords, such as 'macro' 'as' 'operator' and such
 name: simpleName | complexPrimitive
 key: simpleKey | complexPrimitive
 paramName: regex; ^[\s:,{}\[\]()=]+  # kek
@@ -52,5 +51,6 @@ simpleKey: regex; [^:,{}\r\n]+
 complexPrimitive: ""\"" ( BR ( "\s"* "|" )? | ^( BR | "\"" ) )* "\""
                 | "'" ( BR ( "\s"* "|" )? | ^( BR | "'" ) )* "'"
 value: regex; ^[^"'][^,{}\[\]()\r\n]*
+number: regex; [+-]?[0-9]+(\.[0-9]+)?
 
 BR: regex; \r \n? | \n
