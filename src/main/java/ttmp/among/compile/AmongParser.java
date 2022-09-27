@@ -542,7 +542,7 @@ public final class AmongParser{
 	}
 
 	void reportWarning(String message, String... hints){
-		report(ReportType.WARN, message);
+		report(ReportType.WARN, message, hints);
 	}
 	void reportWarning(String message, int srcIndex, String... hints){
 		report(ReportType.WARN, message, srcIndex, hints);
@@ -551,7 +551,7 @@ public final class AmongParser{
 		report(ReportType.WARN, message, ex, hints);
 	}
 	void reportError(String message, String... hints){
-		report(ReportType.ERROR, message);
+		report(ReportType.ERROR, message, hints);
 	}
 	void reportError(String message, int srcIndex, String... hints){
 		report(ReportType.ERROR, message, srcIndex, hints);
