@@ -2,7 +2,7 @@ package test;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import ttmp.among.obj.AmongMacroDef;
+import ttmp.among.obj.MacroDefinition;
 import ttmp.among.obj.AmongRoot;
 import ttmp.among.util.MacroType;
 import ttmp.among.util.OperatorType;
@@ -13,13 +13,13 @@ public class CopyTest{
 	@Test
 	public void copyRoot(){
 		AmongRoot r1 = AmongRoot.empty();
-		r1.addMacro(AmongMacroDef.builder()
+		r1.addMacro(MacroDefinition.builder()
 				.signature("This is macro", MacroType.CONST)
 				.template(object()
 						.prop("P1", "1")
 						.prop("P2", "2"))
 				.build());
-		r1.addMacro(AmongMacroDef.builder()
+		r1.addMacro(MacroDefinition.builder()
 				.signature("Macro2", MacroType.OBJECT)
 				.param("p1")
 				.param("p2", value("default"))

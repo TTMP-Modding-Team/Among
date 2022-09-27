@@ -6,9 +6,9 @@ import ttmp.among.compile.Report.ReportType;
 import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
-import ttmp.among.obj.AmongMacroDef;
+import ttmp.among.obj.MacroDefinition;
 import ttmp.among.obj.AmongObject;
-import ttmp.among.obj.AmongOperatorDef;
+import ttmp.among.obj.OperatorDefinition;
 import ttmp.among.obj.AmongPrimitive;
 import ttmp.among.obj.AmongRoot;
 import ttmp.among.util.MacroParameter;
@@ -144,7 +144,7 @@ public final class AmongParser{
 			skipUntilLineBreak();
 		}
 		if(params!=null)
-			root.addMacro(new AmongMacroDef(name, type, params, expr));
+			root.addMacro(new MacroDefinition(name, type, params, expr));
 	}
 
 	@Nullable private MacroParameterList macroParam(AmongToken.TokenType closure){
@@ -217,7 +217,7 @@ public final class AmongParser{
 			skipUntilLineBreak();
 			return;
 		}
-		AmongOperatorDef operator = new AmongOperatorDef(name, keyword, type, priority);
+		OperatorDefinition operator = new OperatorDefinition(name, keyword, type, priority);
 		OperatorRegistry.RegistrationResult result = root.operators().add(operator);
 		if(!result.isSuccess())
 			report(engine.allowInvalidOperatorRegistration ?
@@ -454,7 +454,7 @@ public final class AmongParser{
 						tokenizer.discard();
 						AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
 						if(next.isOperatorOrKeyword()){
-							AmongOperatorDef op = group.get(next.expectLiteral());
+							OperatorDefinition op = group.get(next.expectLiteral());
 							if(op!=null){
 								a = operationMacro(Among.namedList(op.name(), a, operationExpression(operators, i+1, macro)), next.start);
 								continue;
@@ -470,7 +470,7 @@ public final class AmongParser{
 						tokenizer.discard();
 						AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION, macro);
 						if(next.isOperatorOrKeyword()){
-							AmongOperatorDef op = group.get(next.expectLiteral());
+							OperatorDefinition op = group.get(next.expectLiteral());
 							if(op!=null){
 								a = operationMacro(Among.namedList(op.name(), a), next.start);
 								continue;
@@ -504,7 +504,7 @@ public final class AmongParser{
 		tokenizer.discard();
 		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION, macro);
 		if(next.isOperatorOrKeyword()){
-			AmongOperatorDef op = operators.get(i).get(next.expectLiteral());
+			OperatorDefinition op = operators.get(i).get(next.expectLiteral());
 			if(op!=null) return operationMacro(Among.namedList(op.name(), prefix(operators, i, macro)), next.start);
 		}
 		tokenizer.reset();
@@ -524,7 +524,7 @@ public final class AmongParser{
 		return macro(operation, operation.getName(), MacroType.OPERATION, sourcePosition);
 	}
 	private Among macro(Among target, String macroName, MacroType macroType, int sourcePosition){
-		AmongMacroDef macro = root.searchMacro(macroName, macroType);
+		MacroDefinition macro = root.searchMacro(macroName, macroType);
 		if(macro==null) return target;
 		try{
 			return macro.apply(target, engine.copyMacroConstant,

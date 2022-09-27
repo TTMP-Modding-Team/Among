@@ -1,13 +1,13 @@
 package ttmp.among.util;
 
 import org.jetbrains.annotations.NotNull;
-import ttmp.among.obj.AmongMacroDef;
+import ttmp.among.obj.MacroDefinition;
 
 import java.util.Objects;
 
 /**
  * Signature of the macro - name and type.
- * @see AmongMacroDef
+ * @see MacroDefinition
  */
 public final class MacroSignature implements Comparable<MacroSignature>{
 	private final String name;

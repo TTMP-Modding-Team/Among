@@ -1,12 +1,12 @@
 package ttmp.among.util;
 
 import ttmp.among.obj.Among;
-import ttmp.among.obj.AmongMacroDef;
+import ttmp.among.obj.MacroDefinition;
 
 /**
  * Object representing one replacement operation.
  *
- * @see AmongMacroDef
+ * @see MacroDefinition
  */
 public final class MacroReplacement{
 	private final NodePath path;

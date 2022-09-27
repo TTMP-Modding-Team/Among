@@ -3,10 +3,10 @@ package test;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import ttmp.among.obj.Among;
-import ttmp.among.obj.AmongMacroDef;
-import ttmp.among.obj.AmongOperatorDef;
+import ttmp.among.obj.MacroDefinition;
+import ttmp.among.obj.OperatorDefinition;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.util.AmongMacroDefBuilder;
+import ttmp.among.util.MacroDefinitionBuilder;
 import ttmp.among.util.MacroType;
 import ttmp.among.util.OperatorPriorities;
 import ttmp.among.util.OperatorRegistry;
@@ -60,24 +60,24 @@ public class RecompileTests{
 				value("Amogus\"); DROP TABLE Everything;/*"),
 				value("////////// lol")));
 
-		list.add(recompileTest("Macro 1", AmongMacroDef.builder()
+		list.add(recompileTest("Macro 1", MacroDefinition.builder()
 				.signature("macro", MacroType.CONST).template(object()
 						.prop("Hello", "Macro!"))));
 		list.add(recompileTest("Macro 2",
-				AmongMacroDef.builder().signature("macro1", MacroType.LIST)
+				MacroDefinition.builder().signature("macro1", MacroType.LIST)
 						.template(value("Macro with zero parameters")),
-				AmongMacroDef.builder().signature("macro2", MacroType.LIST)
+				MacroDefinition.builder().signature("macro2", MacroType.LIST)
 						.param("1")
 						.template(list(value("Macro with 1 parameter"), object()
 								.prop("param 1", value("$1").paramRef())
 						)),
-				AmongMacroDef.builder().signature("macro3", MacroType.LIST)
+				MacroDefinition.builder().signature("macro3", MacroType.LIST)
 						.param("1").param("2", value("default"))
 						.template(list(value("Macro with 2 parameters"), object()
 								.prop("param 1", value("$1").paramRef())
 								.prop("param 2", value("$2").paramRef())
 						)),
-				AmongMacroDef.builder().signature("macro4", MacroType.LIST)
+				MacroDefinition.builder().signature("macro4", MacroType.LIST)
 						.param("1").param("2", value("default")).param("3", namedList("default 2", 1, 2, 3))
 						.template(list(value("Macro with 3 parameters"), object()
 								.prop("param 1", value("$1").paramRef())
@@ -85,11 +85,11 @@ public class RecompileTests{
 								.prop("param 3", value("$3").paramRef())
 						))));
 
-		list.add(recompileTest("Operator 1", new AmongOperatorDef("yo", true, OperatorType.PREFIX)));
+		list.add(recompileTest("Operator 1", new OperatorDefinition("yo", true, OperatorType.PREFIX)));
 		list.add(recompileTest("Operator 2",
-				new AmongOperatorDef("yo", true, OperatorType.PREFIX),
-				new AmongOperatorDef("***", false, OperatorType.BINARY),
-				new AmongOperatorDef("..", false, OperatorType.BINARY, OperatorPriorities.BINARY_ACCESS)
+				new OperatorDefinition("yo", true, OperatorType.PREFIX),
+				new OperatorDefinition("***", false, OperatorType.BINARY),
+				new OperatorDefinition("..", false, OperatorType.BINARY, OperatorPriorities.BINARY_ACCESS)
 		));
 
 		return list;
@@ -106,11 +106,11 @@ public class RecompileTests{
 		});
 	}
 
-	private static DynamicTest recompileTest(String name, AmongMacroDefBuilder... original){
+	private static DynamicTest recompileTest(String name, MacroDefinitionBuilder... original){
 		return DynamicTest.dynamicTest(name, () -> {
 			AmongRoot root = AmongRoot.empty();
-			for(AmongMacroDefBuilder v : original){
-				AmongMacroDef orig = root.addMacro(v.build());
+			for(MacroDefinitionBuilder v : original){
+				MacroDefinition orig = root.addMacro(v.build());
 				if(orig!=null)
 					throw new RuntimeException("Macro definition '"+v+"' is duplicate of '"+orig+"'");
 			}
@@ -120,10 +120,10 @@ public class RecompileTests{
 		});
 	}
 
-	private static DynamicTest recompileTest(String name, AmongOperatorDef... original){
+	private static DynamicTest recompileTest(String name, OperatorDefinition... original){
 		return DynamicTest.dynamicTest(name, () -> {
 			AmongRoot root = AmongRoot.empty();
-			for(AmongOperatorDef v : original){
+			for(OperatorDefinition v : original){
 				OperatorRegistry.RegistrationResult r = root.operators().add(v);
 				if(!r.isSuccess())
 					throw new RuntimeException("Cannot register operator '"+v+"': "+r.message(v));

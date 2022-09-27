@@ -2,7 +2,7 @@ package ttmp.among.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.obj.AmongOperatorDef;
+import ttmp.among.obj.OperatorDefinition;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,7 +21,7 @@ import static ttmp.among.util.OperatorType.BINARY;
 import static ttmp.among.util.OperatorType.POSTFIX;
 
 /**
- * Collection of {@link AmongOperatorDef}s organized in various format to ensure faster access during compilation.<br>
+ * Collection of {@link OperatorDefinition}s organized in various format to ensure faster access during compilation.<br>
  * Just to be clear, absolutely everything in this class is not thread safe.
  */
 public final class OperatorRegistry{
@@ -51,17 +51,17 @@ public final class OperatorRegistry{
 		return addOperator(name, type, Double.NaN);
 	}
 	public RegistrationResult addOperator(String name, OperatorType type, double priority){
-		return add(new AmongOperatorDef(name, false, type, priority));
+		return add(new OperatorDefinition(name, false, type, priority));
 	}
 
 	public RegistrationResult addKeyword(String name, OperatorType type){
 		return addKeyword(name, type, Double.NaN);
 	}
 	public RegistrationResult addKeyword(String name, OperatorType type, double priority){
-		return add(new AmongOperatorDef(name, false, type, priority));
+		return add(new OperatorDefinition(name, false, type, priority));
 	}
 
-	public RegistrationResult add(AmongOperatorDef definition){
+	public RegistrationResult add(OperatorDefinition definition){
 		if(isPriorityOccupiedByWrongType(definition))
 			return RegistrationResult.PRIORITY_OCCUPIED_BY_DIFFERENT_TYPE;
 		NameGroup o = operators.get(definition.name());
@@ -93,24 +93,24 @@ public final class OperatorRegistry{
 				operators.remove(op);
 				if(operators.isEmpty()) m.remove(op.codePointAt(0));
 			}
-			for(AmongOperatorDef def : op.defByType.values()){
+			for(OperatorDefinition def : op.defByType.values()){
 				removeFromParsingOrder(def);
 			}
 		}
 	}
 
-	private boolean isPriorityOccupiedByWrongType(AmongOperatorDef definition){
+	private boolean isPriorityOccupiedByWrongType(OperatorDefinition definition){
 		PriorityGroup g = this.priorityGroup.get(definition.priority());
 		return g!=null&&g.type()!=definition.type();
 	}
-	private void addToPriorityGroup(AmongOperatorDef definition){
+	private void addToPriorityGroup(OperatorDefinition definition){
 		PriorityGroup g = this.priorityGroup.get(definition.priority());
 		if(g==null) this.priorityGroup.put(definition.priority(), new PriorityGroup(definition));
 		else g.add(definition);
 		priorityGroupList = null;
 	}
 
-	private void removeFromParsingOrder(AmongOperatorDef def){
+	private void removeFromParsingOrder(OperatorDefinition def){
 		PriorityGroup g = this.priorityGroup.get(def.priority());
 		if(g!=null){
 			g.remove(def);
@@ -140,13 +140,13 @@ public final class OperatorRegistry{
 		return priorityGroupList;
 	}
 
-	public void forEachOperatorAndKeyword(Consumer<AmongOperatorDef> consumer){
+	public void forEachOperatorAndKeyword(Consumer<OperatorDefinition> consumer){
 		for(NameGroup op : operators.values())
 			op.defByType.values().forEach(consumer);
 	}
 
-	public Set<AmongOperatorDef> allOperatorsAndKeywords(){
-		Set<AmongOperatorDef> set = new HashSet<>();
+	public Set<OperatorDefinition> allOperatorsAndKeywords(){
+		Set<OperatorDefinition> set = new HashSet<>();
 		for(NameGroup op : operators.values())
 			set.addAll(op.defByType.values());
 		return set;
@@ -160,7 +160,7 @@ public final class OperatorRegistry{
 	}
 
 	/**
-	 * Result of {@link OperatorRegistry#add(AmongOperatorDef)}. Values other than {@link RegistrationResult#OK}
+	 * Result of {@link OperatorRegistry#add(OperatorDefinition)}. Values other than {@link RegistrationResult#OK}
 	 * represents different reasons for failure.
 	 */
 	public enum RegistrationResult{
@@ -191,7 +191,7 @@ public final class OperatorRegistry{
 			return this==OK;
 		}
 
-		public String message(AmongOperatorDef def){
+		public String message(OperatorDefinition def){
 			switch(this){
 				case BOTH_OPERATOR_AND_KEYWORD: return "Word '"+def.name()+"' is defined as both operator and keyword";
 				case DUPLICATE: return (def.isKeyword() ? "Keyword '" : "Operator '")+def.name()+"' is defined twice";
@@ -209,9 +209,9 @@ public final class OperatorRegistry{
 		private final String name;
 		private final int[] codePoints;
 		private final boolean isKeyword;
-		private final EnumMap<OperatorType, AmongOperatorDef> defByType = new EnumMap<>(OperatorType.class);
+		private final EnumMap<OperatorType, OperatorDefinition> defByType = new EnumMap<>(OperatorType.class);
 
-		public NameGroup(AmongOperatorDef initial){
+		public NameGroup(OperatorDefinition initial){
 			this.name = initial.name();
 			this.isKeyword = initial.isKeyword();
 			this.codePoints = name.codePoints().toArray();
@@ -232,11 +232,11 @@ public final class OperatorRegistry{
 			return codePoints[index];
 		}
 
-		public Collection<AmongOperatorDef> definitions(){
+		public Collection<OperatorDefinition> definitions(){
 			return Collections.unmodifiableCollection(defByType.values());
 		}
 
-		private RegistrationResult add(AmongOperatorDef def){
+		private RegistrationResult add(OperatorDefinition def){
 			if(this.isKeyword!=def.isKeyword())
 				return RegistrationResult.BOTH_OPERATOR_AND_KEYWORD;
 			if(defByType.containsKey(def.type()))
@@ -277,15 +277,15 @@ public final class OperatorRegistry{
 	public static final class PriorityGroup implements Comparable<PriorityGroup>{
 		private final double priority;
 		private final OperatorType type;
-		private final Map<String, AmongOperatorDef> operators = new HashMap<>();
+		private final Map<String, OperatorDefinition> operators = new HashMap<>();
 
-		public PriorityGroup(AmongOperatorDef initial){
+		public PriorityGroup(OperatorDefinition initial){
 			this.priority = initial.priority();
 			this.type = initial.type();
 			add(initial);
 		}
 
-		private void add(AmongOperatorDef def){
+		private void add(OperatorDefinition def){
 			if(Double.compare(this.priority, def.priority())!=0)
 				throw new IllegalStateException("Trying to register operator with wrong priority to group");
 			if(this.type!=def.type())
@@ -294,7 +294,7 @@ public final class OperatorRegistry{
 				throw new IllegalStateException("Duplicated registration of operator '"+def.name()+"'");
 		}
 
-		private void remove(AmongOperatorDef def){
+		private void remove(OperatorDefinition def){
 			if(Double.compare(this.priority, def.priority())==0&&this.type==def.type())
 				operators.remove(def.name());
 		}
@@ -310,7 +310,7 @@ public final class OperatorRegistry{
 			return operators.isEmpty();
 		}
 
-		@Nullable public AmongOperatorDef get(String name){
+		@Nullable public OperatorDefinition get(String name){
 			return operators.get(name);
 		}
 

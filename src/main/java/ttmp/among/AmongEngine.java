@@ -4,8 +4,8 @@ import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.AmongParser;
 import ttmp.among.compile.CompileResult;
 import ttmp.among.obj.Among;
-import ttmp.among.obj.AmongMacroDef;
-import ttmp.among.obj.AmongOperatorDef;
+import ttmp.among.obj.MacroDefinition;
+import ttmp.among.obj.OperatorDefinition;
 import ttmp.among.obj.AmongRoot;
 import ttmp.among.util.OperatorRegistry;
 import ttmp.among.util.Source;
@@ -61,7 +61,7 @@ public final class AmongEngine{
 	 * If enabled, invalid registration of operators will not produce compilation error.
 	 * Instead, it will only produce warning.
 	 *
-	 * @see OperatorRegistry#add(AmongOperatorDef)
+	 * @see OperatorRegistry#add(OperatorDefinition)
 	 */
 	public boolean allowInvalidOperatorRegistration = false;
 
@@ -72,7 +72,7 @@ public final class AmongEngine{
 	 * behavior, due to the possibility of instance being shared across multiple places.<br>
 	 * It is advised to disable this option only if the result is not expected to be modified afterwards.
 	 *
-	 * @see AmongMacroDef#apply(Among, boolean)
+	 * @see MacroDefinition#apply(Among, boolean)
 	 */
 	public boolean copyMacroConstant = true;
 

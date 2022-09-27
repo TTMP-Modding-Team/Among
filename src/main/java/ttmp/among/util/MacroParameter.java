@@ -3,13 +3,13 @@ package ttmp.among.util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.obj.Among;
-import ttmp.among.obj.AmongMacroDef;
+import ttmp.among.obj.MacroDefinition;
 
 import java.util.Objects;
 
 /**
- * Parameter of the {@link AmongMacroDef} - name, and default value(optional).
- * @see AmongMacroDef
+ * Parameter of the {@link MacroDefinition} - name, and default value(optional).
+ * @see MacroDefinition
  * @see MacroParameterList
  */
 public final class MacroParameter implements Comparable<MacroParameter>, ToPrettyString{

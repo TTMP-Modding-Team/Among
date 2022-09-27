@@ -3,35 +3,35 @@ package ttmp.among.util;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
-import ttmp.among.obj.AmongMacroDef;
+import ttmp.among.obj.MacroDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Builder for {@link AmongMacroDef}.
+ * Builder for {@link MacroDefinition}.
  */
-public class AmongMacroDefBuilder{
+public class MacroDefinitionBuilder{
 	@Nullable private String name;
 	@Nullable private MacroType type;
 	private final List<MacroParameter> parameters = new ArrayList<>();
 	@Nullable private Among template;
 
-	public AmongMacroDefBuilder signature(String name, MacroType type){
+	public MacroDefinitionBuilder signature(String name, MacroType type){
 		this.name = name;
 		this.type = type;
 		return this;
 	}
 
-	public AmongMacroDefBuilder param(String paramName){
+	public MacroDefinitionBuilder param(String paramName){
 		return param(paramName, null);
 	}
-	public AmongMacroDefBuilder param(String paramName, @Nullable Among defaultValue){
+	public MacroDefinitionBuilder param(String paramName, @Nullable Among defaultValue){
 		this.parameters.add(new MacroParameter(paramName, defaultValue));
 		return this;
 	}
 
-	public AmongMacroDefBuilder template(Among template){
+	public MacroDefinitionBuilder template(Among template){
 		this.template = template;
 		return this;
 	}
@@ -42,10 +42,10 @@ public class AmongMacroDefBuilder{
 	 * @return New macro definition
 	 * @throws Sussy If one of the arguments are unspecified or invalid
 	 */
-	public AmongMacroDef build(){
+	public MacroDefinition build(){
 		if(name==null) throw new Sussy("Name not defined");
 		if(type==null) throw new Sussy("Type not defined");
 		if(template==null) throw new Sussy("Object not defined");
-		return new AmongMacroDef(name, type, MacroParameterList.of(parameters), template);
+		return new MacroDefinition(name, type, MacroParameterList.of(parameters), template);
 	}
 }

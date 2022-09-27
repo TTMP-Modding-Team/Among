@@ -1,7 +1,7 @@
 package ttmp.among.util;
 
 import ttmp.among.exception.Sussy;
-import ttmp.among.obj.AmongMacroDef;
+import ttmp.among.obj.MacroDefinition;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 /**
  * Immutable list of {@link MacroParameter}s. Provides both search-by-index and search-by-name functionality.
  *
- * @see AmongMacroDef
+ * @see MacroDefinition
  * @see MacroParameter
  */
 public final class MacroParameterList implements ToPrettyString{

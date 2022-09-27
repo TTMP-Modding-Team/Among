@@ -3,7 +3,7 @@ package ttmp.among.obj;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.Report;
 import ttmp.among.exception.Sussy;
-import ttmp.among.util.AmongMacroDefBuilder;
+import ttmp.among.util.MacroDefinitionBuilder;
 import ttmp.among.util.AmongUs;
 import ttmp.among.util.AmongWalker;
 import ttmp.among.util.MacroParameter;
@@ -29,9 +29,9 @@ import java.util.function.BiConsumer;
  * macro macro() : "Hello!"
  * </pre>
  */
-public final class AmongMacroDef implements ToPrettyString{
-	public static AmongMacroDefBuilder builder(){
-		return new AmongMacroDefBuilder();
+public final class MacroDefinition implements ToPrettyString{
+	public static MacroDefinitionBuilder builder(){
+		return new MacroDefinitionBuilder();
 	}
 
 	private final MacroSignature signature;
@@ -49,7 +49,7 @@ public final class AmongMacroDef implements ToPrettyString{
 	 * @throws NullPointerException If either of the parameters are {@code null}
 	 * @throws Sussy                If one of the arguments are invalid
 	 */
-	public AmongMacroDef(String name, MacroType type, MacroParameterList params, Among template){
+	public MacroDefinition(String name, MacroType type, MacroParameterList params, Among template){
 		this(new MacroSignature(name, type), params, template);
 	}
 	/**
@@ -61,7 +61,7 @@ public final class AmongMacroDef implements ToPrettyString{
 	 * @throws NullPointerException If either of the parameters are {@code null}
 	 * @throws Sussy                If one of the arguments are invalid
 	 */
-	public AmongMacroDef(MacroSignature sig, MacroParameterList params, Among template){
+	public MacroDefinition(MacroSignature sig, MacroParameterList params, Among template){
 		switch(sig.type()){
 			case CONST:
 				if(!params.isEmpty())
@@ -112,7 +112,7 @@ public final class AmongMacroDef implements ToPrettyString{
 	 * @return Among object with macro applied
 	 * @throws NullPointerException If {@code argument == null} and {@code isConstant() == false}
 	 * @throws Sussy                If argument provided is invalid
-	 * @see AmongMacroDef#apply(Among, boolean)
+	 * @see MacroDefinition#apply(Among, boolean)
 	 */
 	public Among apply(Among argument){
 		return apply(argument, true);
@@ -132,7 +132,7 @@ public final class AmongMacroDef implements ToPrettyString{
 	 * @return Template object itself if {@code isConstant() == true && copyConstant == false}; deep copy of it otherwise
 	 * @throws NullPointerException If {@code argument == null} and {@code isConstant() == false}
 	 * @throws Sussy                If argument provided is invalid
-	 * @see AmongMacroDef#apply(Among, boolean, BiConsumer)
+	 * @see MacroDefinition#apply(Among, boolean, BiConsumer)
 	 */
 	public Among apply(Among argument, boolean copyConstant){
 		return apply(argument, copyConstant, null);
@@ -154,7 +154,7 @@ public final class AmongMacroDef implements ToPrettyString{
 	 * @return Template object itself if {@code isConstant() == true && copyConstant == false}; deep copy of it otherwise
 	 * @throws NullPointerException If {@code argument == null} and {@code isConstant() == false}
 	 * @throws Sussy                If argument provided is invalid
-	 * @see AmongMacroDef#apply(Among, boolean, BiConsumer)
+	 * @see MacroDefinition#apply(Among, boolean, BiConsumer)
 	 */
 	public Among apply(Among argument, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
 		if(reportHandler!=null) analyzeAndReport(argument, reportHandler);
@@ -236,7 +236,7 @@ public final class AmongMacroDef implements ToPrettyString{
 	@Override public boolean equals(Object o){
 		if(this==o) return true;
 		if(o==null||getClass()!=o.getClass()) return false;
-		AmongMacroDef that = (AmongMacroDef)o;
+		MacroDefinition that = (MacroDefinition)o;
 		return signature.equals(that.signature)&&parameter.equals(that.parameter)&&template.equals(that.template);
 	}
 	@Override public int hashCode(){

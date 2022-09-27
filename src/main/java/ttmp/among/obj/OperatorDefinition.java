@@ -13,7 +13,7 @@ import java.util.Objects;
  * keyword is as binary
  * </pre>
  */
-public final class AmongOperatorDef{
+public final class OperatorDefinition{
 	private static final DecimalFormat FORMAT = new DecimalFormat("0.#####");
 
 	private final String name;
@@ -28,9 +28,9 @@ public final class AmongOperatorDef{
 	 * @param isKeyword Whether this defines keyword or operator
 	 * @param type      Type of the operator
 	 * @throws NullPointerException if {@code name == null} or {@code type == null}
-	 * @see AmongOperatorDef#AmongOperatorDef(String, boolean, OperatorType, double)
+	 * @see OperatorDefinition#OperatorDefinition(String, boolean, OperatorType, double)
 	 */
-	public AmongOperatorDef(String name, boolean isKeyword, OperatorType type){
+	public OperatorDefinition(String name, boolean isKeyword, OperatorType type){
 		this(name, isKeyword, type, Double.NaN);
 	}
 	/**
@@ -42,7 +42,7 @@ public final class AmongOperatorDef{
 	 * @param priority  Priority of the operator; if {@code NaN} is supplied, it will be replaced with default priority.
 	 * @throws NullPointerException if {@code name == null} or {@code type == null}
 	 */
-	public AmongOperatorDef(String name, boolean isKeyword, OperatorType type, double priority){
+	public OperatorDefinition(String name, boolean isKeyword, OperatorType type, double priority){
 		this.name = Objects.requireNonNull(name);
 		this.isKeyword = isKeyword;
 		this.type = Objects.requireNonNull(type);
@@ -65,7 +65,7 @@ public final class AmongOperatorDef{
 	@Override public boolean equals(Object o){
 		if(this==o) return true;
 		if(o==null||getClass()!=o.getClass()) return false;
-		AmongOperatorDef that = (AmongOperatorDef)o;
+		OperatorDefinition that = (OperatorDefinition)o;
 		return isKeyword()==that.isKeyword()&&
 				Double.compare(that.priority, priority)==0&&
 				name.equals(that.name)&&

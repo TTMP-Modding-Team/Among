@@ -25,7 +25,7 @@ public abstract class Among implements ToPrettyString{
 	 *     <li>For primitive value, the value itself is considered as parameter reference.</li>
 	 *     <li>For named instances, the name is considered as parameter reference.</li>
 	 * </ul>
-	 * This value does not change any behavior of this object; it is simply a flag used in {@link AmongMacroDef}.
+	 * This value does not change any behavior of this object; it is simply a flag used in {@link MacroDefinition}.
 	 * Additionally, not all the parameter reference are valid.
 	 *
 	 * @return This
@@ -42,7 +42,7 @@ public abstract class Among implements ToPrettyString{
 	 *     <li>For primitive value, the value itself is considered as parameter reference.</li>
 	 *     <li>For named instances, the name is considered as parameter reference.</li>
 	 * </ul>
-	 * This value does not change any behavior of this object; it is simply a flag used in {@link AmongMacroDef}.
+	 * This value does not change any behavior of this object; it is simply a flag used in {@link MacroDefinition}.
 	 * Additionally, not all the parameter reference are valid.
 	 *
 	 * @return Whether this object is a reference to macro parameter
@@ -57,7 +57,7 @@ public abstract class Among implements ToPrettyString{
 	 *     <li>For primitive value, the value itself is considered as parameter reference.</li>
 	 *     <li>For named instances, the name is considered as parameter reference.</li>
 	 * </ul>
-	 * This value does not change any behavior of this object; it is simply a flag used in {@link AmongMacroDef}.
+	 * This value does not change any behavior of this object; it is simply a flag used in {@link MacroDefinition}.
 	 * Additionally, not all the parameter reference are valid.
 	 *
 	 * @param paramRef Whether this object is a reference to macro parameter

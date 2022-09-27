@@ -2,7 +2,7 @@ package ttmp.among.compile;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.exception.Sussy;
-import ttmp.among.obj.AmongOperatorDef;
+import ttmp.among.obj.OperatorDefinition;
 
 import java.util.Objects;
 
@@ -65,7 +65,7 @@ public final class AmongToken{
 		return is(TokenType.OPERATOR)||is(TokenType.KEYWORD);
 	}
 
-	public boolean is(AmongOperatorDef operator){
+	public boolean is(OperatorDefinition operator){
 		return isOperatorOrKeyword()&&expectLiteral().equals(operator.name());
 	}
 

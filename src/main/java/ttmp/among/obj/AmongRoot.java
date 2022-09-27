@@ -67,7 +67,7 @@ public final class AmongRoot implements ToPrettyString{
 		return root;
 	}
 
-	private final Map<MacroSignature, AmongMacroDef> macros;
+	private final Map<MacroSignature, MacroDefinition> macros;
 	private final OperatorRegistry operators;
 	private final List<Among> objects;
 
@@ -82,22 +82,22 @@ public final class AmongRoot implements ToPrettyString{
 		this.objects = new ArrayList<>(copyFrom.objects);
 	}
 
-	public Map<MacroSignature, AmongMacroDef> macros(){
+	public Map<MacroSignature, MacroDefinition> macros(){
 		return Collections.unmodifiableMap(macros);
 	}
-	@Nullable public AmongMacroDef searchMacro(String name, MacroType type){
+	@Nullable public MacroDefinition searchMacro(String name, MacroType type){
 		return searchMacro(new MacroSignature(name, type));
 	}
-	@Nullable public AmongMacroDef searchMacro(MacroSignature signature){
+	@Nullable public MacroDefinition searchMacro(MacroSignature signature){
 		return macros.get(signature);
 	}
-	@Nullable public AmongMacroDef addMacro(AmongMacroDef def){
+	@Nullable public MacroDefinition addMacro(MacroDefinition def){
 		return macros.put(def.signature(), def);
 	}
-	@Nullable public AmongMacroDef removeMacro(String name, MacroType type){
+	@Nullable public MacroDefinition removeMacro(String name, MacroType type){
 		return removeMacro(new MacroSignature(name, type));
 	}
-	@Nullable public AmongMacroDef removeMacro(MacroSignature signature){
+	@Nullable public MacroDefinition removeMacro(MacroSignature signature){
 		return macros.remove(signature);
 	}
 	public void clearMacros(){
@@ -276,7 +276,7 @@ public final class AmongRoot implements ToPrettyString{
 	}
 	private void definitionsToPrettyString(StringBuilder stb, int indents, String indent){
 		List<String> lines = new ArrayList<>();
-		for(AmongMacroDef def : macros.values())
+		for(MacroDefinition def : macros.values())
 			lines.add(def.toPrettyString(indents, indent));
 		operators.forEachOperatorAndKeyword(def -> lines.add(def.toString()));
 		boolean first = true;
