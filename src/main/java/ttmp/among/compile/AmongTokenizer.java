@@ -6,14 +6,13 @@ import ttmp.among.compile.AmongToken.TokenType;
 import ttmp.among.compile.Report.ReportType;
 import ttmp.among.obj.AmongRoot;
 import ttmp.among.operator.OperatorRegistry;
-import ttmp.among.util.Source;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import static ttmp.among.util.Source.EOF;
+import static ttmp.among.compile.Source.EOF;
 
 /**
  * Object responsible for converting raw source strings into list of {@link AmongToken}s.<br>

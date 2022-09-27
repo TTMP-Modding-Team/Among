@@ -2,7 +2,6 @@ package ttmp.among.compile;
 
 import ttmp.among.exception.SussyCompile;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.util.Source;
 
 import java.util.ArrayList;
 import java.util.Collections;

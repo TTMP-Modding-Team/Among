@@ -11,7 +11,7 @@ import ttmp.among.util.DefaultInstanceProvider;
 import ttmp.among.util.ErrorHandling;
 import ttmp.among.operator.OperatorRegistry;
 import ttmp.among.util.Provider;
-import ttmp.among.util.Source;
+import ttmp.among.compile.Source;
 
 import java.util.ArrayList;
 import java.util.HashMap;

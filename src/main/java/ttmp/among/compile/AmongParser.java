@@ -16,7 +16,6 @@ import ttmp.among.macro.MacroParameterList;
 import ttmp.among.macro.MacroType;
 import ttmp.among.operator.OperatorRegistry;
 import ttmp.among.operator.OperatorType;
-import ttmp.among.util.Source;
 
 import java.util.ArrayList;
 import java.util.HashSet;

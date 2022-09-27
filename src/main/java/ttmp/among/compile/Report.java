@@ -2,7 +2,6 @@ package ttmp.among.compile;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.util.LnCol;
-import ttmp.among.util.Source;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -6,7 +6,7 @@ import ttmp.among.exception.SussyCast;
 import ttmp.among.macro.MacroDefinition;
 import ttmp.among.util.AmongWalker;
 import ttmp.among.util.NodePath;
-import ttmp.among.util.Source;
+import ttmp.among.compile.Source;
 import ttmp.among.util.ToPrettyString;
 
 /**
