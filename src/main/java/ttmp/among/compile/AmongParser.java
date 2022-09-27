@@ -75,6 +75,7 @@ public final class AmongParser{
 						skipUntilLineBreak();
 						continue;
 				}
+				case "use": use(); continue;
 			}
 			tokenizer.reset(next.isSimpleLiteral());
 			Among a = nameable(TokenizationMode.NAME, false);
@@ -275,6 +276,29 @@ public final class AmongParser{
 		}
 	}
 
+	private void use(){
+		tokenizer.discard();
+		AmongToken next = tokenizer.next(false, TokenizationMode.VALUE);
+		if(!next.isLiteral()){
+			reportError("Expected path");
+			skipUntilLineBreak();
+			return;
+		}
+		String path = next.expectLiteral();
+		AmongRoot imported = engine.getOrReadFrom(path);
+		if(imported==null){
+			reportError("Invalid use statement: Cannot resolve object from path '"+path+"'");
+		}else{
+			for(MacroDefinition macro : imported.macros().values()) root.addMacro(macro);
+			imported.operators().forEachOperatorAndKeyword(root.operators()::add); // TODO log failure
+		}
+		next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
+		if(!next.is(BR)&&!next.is(EOF)){
+			reportError("Expected newline after undef statement");
+			skipUntilLineBreak();
+		}
+	}
+
 	private void expectNext(AmongToken.TokenType type){
 		if(!tokenizer.next(true, TokenizationMode.UNEXPECTED).is(type)){
 			reportError("Expected "+type);
@@ -439,6 +463,7 @@ public final class AmongParser{
 			}
 			tokenizer.reset();
 			list.add(operationExpression(root.operators().priorityGroup(), 0, macro));
+			tokenizer.discard();
 			switch(tokenizer.next(true, TokenizationMode.OPERATION, macro).type){
 				case COMMA: continue;
 				case EOF: reportError("Unterminated operation");

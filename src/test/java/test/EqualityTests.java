@@ -58,7 +58,7 @@ public class EqualityTests{
 				namedList("areYouMacro"),
 				namedList("!!", "a", "b"),
 				namedList("!!", namedList("!!", "a"), "b"),
-				list(namedList("!", namedList("!", "a")), namedList("!", namedList("!", "b")))));
+				list("!!", "!!")));
 		list.add(simpleEqualityTest("unicodeTest",
 				value("⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n"+
 						"⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠛⠛⠛⠛⠛⠛⢛⣿⠿⠟⠛⠛⠛⠛⠛⠛⠿⠿⣿⣟⠛⠛⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠿⣛\n"+

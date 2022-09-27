@@ -4,16 +4,25 @@ import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.AmongParser;
 import ttmp.among.compile.CompileResult;
 import ttmp.among.obj.Among;
+import ttmp.among.obj.AmongRoot;
 import ttmp.among.obj.MacroDefinition;
 import ttmp.among.obj.OperatorDefinition;
-import ttmp.among.obj.AmongRoot;
+import ttmp.among.util.DefaultInstanceProvider;
+import ttmp.among.util.ErrorHandling;
 import ttmp.among.util.OperatorRegistry;
+import ttmp.among.util.Provider;
 import ttmp.among.util.Source;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Absolutely Mental Object Notation. (G is silent (that's how acronyms work right?))<br>
  */
-public final class AmongEngine{
+public class AmongEngine{
 	/**
 	 * If enabled, any single-element, unnamed operations will be 'collapsed'; that is, being replaced with its child
 	 * element. Snipped below demonstrates compilation result with and without the option.
@@ -89,14 +98,45 @@ public final class AmongEngine{
 	 */
 	public int invalidUnicodeHandling = ErrorHandling.ERROR;
 
+	private final List<Provider<Source>> sourceProviders = new ArrayList<>();
+	private final List<Provider<AmongRoot>> instanceProviders = new ArrayList<>();
+	private final Map<String, AmongRoot> pathByInstance = new HashMap<>();
+
+	{
+		instanceProviders.add(DefaultInstanceProvider.instance());
+	}
+
 	/**
-	 * Reads and parses the source into newly created {@link AmongRoot}.
+	 * Add new source provider to this root. Source providers are searched consecutively with registration order, from
+	 * oldest to newest.
+	 *
+	 * @param sourceProvider The source provider to be registered
+	 * @throws NullPointerException If {@code sourceProvider == null}
+	 */
+	public final void addSourceProvider(Provider<Source> sourceProvider){
+		sourceProviders.add(Objects.requireNonNull(sourceProvider));
+	}
+
+	/**
+	 * Add new instance provider to this root. Instance providers are searched consecutively with registration order,
+	 * from oldest to newest.
+	 *
+	 * @param instanceProvider The instance provider to be registered
+	 * @throws NullPointerException If {@code sourceProvider == null}
+	 */
+	public final void addInstanceProvider(Provider<AmongRoot> instanceProvider){
+		instanceProviders.add(Objects.requireNonNull(instanceProvider));
+	}
+
+	/**
+	 * Reads and parses the source into newly created {@link AmongRoot}. The instance read will not be correlated to any
+	 * path.
 	 *
 	 * @param source Source to be read from
 	 * @return Result with new root containing objects parsed from {@code source}
 	 * @see AmongEngine#read(Source, AmongRoot)
 	 */
-	public CompileResult read(Source source){
+	public final CompileResult read(Source source){
 		return read(source, null);
 	}
 
@@ -107,45 +147,103 @@ public final class AmongEngine{
 	 * @param root   Root to be used
 	 * @return Result with {@code root} (or new root if it was {@code null}) containing objects parsed from {@code source}
 	 */
-	public CompileResult read(Source source, @Nullable AmongRoot root){
+	public final CompileResult read(Source source, @Nullable AmongRoot root){
 		return new AmongParser(source, this,
-				root==null ? AmongRoot.withDefaultOperators() : root)
+				root==null ? AmongRoot.empty() : root)
 				.parse();
 	}
 
 	/**
-	 * Specifies error handling mode for various invalid inputs.
-	 * <table>
-	 *   <tr>
-	 *     <td>Value</td><td>Behavior</td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td>{@link ErrorHandling#ERROR}</td> <td>All invalid inputs will be reported as compilation errors.</td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td>{@link ErrorHandling#WARN}</td> <td>All invalid inputs will be reported as warnings.</td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td>{@link ErrorHandling#IGNORE}</td> <td>All invalid inputs will be ignored.</td>
-	 *   </tr>
-	 * </table>
-	 * <br>
-	 * This value does not modify the way invalid inputs are being read; it will produce identical results regardless
-	 * of the mode used.<br>
-	 * If any other value is provided, the default value will be used; see the individual use cases for details.
+	 * Get an instance of {@link AmongRoot} correlated to specific path. If the instance was not read yet, the engine
+	 * will try to resolve the instance using instance providers, then the source - which will be read with {@link
+	 * AmongEngine#read(Source)}. The resulting object will be automatically correlated to given path.<br>
+	 * If neither instance nor source cannot be resolved, {@code null} will be returned. If the compilation result
+	 * returned by {@link AmongEngine#read(Source)} contains error, {@code null} will be returned. Following calls in
+	 * the future with identical path will yield {@code null} without an attempt to resolve the instance or source
+	 * again.<br>
+	 * Note that modifying the returned root might produce unwanted behavior.
+	 *
+	 * @param path Path of the instance
+	 * @return Instance of {@link AmongRoot} correlated to the path, or {@code null} if the search failed
+	 * @throws NullPointerException If {@code path == null}
 	 */
-	public interface ErrorHandling{
-		/**
-		 * All invalid inputs will be reported as compilation errors.
-		 */
-		int ERROR = 0;
-		/**
-		 * All invalid inputs will be reported as warnings.
-		 */
-		int WARN = 1;
-		/**
-		 * All invalid inputs will be ignored.
-		 */
-		int IGNORE = 2;
+	@Nullable public final AmongRoot getOrReadFrom(String path){
+		return pathByInstance.computeIfAbsent(path, this::resolve);
+	}
+
+	/**
+	 * Try to resolve an instance of {@link AmongRoot} with given path, first using instance providers, then the source
+	 * - which will be read with {@link AmongEngine#read(Source)}. If succeeded, the instance will be correlated to
+	 * the path. If there was already an instance correlated, it will be overwritten.<br>
+	 * If neither instance nor source cannot be resolved, {@code null} will be returned. If the compilation result
+	 * returned by {@link AmongEngine#read(Source)} contains error, {@code null} will be returned. Following calls of
+	 * {@link AmongEngine#getOrReadFrom(String)} in
+	 * the future with identical path will yield {@code null} without an attempt to resolve the instance or source
+	 * again.<br>
+	 * Note that modifying the returned root might produce unwanted behavior.
+	 *
+	 * @param path Path of the instance
+	 * @return Instance of {@link AmongRoot} correlated to the path, or {@code null} if the search failed
+	 * @throws NullPointerException If {@code path == null}
+	 */
+	@Nullable public final AmongRoot readFrom(String path){
+		AmongRoot r = resolve(path);
+		pathByInstance.put(path, r);
+		return r;
+	}
+
+	@Nullable private AmongRoot resolve(String path){
+		for(Provider<AmongRoot> ip : instanceProviders){
+			try{
+				AmongRoot resolve = ip.resolve(path);
+				if(resolve!=null) return resolve;
+			}catch(Exception ex){
+				handleInstanceResolveException(path, ex);
+			}
+		}
+		for(Provider<Source> sp : sourceProviders){
+			try{
+				Source source = sp.resolve(path);
+				if(source!=null){
+					CompileResult res = read(source);
+					if(res.isSuccess()){
+						handleCompileSuccess(path, res);
+						return res.root();
+					}else{
+						handleCompileError(path, res);
+						return null;
+					}
+				}
+			}catch(Exception ex){
+				handleInstanceResolveException(path, ex);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Clears all caches of instance read with {@link AmongEngine#getOrReadFrom(String)} and {@link
+	 * AmongEngine#readFrom(String)}. Source providers and instance providers are not affected.
+	 */
+	public void clearInstances(){
+		pathByInstance.clear();
+	}
+
+	protected void handleSourceResolveException(String path, Exception ex){
+		System.err.println("An error occurred while resolving '"+path+"'");
+		ex.printStackTrace();
+	}
+
+	protected void handleInstanceResolveException(String path, Exception ex){
+		System.err.println("An error occurred while resolving '"+path+"'");
+		ex.printStackTrace();
+	}
+
+	protected void handleCompileSuccess(String path, CompileResult result){
+		result.printReports();
+	}
+	protected void handleCompileError(String path, CompileResult result){
+		System.err.println("Cannot import script resolved with '"+path+"' due to compile error");
+		result.printReports();
 	}
 }

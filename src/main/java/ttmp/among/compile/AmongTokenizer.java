@@ -1,7 +1,7 @@
 package ttmp.among.compile;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.AmongEngine.ErrorHandling;
+import ttmp.among.util.ErrorHandling;
 import ttmp.among.compile.AmongToken.TokenType;
 import ttmp.among.compile.Report.ReportType;
 import ttmp.among.obj.AmongRoot;

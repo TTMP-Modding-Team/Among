@@ -9,6 +9,8 @@ macro macro2{param}: $param
   Macro: macro2 { param: "Hi!" }  // "Hi!"
 }
 
+use among/default_operators
+
 macro nestedMacro[param1, param2]: ( macro2 { param: $param1 } * macro2 { param: $param2} )
 
 {

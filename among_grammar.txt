@@ -2,6 +2,7 @@ among: BR*
        ( "macro" BR* macroDefinition BR
        | ( "operator" | "keyword" ) BR* operatorDefinition BR
        | "undef" BR* undef BR+
+       | "use" value BR+
        | nameable BR*
        | complexPrimitive BR* )* EOF
 

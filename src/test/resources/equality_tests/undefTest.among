@@ -21,4 +21,4 @@ operator !! as prefix
 
 undef operator !!
 
-(!! a, !! b)  // [! [! [a], ! [! [b]]]
+(!!, !!)  // [!!, !!]
