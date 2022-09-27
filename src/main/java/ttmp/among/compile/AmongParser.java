@@ -4,16 +4,16 @@ import org.jetbrains.annotations.Nullable;
 import ttmp.among.AmongEngine;
 import ttmp.among.compile.Report.ReportType;
 import ttmp.among.exception.Sussy;
+import ttmp.among.macro.MacroDefinition;
+import ttmp.among.macro.MacroParameter;
+import ttmp.among.macro.MacroParameterList;
+import ttmp.among.macro.MacroType;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
 import ttmp.among.obj.AmongObject;
 import ttmp.among.obj.AmongPrimitive;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.macro.MacroDefinition;
 import ttmp.among.operator.OperatorDefinition;
-import ttmp.among.macro.MacroParameter;
-import ttmp.among.macro.MacroParameterList;
-import ttmp.among.macro.MacroType;
 import ttmp.among.operator.OperatorRegistry;
 import ttmp.among.operator.OperatorType;
 
@@ -646,17 +646,12 @@ public final class AmongParser{
 			AmongToken.TokenType t = tokenizer.next(false, mode).type;
 			switch(t){
 				case BR: if(!returnOnLineBreak) continue;
-				case EOF:
-					this.recovering = prevRecovering;
-					return false; // continue from here (well, there might not be much to do if it's EOF lmao)
+				case EOF: this.recovering = prevRecovering; return false; // continue from here (well, there might not be much to do if it's EOF lmao)
 				case COMMA:
-					if(returnOnComma){
-						this.recovering = prevRecovering;
-						return false;
-					}else continue;
-				case L_BRACE:
-				case L_BRACKET:
-				case L_PAREN:
+					if(!returnOnComma) continue;
+					this.recovering = prevRecovering;
+					return false;
+				case L_BRACE: case L_BRACKET: case L_PAREN:
 					tokenizer.reset();
 					nameable(TokenizationMode.NAME, false); // read object and throw it away
 					continue;
