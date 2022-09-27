@@ -137,7 +137,7 @@ public class AmongObject extends AmongNamed{
 
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
-		if(hasName()) AmongUs.nameToString(stb, getName());
+		if(hasName()) AmongUs.nameToString(stb, getName(), isParamRef());
 		if(isEmpty()) stb.append("{}");
 		else{
 			stb.append('{');
@@ -145,7 +145,7 @@ public class AmongObject extends AmongNamed{
 			for(Map.Entry<String, Among> e : properties.entrySet()){
 				if(first) first = false;
 				else stb.append(',');
-				AmongUs.keyToString(stb, e.getKey());
+				AmongUs.keyToString(stb, e.getKey(), false);
 				stb.append(':');
 				AmongUs.valueToString(stb, e.getValue());
 			}
@@ -157,7 +157,7 @@ public class AmongObject extends AmongNamed{
 	@Override public String toPrettyString(int indents, String indent){
 		StringBuilder stb = new StringBuilder();
 		if(hasName()){
-			AmongUs.nameToPrettyString(stb, getName(), indents+1, indent);
+			AmongUs.nameToPrettyString(stb, getName(), isParamRef(), indents+1, indent);
 			stb.append(' ');
 		}
 		if(isEmpty()) stb.append("{}");
@@ -166,7 +166,7 @@ public class AmongObject extends AmongNamed{
 			for(Map.Entry<String, Among> e : properties.entrySet()){
 				stb.append('\n');
 				for(int i = 0; i<indents+1; i++) stb.append(indent);
-				AmongUs.keyToPrettyString(stb, e.getKey(), indents+1, indent);
+				AmongUs.keyToPrettyString(stb, e.getKey(), false, indents+1, indent);
 				stb.append(": ");
 				AmongUs.valueToPrettyString(stb, e.getValue(), indents+1, indent);
 			}

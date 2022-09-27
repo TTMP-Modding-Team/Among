@@ -277,7 +277,10 @@ public final class AmongParser{
 
 	private void use(){
 		tokenizer.discard();
-		AmongToken next = tokenizer.next(false, TokenizationMode.VALUE);
+		AmongToken next = tokenizer.next(false, TokenizationMode.WORD);
+		boolean pub = next.keywordOrEmpty().equals("public");
+		if(!pub) tokenizer.reset(true);
+		next = tokenizer.next(false, TokenizationMode.VALUE);
 		if(!next.isLiteral()){
 			reportError("Expected path");
 			skipUntilLineBreak();

@@ -245,7 +245,7 @@ public final class MacroDefinition implements ToPrettyString{
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
 		stb.append("macro ");
-		AmongUs.nameToString(stb, name());
+		AmongUs.nameToString(stb, name(), false);
 		switch(this.type()){
 			case OBJECT:
 				stb.append("{").append(parameter).append("}");
@@ -262,7 +262,7 @@ public final class MacroDefinition implements ToPrettyString{
 	@Override public String toPrettyString(int indents, String indent){
 		StringBuilder stb = new StringBuilder();
 		stb.append("macro ");
-		AmongUs.nameToPrettyString(stb, name(), indents, indent);
+		AmongUs.nameToPrettyString(stb, name(), false, indents, indent);
 		switch(this.type()){
 			case OBJECT:
 				stb.append("{").append(parameter.toPrettyString(indents, indent)).append("}");

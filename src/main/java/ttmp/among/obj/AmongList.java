@@ -128,7 +128,7 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
-		if(hasName()) AmongUs.nameToString(stb, getName());
+		if(hasName()) AmongUs.nameToString(stb, getName(), isParamRef());
 		if(isEmpty()) stb.append("[]");
 		else{
 			stb.append('[');
@@ -146,7 +146,7 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 	@Override public String toPrettyString(int indents, String indent){
 		StringBuilder stb = new StringBuilder();
 		if(hasName()){
-			AmongUs.nameToPrettyString(stb, getName(), indents+1, indent);
+			AmongUs.nameToPrettyString(stb, getName(), isParamRef(), indents+1, indent);
 			stb.append(' ');
 		}
 		if(isEmpty()) stb.append("[]");

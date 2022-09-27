@@ -43,7 +43,7 @@ public final class MacroSignature implements Comparable<MacroSignature>{
 
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
-		AmongUs.nameToString(stb, name);
+		AmongUs.nameToString(stb, name, false);
 		switch(type){
 			case OBJECT:
 				stb.append("{}");

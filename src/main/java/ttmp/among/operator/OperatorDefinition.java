@@ -76,7 +76,7 @@ public final class OperatorDefinition{
 
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder().append(isKeyword ? "keyword " : "operator ");
-		AmongUs.nameToString(stb, this.name);
+		AmongUs.nameToString(stb, this.name, false);
 		stb.append(" as ")
 				.append(type==OperatorType.BINARY ? "binary" : type==OperatorType.POSTFIX ? "postfix" : "prefix");
 		if(Double.compare(priority, type.defaultPriority())!=0)

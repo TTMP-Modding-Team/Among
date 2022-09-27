@@ -53,7 +53,7 @@ public final class MacroParameter implements Comparable<MacroParameter>, ToPrett
 	}
 	@Override public String toPrettyString(int indents, String indent){
 		StringBuilder stb = new StringBuilder();
-		AmongUs.paramToPrettyString(stb, name(), indents, indent);
+		AmongUs.paramToString(stb, name());
 		if(defaultValue()!=null){
 			stb.append(" = ");
 			stb.append(defaultValue().toPrettyString(indents+1, indent));
