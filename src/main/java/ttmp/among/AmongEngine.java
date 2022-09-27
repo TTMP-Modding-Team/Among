@@ -215,7 +215,7 @@ public class AmongEngine{
 					}
 				}
 			}catch(Exception ex){
-				handleInstanceResolveException(path, ex);
+				handleSourceResolveException(path, ex);
 			}
 		}
 		return null;
