@@ -14,6 +14,7 @@ public class ErrorTests{
 		list.add(errorTest("unterminated2"));
 		list.add(errorTest("unterminated3"));
 		list.add(errorTest("expectValue1"));
+		list.add(errorTest("invalidCharEscape"));
 		return list;
 	}
 

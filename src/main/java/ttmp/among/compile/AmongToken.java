@@ -43,6 +43,10 @@ public final class AmongToken{
 		return is(type)&&Objects.equals(literal, this.literal);
 	}
 
+	public boolean isSimpleLiteral(){
+		return !is(TokenType.COMPLEX_PRIMITIVE)&&isLiteral();
+	}
+
 	/**
 	 * Tries to parse literal value to double.
 	 *

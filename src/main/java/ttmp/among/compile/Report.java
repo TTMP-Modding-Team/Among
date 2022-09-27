@@ -69,7 +69,6 @@ public class Report{
 		int line = source.lineAt(sourcePosition);
 		int lineStart = source.lineStart(line);
 		int lineSize = source.lineSize(line);
-		int point = sourcePosition-lineStart;
 
 		if(lineSize>50){
 			lineStart = Math.max(lineStart, sourcePosition-30);
@@ -77,14 +76,14 @@ public class Report{
 		}
 
 		StringBuilder stb = new StringBuilder();
-		for(int i = 0; i<lineSize; i++){
-			int idx = lineStart+i;
-			if(idx==sourcePosition) stb.append("/* HERE >>> */");
-			int c = source.codePointAt(idx);
+		int i = 0;
+		for(;i<lineSize; i++){
+			int c = source.codePointAt(lineStart+i);
 			if(c==Source.EOF) break;
+			if(lineStart+i==sourcePosition) stb.append("/* HERE >>> */");
 			if(c!='\r'&&c!='\n') stb.appendCodePoint(c);
 		}
-		if(lineStart+lineSize<=sourcePosition) stb.append("  // <<< HERE");
+		if(lineStart+i<=sourcePosition) stb.append("  // <<< HERE");
 		return stb.toString();
 	}
 

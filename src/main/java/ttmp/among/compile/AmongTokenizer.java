@@ -1,13 +1,16 @@
 package ttmp.among.compile;
 
 import org.jetbrains.annotations.Nullable;
+import ttmp.among.AmongEngine.ErrorHandling;
 import ttmp.among.compile.AmongToken.TokenType;
+import ttmp.among.compile.Report.ReportType;
 import ttmp.among.obj.AmongRoot;
 import ttmp.among.util.OperatorRegistry;
 import ttmp.among.util.Source;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import static ttmp.among.util.Source.EOF;
@@ -421,24 +424,64 @@ public final class AmongTokenizer{
 			case 'n': return '\n';
 			case 't': return '\t';
 			case 'r': return '\r';
-			case 'u':{ // \ uxxxx // wait, why is this compilation error??????????
-				int r = hex(srcIndex, 4);
-				srcIndex += 4;
-				return r;
-			}
-			case 'U':{ // \Uxxxxxxxx
-				int r = hex(srcIndex, 8);
-				srcIndex += 8;
-				return r;
-			}
+			case 'u': return hex(4); // \ uxxxx // wait, why is this compilation error??????????
+			case 'U': return hex(8); // \Uxxxxxxxx
 			default: return c2; // just append trailing character
 		}
 	}
 
-	private int hex(int start, int digits){
-		StringBuilder stb = new StringBuilder();
-		for(int i = 0; i<digits; i++)
-			stb.appendCodePoint(source.codePointAt(start+i));
-		return Integer.parseUnsignedInt(stb.toString(), 16);
+	private int hex(int digits){
+		int start = srcIndex;
+		int codePoint = 0;
+		for(int i = 0; i<digits; i++){
+			int n;
+			int c = source.codePointAt(start+i);
+			switch(c){
+				case EOF:
+					if(parser.engine().invalidUnicodeHandling!=ErrorHandling.IGNORE)
+						parser.report(parser.engine().invalidUnicodeHandling==ErrorHandling.WARN ?
+										ReportType.WARN : ReportType.ERROR,
+								"Incomplete unicode escape", start+i);
+					return source.codePointAt(start-1);
+				case '0': n = 0; break;
+				case '1': n = 1; break;
+				case '2': n = 2; break;
+				case '3': n = 3; break;
+				case '4': n = 4; break;
+				case '5': n = 5; break;
+				case '6': n = 6; break;
+				case '7': n = 7; break;
+				case '8': n = 8; break;
+				case '9': n = 9; break;
+				case 'A': case 'a': n = 10; break;
+				case 'B': case 'b': n = 11; break;
+				case 'C': case 'c': n = 12; break;
+				case 'D': case 'd': n = 13; break;
+				case 'E': case 'e': n = 14; break;
+				case 'F': case 'f': n = 15; break;
+				default:
+					if(parser.engine().invalidUnicodeHandling!=ErrorHandling.IGNORE){
+						ReportType type = parser.engine().invalidUnicodeHandling==ErrorHandling.WARN ?
+								ReportType.WARN : ReportType.ERROR;
+						String message = new StringBuilder().append("Invalid character '")
+								.appendCodePoint(c)
+								.append("' for unicode escape").toString();
+						parser.report(type, message, start+i);
+					}
+					return source.codePointAt(start-1);
+			}
+			codePoint |= n<<4*(digits-i-1);
+		}
+		if(codePoint>0x10FFFF||codePoint<0){
+			if(parser.engine().invalidUnicodeHandling!=ErrorHandling.IGNORE)
+				parser.report(parser.engine().invalidUnicodeHandling==ErrorHandling.WARN ?
+								ReportType.WARN : ReportType.ERROR,
+						"Provided value '"+Integer.toHexString(codePoint).toUpperCase(Locale.ROOT)+
+								"' is outside the unicode range (0 ~ 10FFFF)",
+						start);
+			return source.codePointAt(start-1);
+		}
+		srcIndex += digits;
+		return codePoint;
 	}
 }

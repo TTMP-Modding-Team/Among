@@ -73,7 +73,7 @@ public final class AmongParser{
 						continue;
 				}
 			}
-			tokenizer.reset(true);
+			tokenizer.reset(next.isSimpleLiteral());
 			Among a = nameable(TokenizationMode.NAME, false);
 			if(a==null){
 				next = tokenizer.next(true, TokenizationMode.NAME);
@@ -222,11 +222,12 @@ public final class AmongParser{
 
 		tokenizer.discard();
 		double priority = Double.NaN;
-		if(tokenizer.next(true, TokenizationMode.UNEXPECTED).is(COLON)){
+		AmongToken next = tokenizer.next(true, TokenizationMode.UNEXPECTED);
+		if(next.is(COLON)){
 			priority = tokenizer.next(true, TokenizationMode.VALUE)
 					.asNumber();
 			if(Double.isNaN(priority)) reportError("Expected number");
-		}else tokenizer.reset(true);
+		}else tokenizer.reset(next.is(ERROR));
 		AmongOperatorDef def = new AmongOperatorDef(name, isKeyword, type, priority);
 		OperatorRegistry.RegistrationResult result = root.operators().add(def);
 		if(!result.isSuccess())
@@ -412,20 +413,21 @@ public final class AmongParser{
 		L:
 		while(true){
 			tokenizer.discard();
-			switch(tokenizer.next(true, TokenizationMode.UNEXPECTED).type){
+			AmongToken next = tokenizer.next(true, TokenizationMode.UNEXPECTED);
+			switch(next.type){
 				case EOF: reportError("Unterminated list");
 				case R_BRACKET: break L;
 			}
-			tokenizer.reset(true);
+			tokenizer.reset(next.is(ERROR));
 			Among expr = expr(macro);
 			if(expr!=null) list.add(expr);
-			AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
+			next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 			switch(next.type){
 				case BR:
 					tokenizer.discard();
 					next = tokenizer.next(true, TokenizationMode.UNEXPECTED);
 					if(!next.is(AmongToken.TokenType.COMMA))
-						tokenizer.reset(true);
+						tokenizer.reset(next.is(ERROR));
 					break;
 				case COMMA: break;
 				case EOF: reportError("Unterminated list");

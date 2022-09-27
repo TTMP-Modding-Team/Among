@@ -77,6 +77,19 @@ public final class AmongEngine{
 	public boolean copyMacroConstant = true;
 
 	/**
+	 * Specifies error handling behavior for invalid unicode escape. It specifically refers to invalid trailing value
+	 * for {@code \u005Cu} and {@code \u005CU} notation, which should be a hexadecimal with 4 characters (for {@code
+	 * \u005Cu}) and 8 characters (for {@code \u005CU}). This behavior is also used when the codepoint supplied by
+	 * {@code \u005CU} notation is outside the unicode definition (larger than {@code 10FFFF}).<br>
+	 * Regardless of the setting, the compiler will process the input as the {@code \u005Cu} notation never existed;
+	 * for example, invalid input {@code '\u005Cuabcd'} will produce {@code 'uabcd'}.<br>
+	 * If any other value is provided, {@link ErrorHandling#ERROR ERROR} will be used.
+	 *
+	 * @see ErrorHandling
+	 */
+	public int invalidUnicodeHandling = ErrorHandling.ERROR;
+
+	/**
 	 * Reads and parses the source into newly created {@link AmongRoot}.
 	 *
 	 * @param source Source to be read from
@@ -98,5 +111,41 @@ public final class AmongEngine{
 		return new AmongParser(source, this,
 				root==null ? AmongRoot.withDefaultOperators() : root)
 				.parse();
+	}
+
+	/**
+	 * Specifies error handling mode for various invalid inputs.
+	 * <table>
+	 *   <tr>
+	 *     <td>Value</td><td>Behavior</td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td>{@link ErrorHandling#ERROR}</td> <td>All invalid inputs will be reported as compilation errors.</td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td>{@link ErrorHandling#WARN}</td> <td>All invalid inputs will be reported as warnings.</td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td>{@link ErrorHandling#IGNORE}</td> <td>All invalid inputs will be ignored.</td>
+	 *   </tr>
+	 * </table>
+	 * <br>
+	 * This value does not modify the way invalid inputs are being read; it will produce identical results regardless
+	 * of the mode used.<br>
+	 * If any other value is provided, the default value will be used; see the individual use cases for details.
+	 */
+	public interface ErrorHandling{
+		/**
+		 * All invalid inputs will be reported as compilation errors.
+		 */
+		int ERROR = 0;
+		/**
+		 * All invalid inputs will be reported as warnings.
+		 */
+		int WARN = 1;
+		/**
+		 * All invalid inputs will be ignored.
+		 */
+		int IGNORE = 2;
 	}
 }
