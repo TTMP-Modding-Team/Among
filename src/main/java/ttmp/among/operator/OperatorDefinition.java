@@ -1,7 +1,6 @@
-package ttmp.among.obj;
+package ttmp.among.operator;
 
 import ttmp.among.util.AmongUs;
-import ttmp.among.util.OperatorType;
 
 import java.text.DecimalFormat;
 import java.util.Objects;

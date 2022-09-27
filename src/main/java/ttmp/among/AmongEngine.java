@@ -5,11 +5,11 @@ import ttmp.among.compile.AmongParser;
 import ttmp.among.compile.CompileResult;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.obj.MacroDefinition;
-import ttmp.among.obj.OperatorDefinition;
+import ttmp.among.macro.MacroDefinition;
+import ttmp.among.operator.OperatorDefinition;
 import ttmp.among.util.DefaultInstanceProvider;
 import ttmp.among.util.ErrorHandling;
-import ttmp.among.util.OperatorRegistry;
+import ttmp.among.operator.OperatorRegistry;
 import ttmp.among.util.Provider;
 import ttmp.among.util.Source;
 

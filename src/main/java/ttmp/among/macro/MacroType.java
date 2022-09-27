@@ -1,6 +1,4 @@
-package ttmp.among.util;
-
-import ttmp.among.obj.MacroDefinition;
+package ttmp.among.macro;
 
 /**
  * Types of macro. Snippet below shows macros with each type written in Among.

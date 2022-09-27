@@ -1,9 +1,10 @@
-package ttmp.among.util;
+package ttmp.among.macro;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.obj.Among;
-import ttmp.among.obj.MacroDefinition;
+import ttmp.among.util.AmongUs;
+import ttmp.among.util.ToPrettyString;
 
 import java.util.Objects;
 

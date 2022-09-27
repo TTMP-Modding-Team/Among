@@ -3,6 +3,7 @@ package ttmp.among.obj;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.AmongEngine;
 import ttmp.among.exception.SussyCast;
+import ttmp.among.macro.MacroDefinition;
 import ttmp.among.util.AmongWalker;
 import ttmp.among.util.NodePath;
 import ttmp.among.util.Source;

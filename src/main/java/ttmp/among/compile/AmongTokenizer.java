@@ -5,7 +5,7 @@ import ttmp.among.util.ErrorHandling;
 import ttmp.among.compile.AmongToken.TokenType;
 import ttmp.among.compile.Report.ReportType;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.util.OperatorRegistry;
+import ttmp.among.operator.OperatorRegistry;
 import ttmp.among.util.Source;
 
 import java.util.ArrayList;

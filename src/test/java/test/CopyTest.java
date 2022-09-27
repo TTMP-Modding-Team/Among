@@ -2,10 +2,10 @@ package test;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import ttmp.among.obj.MacroDefinition;
+import ttmp.among.macro.MacroDefinition;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.util.MacroType;
-import ttmp.among.util.OperatorType;
+import ttmp.among.macro.MacroType;
+import ttmp.among.operator.OperatorType;
 
 import static ttmp.among.obj.Among.*;
 

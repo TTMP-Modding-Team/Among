@@ -1,4 +1,4 @@
-package ttmp.among.util;
+package ttmp.among.operator;
 
 /**
  * Type of the operator

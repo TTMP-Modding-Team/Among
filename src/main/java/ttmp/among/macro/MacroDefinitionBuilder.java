@@ -1,9 +1,8 @@
-package ttmp.among.util;
+package ttmp.among.macro;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
-import ttmp.among.obj.MacroDefinition;
 
 import java.util.ArrayList;
 import java.util.List;

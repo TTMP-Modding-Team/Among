@@ -1,16 +1,14 @@
-package ttmp.among.obj;
+package ttmp.among.macro;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.Report;
 import ttmp.among.exception.Sussy;
+import ttmp.among.obj.Among;
+import ttmp.among.obj.AmongList;
+import ttmp.among.obj.AmongObject;
+import ttmp.among.obj.AmongPrimitive;
 import ttmp.among.util.AmongUs;
 import ttmp.among.util.AmongWalker;
-import ttmp.among.util.MacroDefinitionBuilder;
-import ttmp.among.util.MacroParameter;
-import ttmp.among.util.MacroParameterList;
-import ttmp.among.util.MacroReplacement;
-import ttmp.among.util.MacroSignature;
-import ttmp.among.util.MacroType;
 import ttmp.among.util.NodePath;
 import ttmp.among.util.ToPrettyString;
 

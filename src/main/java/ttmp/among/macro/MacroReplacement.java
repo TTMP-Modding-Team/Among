@@ -1,7 +1,7 @@
-package ttmp.among.util;
+package ttmp.among.macro;
 
 import ttmp.among.obj.Among;
-import ttmp.among.obj.MacroDefinition;
+import ttmp.among.util.NodePath;
 
 /**
  * Object representing one replacement operation.

@@ -1,7 +1,7 @@
-package ttmp.among.util;
+package ttmp.among.macro;
 
 import org.jetbrains.annotations.NotNull;
-import ttmp.among.obj.MacroDefinition;
+import ttmp.among.util.AmongUs;
 
 import java.util.Objects;
 

@@ -2,7 +2,7 @@ package ttmp.among.compile;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.exception.Sussy;
-import ttmp.among.obj.OperatorDefinition;
+import ttmp.among.operator.OperatorDefinition;
 
 import java.util.Objects;
 

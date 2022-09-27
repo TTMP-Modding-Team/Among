@@ -1,4 +1,4 @@
-package ttmp.among.util;
+package ttmp.among.operator;
 
 public interface OperatorPriorities{
 	double BINARY_ASSIGN = 0;

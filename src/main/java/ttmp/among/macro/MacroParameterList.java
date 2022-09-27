@@ -1,7 +1,7 @@
-package ttmp.among.util;
+package ttmp.among.macro;
 
 import ttmp.among.exception.Sussy;
-import ttmp.among.obj.MacroDefinition;
+import ttmp.among.util.ToPrettyString;
 
 import java.util.ArrayList;
 import java.util.Collection;

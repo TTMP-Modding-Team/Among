@@ -1,8 +1,7 @@
-package ttmp.among.util;
+package ttmp.among.operator;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.obj.OperatorDefinition;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,8 +16,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
-import static ttmp.among.util.OperatorType.BINARY;
-import static ttmp.among.util.OperatorType.POSTFIX;
+import static ttmp.among.operator.OperatorType.BINARY;
+import static ttmp.among.operator.OperatorType.POSTFIX;
 
 /**
  * Collection of {@link OperatorDefinition}s organized in various format to ensure faster access during compilation.<br>

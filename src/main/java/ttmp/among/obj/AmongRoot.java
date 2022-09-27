@@ -2,12 +2,13 @@ package ttmp.among.obj;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.exception.Sussy;
+import ttmp.among.macro.MacroDefinition;
 import ttmp.among.util.AmongUs;
-import ttmp.among.util.MacroSignature;
-import ttmp.among.util.MacroType;
-import ttmp.among.util.OperatorPriorities;
-import ttmp.among.util.OperatorRegistry;
-import ttmp.among.util.OperatorType;
+import ttmp.among.macro.MacroSignature;
+import ttmp.among.macro.MacroType;
+import ttmp.among.operator.OperatorPriorities;
+import ttmp.among.operator.OperatorRegistry;
+import ttmp.among.operator.OperatorType;
 import ttmp.among.util.ToPrettyString;
 
 import java.util.ArrayList;
