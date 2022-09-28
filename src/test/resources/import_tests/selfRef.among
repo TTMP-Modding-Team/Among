@@ -1,0 +1,4 @@
+
+use selfRef  // ERROR
+
+(sussy, baka)

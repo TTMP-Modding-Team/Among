@@ -1,11 +1,10 @@
 package ttmp.among.compile;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.util.ErrorHandling;
 import ttmp.among.compile.AmongToken.TokenType;
 import ttmp.among.compile.Report.ReportType;
-import ttmp.among.obj.AmongRoot;
 import ttmp.among.operator.OperatorRegistry;
+import ttmp.among.util.ErrorHandling;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +26,6 @@ import static ttmp.among.compile.Source.EOF;
 public final class AmongTokenizer{
 	private final Source source;
 	private final AmongParser parser;
-	private final AmongRoot root;
 
 	private int srcIndex;
 
@@ -36,10 +34,9 @@ public final class AmongTokenizer{
 	private int lastSrcIndex;
 	private int lastTokensLeft;
 
-	public AmongTokenizer(Source source, AmongParser parser, AmongRoot root){
+	public AmongTokenizer(Source source, AmongParser parser){
 		this.source = source;
 		this.parser = parser;
-		this.root = root;
 	}
 
 	public Source source(){
@@ -327,8 +324,8 @@ public final class AmongTokenizer{
 	@Nullable private OperatorRegistry.NameGroup match(boolean keyword){
 		int prev = srcIndex;
 		Set<OperatorRegistry.NameGroup> set = keyword ?
-				root.operators().getKeywords(nextLiteralChar()) :
-				root.operators().getOperators(nextLiteralChar());
+				parser.importRoot().operators().getKeywords(nextLiteralChar()) :
+				parser.importRoot().operators().getOperators(nextLiteralChar());
 		srcIndex = prev;
 		if(!set.isEmpty())
 			for(OperatorRegistry.NameGroup o : set)

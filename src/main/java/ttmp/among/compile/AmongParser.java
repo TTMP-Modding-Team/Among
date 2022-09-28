@@ -28,7 +28,14 @@ import static ttmp.among.compile.AmongToken.TokenType.*;
  * Eats token. Shits object. Crazy.
  */
 public final class AmongParser{
+	/**
+	 * Actual root; will be returned as compilation result.
+	 */
 	private final AmongRoot root;
+	/**
+	 * Root object for holding imported macros and operators. Will be discarded along with parser.
+	 */
+	private final AmongRoot importRoot;
 	private final AmongEngine engine;
 	private final AmongTokenizer tokenizer;
 	private final List<Report> reports = new ArrayList<>();
@@ -38,11 +45,15 @@ public final class AmongParser{
 	public AmongParser(Source source, AmongEngine engine, AmongRoot root){
 		this.engine = engine;
 		this.root = root;
-		this.tokenizer = new AmongTokenizer(source, this, this.root);
+		this.importRoot = root.copy();
+		this.tokenizer = new AmongTokenizer(source, this);
 	}
 
 	public AmongEngine engine(){
 		return engine;
+	}
+	public AmongRoot importRoot(){
+		return importRoot;
 	}
 
 	public CompileResult parse(){
@@ -147,10 +158,14 @@ public final class AmongParser{
 			tryToRecover(TokenizationMode.WORD);
 		}
 		if(params!=null){
-			if((type==MacroType.LIST||type==MacroType.OPERATION)&&!params.hasConsecutiveOptionalParams())
+			if((type==MacroType.LIST||type==MacroType.OPERATION)&&!params.hasConsecutiveOptionalParams()){
 				reportError("Optional parameters of "+(type==MacroType.LIST ? "list" : "operation")+
 						" macro should be consecutive, placed at end of the parameter list", startIndex);
-			else root.addMacro(new MacroDefinition(name, type, params, expr));
+				return;
+			}
+			MacroDefinition macro = new MacroDefinition(name, type, params, expr);
+			root.addMacro(macro);
+			importRoot.addMacro(macro);
 		}
 	}
 
@@ -225,11 +240,12 @@ public final class AmongParser{
 			return;
 		}
 		OperatorDefinition operator = new OperatorDefinition(name, keyword, type, priority);
-		OperatorRegistry.RegistrationResult result = root.operators().add(operator);
+		OperatorRegistry.RegistrationResult result = importRoot.operators().add(operator);
 		if(!result.isSuccess())
 			report(engine.allowInvalidOperatorRegistration ?
 							ReportType.WARN : ReportType.ERROR,
 					result.message(operator), startIndex);
+		root.operators().add(operator);
 	}
 
 	private void undefMacro(){
@@ -239,18 +255,22 @@ public final class AmongParser{
 		switch(next.type){
 			case BR:
 				root.removeMacro(name, MacroType.CONST);
+				importRoot.removeMacro(name, MacroType.CONST);
 				return;
 			case L_BRACE:
 				expectNext(R_BRACE);
 				root.removeMacro(name, MacroType.OBJECT);
+				importRoot.removeMacro(name, MacroType.OBJECT);
 				break;
 			case L_BRACKET:
 				expectNext(R_BRACKET);
 				root.removeMacro(name, MacroType.LIST);
+				importRoot.removeMacro(name, MacroType.LIST);
 				break;
 			case L_PAREN:
 				expectNext(R_PAREN);
 				root.removeMacro(name, MacroType.OPERATION);
+				importRoot.removeMacro(name, MacroType.OPERATION);
 				break;
 			default:
 				reportError("Expected '{', '[', '(' or line break");
@@ -268,6 +288,7 @@ public final class AmongParser{
 		String name = definitionName(TokenizationMode.NAME);
 		if(name==null) return;
 		root.operators().remove(name, keyword);
+		importRoot.operators().remove(name, keyword);
 		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 		if(!next.is(BR)&&!next.is(EOF)){
 			reportError("Expected newline after undef statement");
@@ -289,16 +310,21 @@ public final class AmongParser{
 		String path = next.expectLiteral();
 		AmongRoot imported = engine.getOrReadFrom(path);
 		if(imported==null){
-			reportError("Invalid use statement: Cannot resolve object from path '"+path+"'");
+			reportError("Invalid use statement: Cannot resolve definitions from path '"+path+"'");
 		}else{
-			for(MacroDefinition macro : imported.macros().values()) root.addMacro(macro);
-			imported.operators().forEachOperatorAndKeyword(root.operators()::add); // TODO log failure
+			copyDefinitions(imported, importRoot);
+			if(pub) copyDefinitions(imported, root);
 		}
 		next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 		if(!next.is(BR)&&!next.is(EOF)){
 			reportError("Expected newline after undef statement");
 			skipUntilLineBreak();
 		}
+	}
+
+	private void copyDefinitions(AmongRoot from, AmongRoot to){
+		for(MacroDefinition macro : from.macros().values()) to.addMacro(macro);
+		from.operators().forEachOperatorAndKeyword(to.operators()::add); // TODO log failure
 	}
 
 	private void expectNext(AmongToken.TokenType type){
@@ -464,7 +490,7 @@ public final class AmongParser{
 				case R_PAREN: break L;
 			}
 			tokenizer.reset();
-			list.add(operationExpression(root.operators().priorityGroup(), 0, macro));
+			list.add(operationExpression(importRoot.operators().priorityGroup(), 0, macro));
 			tokenizer.discard();
 			switch(tokenizer.next(true, TokenizationMode.OPERATION, macro).type){
 				case COMMA: continue;
@@ -558,7 +584,7 @@ public final class AmongParser{
 		return macro(operation, operation.getName(), MacroType.OPERATION, sourcePosition);
 	}
 	private Among macro(Among target, String macroName, MacroType macroType, int sourcePosition){
-		MacroDefinition macro = root.searchMacro(macroName, macroType);
+		MacroDefinition macro = importRoot.searchMacro(macroName, macroType);
 		if(macro==null) return target;
 		try{
 			return macro.apply(target, engine.copyMacroConstant,

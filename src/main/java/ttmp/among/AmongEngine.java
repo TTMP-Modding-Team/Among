@@ -3,18 +3,19 @@ package ttmp.among;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.AmongParser;
 import ttmp.among.compile.CompileResult;
+import ttmp.among.compile.Source;
+import ttmp.among.macro.MacroDefinition;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.macro.MacroDefinition;
 import ttmp.among.operator.OperatorDefinition;
+import ttmp.among.operator.OperatorRegistry;
 import ttmp.among.util.DefaultInstanceProvider;
 import ttmp.among.util.ErrorHandling;
-import ttmp.among.operator.OperatorRegistry;
 import ttmp.among.util.Provider;
-import ttmp.among.compile.Source;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -168,7 +169,12 @@ public class AmongEngine{
 	 * @throws NullPointerException If {@code path == null}
 	 */
 	@Nullable public final AmongRoot getOrReadFrom(String path){
-		return pathByInstance.computeIfAbsent(path, this::resolve);
+		AmongRoot r = pathByInstance.get(path);
+		if(r==null){
+			r = resolve(path);
+			pathByInstance.put(path, r);
+		}
+		return r;
 	}
 
 	/**
@@ -192,7 +198,28 @@ public class AmongEngine{
 		return r;
 	}
 
+	private final LinkedHashSet<String> resolvingPathCache = new LinkedHashSet<>();
+
 	@Nullable private AmongRoot resolve(String path){
+		if(!resolvingPathCache.add(path)){
+			List<String> trace = new ArrayList<>();
+			boolean found = false;
+			for(String s : resolvingPathCache){
+				if(found) trace.add(s);
+				else if(s.equals(path)){
+					found = true;
+					trace.add(s);
+				}
+			}
+			handleCircularReference(path, trace);
+			return null;
+		}
+		AmongRoot r = resolveInternal(path);
+		resolvingPathCache.remove(path);
+		return r;
+	}
+
+	@Nullable private AmongRoot resolveInternal(String path){
 		for(Provider<AmongRoot> ip : instanceProviders){
 			try{
 				AmongRoot resolve = ip.resolve(path);
@@ -240,10 +267,26 @@ public class AmongEngine{
 	}
 
 	protected void handleCompileSuccess(String path, CompileResult result){
-		result.printReports();
+		result.printReports(path);
 	}
+
 	protected void handleCompileError(String path, CompileResult result){
-		System.err.println("Cannot import script resolved with '"+path+"' due to compile error");
-		result.printReports();
+		result.printReports(path);
+	}
+
+	protected void handleCircularReference(String path, List<String> trace){
+		switch(trace.size()){
+			case 0: // what?
+				System.err.println("Cannot import script resolved with '"+path+"' due to cosmic ray interference");
+				break;
+			case 1: // self-reference
+				System.err.println("Self-reference in script '"+path+"'");
+				break;
+			default: // circular reference
+				System.err.println("Cannot import script resolved with '"+path+"' due to circular reference:");
+				for(int i = 0; i<trace.size()-1; i++)
+					System.err.println("  '"+trace.get(i)+"' references '"+trace.get(i+1)+"'");
+				System.err.println("  and '"+trace.get(trace.size()-1)+"' references '"+path+"'");
+		}
 	}
 }

@@ -183,7 +183,7 @@ public class EqualityTests{
 
 	private static DynamicTest simpleEqualityTest(String name, Among... expected){
 		return DynamicTest.dynamicTest(name, () -> assertArrayEquals(expected,
-				TestUtil.make(TestUtil.sourceFrom("equality_tests", name))
+				TestUtil.make(TestUtil.expectSourceFrom("equality_tests", name))
 						.objects()
 						.toArray(new Among[0])));
 	}

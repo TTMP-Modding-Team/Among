@@ -1,0 +1,19 @@
+
+none {
+  filename: filename()
+  number: NUMBER
+}
+
+use import1
+
+1 {
+  filename: filename()
+  number: NUMBER
+}
+
+use import2
+
+2 {
+  filename: filename()
+  number: NUMBER
+}

@@ -1,0 +1,9 @@
+(coolMacro)
+use usePublic2
+(coolMacro)
+use usePublic3
+(coolMacro)
+undef macro coolMacro
+(coolMacro)
+use usePublic1
+(coolMacro)

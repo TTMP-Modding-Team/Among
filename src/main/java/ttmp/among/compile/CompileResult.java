@@ -1,5 +1,6 @@
 package ttmp.among.compile;
 
+import org.jetbrains.annotations.Nullable;
 import ttmp.among.exception.SussyCompile;
 import ttmp.among.obj.AmongRoot;
 
@@ -100,11 +101,14 @@ public final class CompileResult{
 	}
 
 	public void printReports(){
+		printReports(null);
+	}
+	public void printReports(@Nullable String path){
 		if(reports.isEmpty()) return;
-		printReports(isSuccess() ? System.out::println : System.err::println);
+		printReports(path, isSuccess() ? System.out::println : System.err::println);
 	}
 
-	public void printReports(Consumer<String> logger){
+	public void printReports(@Nullable String path, Consumer<String> logger){
 		if(reports.isEmpty()) return;
 		int infoCount = 0;
 		int warningCount = 0;
@@ -125,12 +129,13 @@ public final class CompileResult{
 		List<String> types = new ArrayList<>();
 		if(errorCount>0) types.add(errorCount==1 ? "1 error" : errorCount+" errors");
 		if(warningCount>0) types.add(warningCount==1 ? "1 warning" : warningCount+" warnings");
-		if(infoCount>0) types.add( infoCount+" info");
+		if(infoCount>0) types.add(infoCount+" info");
 
 		StringBuilder stb = new StringBuilder();
-		stb.append("Compilation finished with ");
+		if(path==null) stb.append("Compilation finished with ");
+		else stb.append("Compilation of script at '").append(path).append("' finished with ");
 		for(int i = 0; i<types.size(); i++){
-			if(i>0) stb.append(i==types.size()-1 ? " and ": ", ");
+			if(i>0) stb.append(i==types.size()-1 ? " and " : ", ");
 			stb.append(types.get(i));
 		}
 

@@ -1,0 +1,4 @@
+
+macro filename(): "import_tests/import1.among"
+
+macro NUMBER: 1

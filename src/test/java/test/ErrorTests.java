@@ -8,7 +8,7 @@ import java.util.List;
 
 public class ErrorTests{
 	@TestFactory
-	public List<DynamicTest> simpleEqualityTests(){
+	public List<DynamicTest> errorTests(){
 		List<DynamicTest> list = new ArrayList<>();
 		list.add(errorTest("unterminated1"));
 		list.add(errorTest("unterminated2"));
@@ -21,6 +21,6 @@ public class ErrorTests{
 	}
 
 	private static DynamicTest errorTest(String name){
-		return DynamicTest.dynamicTest(name, () -> TestUtil.expectError(TestUtil.sourceFrom("error_tests", name)));
+		return DynamicTest.dynamicTest(name, () -> TestUtil.expectError(TestUtil.expectSourceFrom("error_tests", name)));
 	}
 }
