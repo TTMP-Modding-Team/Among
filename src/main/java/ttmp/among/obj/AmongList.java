@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * List is a named {@link Among} node with ordered elements. Snippet below shows a list written in Among.
+ * Nameable {@link Among} node with ordered elements. Snippet below shows a list written in Among.
  * <pre>
  * [
  *   "Hello!"
@@ -24,8 +24,8 @@ import java.util.Objects;
  * ]
  * </pre>
  * <p>
- * Additionally, <a href="https://youtu.be/doEqUhFiQS4">operators</a> will be compiled into lists; operations do not
- * have object representation.
+ * Note that <a href="https://youtu.be/doEqUhFiQS4">operations</a> get compiled into list; operations do not
+ * have type representation.
  */
 public class AmongList extends AmongNamed implements Iterable<Among>{
 	private final List<Among> values = new ArrayList<>();
@@ -102,11 +102,9 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 	}
 
 	@Override public void walk(AmongWalker visitor, NodePath path){
-		if(visitor.walk(this, path)){
-			List<Among> amongs = this.values;
-			for(int i = 0; i<amongs.size(); i++)
-				amongs.get(i).walk(visitor, path.subPath(i));
-		}
+		if(visitor.walk(this, path))
+			for(int i = 0; i<this.values.size(); i++)
+				this.values.get(i).walk(visitor, path.subPath(i));
 	}
 
 	@Override public AmongList copy(){

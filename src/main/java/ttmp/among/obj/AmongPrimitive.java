@@ -7,7 +7,7 @@ import ttmp.among.util.NodePath;
 import java.util.Objects;
 
 /**
- * Primitive is an {@link Among} node representing a value. Snippet below shows a primitive written in Among.
+ * {@link Among} node representing a string value. Snippet below shows a primitive written in Among.
  * <pre>
  * "Hello!"
  * </pre>

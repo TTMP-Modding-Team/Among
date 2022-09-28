@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Object is a named {@link Among} node with properties. Property is a pair of a name(key) to a child node(values).
+ * Nameable {@link Among} node with properties. Property is a pair of a name(key) to a child node(values).
  * Snippet below shows an object written in Among.
  * <pre>
  * {
@@ -28,9 +28,6 @@ public class AmongObject extends AmongNamed{
 	private final Map<String, Among> properties = new LinkedHashMap<>(); // Use linkedhashmap to preserve insertion order
 
 	AmongObject(){}
-	AmongObject(Map<String, Among> map){
-		this(null, map);
-	}
 	AmongObject(@Nullable String name){
 		super(name);
 	}
@@ -42,7 +39,7 @@ public class AmongObject extends AmongNamed{
 	}
 
 	/**
-	 * Sets the property with name {@code key} to {@code value}. This is utility method for method chaining.<br>
+	 * Set the property with name {@code key} to {@code value}. This is utility method for method chaining.<br>
 	 * As this method is supposed to be used primarily for object initialization in code, duplicated properties are not
 	 * allowed.
 	 *
@@ -58,7 +55,7 @@ public class AmongObject extends AmongNamed{
 		return prop(key, value instanceof Among ? (Among)value : value(value));
 	}
 	/**
-	 * Sets the property with name {@code key} to {@code value}. This is utility method for method chaining.<br>
+	 * Set the property with name {@code key} to {@code value}. This is utility method for method chaining.<br>
 	 * As this method is supposed to be used primarily for object initialization in code, duplicated properties are not
 	 * allowed.
 	 *
@@ -81,26 +78,64 @@ public class AmongObject extends AmongNamed{
 		return Collections.unmodifiableMap(properties);
 	}
 
+	/**
+	 * Returns whether this object has property named {@code key}.
+	 *
+	 * @param key Key of the property
+	 * @return Whether this object has property named {@code key}.
+	 * @throws NullPointerException If {@code key == null}
+	 */
 	public boolean hasProperty(String key){
 		return this.properties.containsKey(key);
 	}
 
+	/**
+	 * Return the property for name of {@code key}. Returns {@code null} if there's no property with given name.
+	 *
+	 * @param key Key of the property
+	 * @return Whether this object has property named {@code key}.
+	 * @throws NullPointerException If {@code key == null}
+	 */
 	@Nullable public Among getProperty(String key){
 		return this.properties.get(key);
 	}
 
+	/**
+	 * Set the property with name {@code key} to {@code value}; if there is already a property associated with {@code
+	 * key}, it will be overwritten. Providing {@code null} for value will remove the property from this object.
+	 *
+	 * @param key   Key of the property
+	 * @param value Value of the property
+	 * @return Previous property value, or {@code null} if there was no property associated to the key
+	 * @throws NullPointerException If {@code key == null}
+	 */
 	@Nullable public Among setProperty(String key, @Nullable Among value){
 		if(value==null) return this.properties.remove(key);
 		else return this.properties.put(key, value);
 	}
 
+	/**
+	 * Remove the property with name {@code key}. If there is no property associated with {@code key}, this method does
+	 * nothing.
+	 *
+	 * @param key Key of the property
+	 * @return Previous property value, or {@code null} if there was no property associated to the key
+	 * @throws NullPointerException If {@code key == null}
+	 */
 	@Nullable public Among removeProperty(String key){
 		return this.properties.remove(key);
 	}
 
+	/**
+	 * Returns if this object has no property.
+	 * @return Whether this object has no property
+	 */
 	public boolean isEmpty(){
 		return properties.isEmpty();
 	}
+	/**
+	 * Removes all property from this object.
+	 */
 	public void clear(){
 		properties.clear();
 	}

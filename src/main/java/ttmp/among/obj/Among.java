@@ -2,12 +2,14 @@ package ttmp.among.obj;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.AmongEngine;
+import ttmp.among.compile.Source;
 import ttmp.among.exception.SussyCast;
 import ttmp.among.macro.MacroDefinition;
 import ttmp.among.util.AmongWalker;
 import ttmp.among.util.NodePath;
-import ttmp.among.compile.Source;
 import ttmp.among.util.ToPrettyString;
+
+import java.util.Map;
 
 /**
  * Base class for all among nodes.
@@ -21,7 +23,7 @@ public abstract class Among implements ToPrettyString{
 	private boolean paramRef;
 
 	/**
-	 * Marks this as a reference to macro parameter. If it is {@code true}:<br>
+	 * Mark this as a reference to macro parameter. If it is {@code true}:<br>
 	 * <ul>
 	 *     <li>For primitive value, the value itself is considered as parameter reference.</li>
 	 *     <li>For named instances, the name is considered as parameter reference.</li>
@@ -53,7 +55,7 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Marks this as a reference to macro parameter. If it is {@code true}:<br>
+	 * Mark this as a reference to macro parameter. If it is {@code true}:<br>
 	 * <ul>
 	 *     <li>For primitive value, the value itself is considered as parameter reference.</li>
 	 *     <li>For named instances, the name is considered as parameter reference.</li>
@@ -69,7 +71,7 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Returns this object as {@link AmongObject} instance.
+	 * Return this object as {@link AmongObject} instance.
 	 *
 	 * @return This object as {@link AmongObject} instance.
 	 * @throws SussyCast If this object is not {@link AmongObject}
@@ -88,7 +90,7 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Returns this object as {@link AmongList} instance.
+	 * Return this object as {@link AmongList} instance.
 	 *
 	 * @return This object as {@link AmongList} instance.
 	 * @throws SussyCast If this object is not {@link AmongList}
@@ -107,7 +109,7 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Returns this object as {@link AmongPrimitive} instance.
+	 * Return this object as {@link AmongPrimitive} instance.
 	 *
 	 * @return This object as {@link AmongPrimitive} instance.
 	 * @throws SussyCast If this object is not {@link AmongPrimitive}
@@ -126,7 +128,7 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Returns this object as {@link AmongNamed} instance.
+	 * Return this object as {@link AmongNamed} instance.
 	 *
 	 * @return This object as {@link AmongNamed} instance.
 	 * @throws SussyCast If this object is not {@link AmongNamed}
@@ -160,7 +162,7 @@ public abstract class Among implements ToPrettyString{
 	public abstract Among copy();
 
 	/**
-	 * Visits the node tree of objects in depth-first order.
+	 * Visit the node tree of objects in depth-first order.
 	 *
 	 * @param visitor Specific operation to be performed on each node
 	 */
@@ -169,7 +171,7 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Visits the node tree of objects in depth-first order.
+	 * Visit the node tree of objects in depth-first order.
 	 *
 	 * @param visitor Specific operation to be performed on each node
 	 * @param path    The starting path - i.e. path of this object
@@ -177,15 +179,16 @@ public abstract class Among implements ToPrettyString{
 	public abstract void walk(AmongWalker visitor, NodePath path);
 
 	/**
-	 * Creates an instance of {@link AmongPrimitive} with empty value.
+	 * Create an instance of {@link AmongPrimitive} with empty value.
 	 *
 	 * @return A new instance of {@link AmongPrimitive}
 	 */
 	public static AmongPrimitive value(){
 		return new AmongPrimitive();
 	}
+
 	/**
-	 * Creates an instance of {@link AmongPrimitive} with the value provided.
+	 * Create an instance of {@link AmongPrimitive} with the value provided.
 	 * The boolean value will be converted to its string representation by {@link Boolean#toString()}.
 	 *
 	 * @param value Value
@@ -194,8 +197,9 @@ public abstract class Among implements ToPrettyString{
 	public static AmongPrimitive value(boolean value){
 		return new AmongPrimitive(Boolean.toString(value));
 	}
+
 	/**
-	 * Creates an instance of {@link AmongPrimitive} with the value provided.
+	 * Create an instance of {@link AmongPrimitive} with the value provided.
 	 * The byte value will be converted to its string representation by {@link Character#toString()}.
 	 *
 	 * @param value Value
@@ -204,8 +208,9 @@ public abstract class Among implements ToPrettyString{
 	public static AmongPrimitive value(char value){
 		return new AmongPrimitive(Character.toString(value));
 	}
+
 	/**
-	 * Creates an instance of {@link AmongPrimitive} with the value provided.
+	 * Create an instance of {@link AmongPrimitive} with the value provided.
 	 * The byte value will be converted to its string representation by {@link Byte#toString()}.
 	 *
 	 * @param value Value
@@ -214,8 +219,9 @@ public abstract class Among implements ToPrettyString{
 	public static AmongPrimitive value(byte value){
 		return new AmongPrimitive(Byte.toString(value));
 	}
+
 	/**
-	 * Creates an instance of {@link AmongPrimitive} with the value provided.
+	 * Create an instance of {@link AmongPrimitive} with the value provided.
 	 * The short value will be converted to its string representation by {@link Short#toString()}.
 	 *
 	 * @param value Value
@@ -224,8 +230,9 @@ public abstract class Among implements ToPrettyString{
 	public static AmongPrimitive value(short value){
 		return new AmongPrimitive(Short.toString(value));
 	}
+
 	/**
-	 * Creates an instance of {@link AmongPrimitive} with the value provided.
+	 * Create an instance of {@link AmongPrimitive} with the value provided.
 	 * The short value will be converted to its string representation by {@link Integer#toString()}.
 	 *
 	 * @param value Value
@@ -234,8 +241,9 @@ public abstract class Among implements ToPrettyString{
 	public static AmongPrimitive value(int value){
 		return new AmongPrimitive(Integer.toString(value));
 	}
+
 	/**
-	 * Creates an instance of {@link AmongPrimitive} with the value provided.
+	 * Create an instance of {@link AmongPrimitive} with the value provided.
 	 * The short value will be converted to its string representation by {@link Long#toString()}.
 	 *
 	 * @param value Value
@@ -244,8 +252,9 @@ public abstract class Among implements ToPrettyString{
 	public static AmongPrimitive value(long value){
 		return new AmongPrimitive(Long.toString(value));
 	}
+
 	/**
-	 * Creates an instance of {@link AmongPrimitive} with the value provided.
+	 * Create an instance of {@link AmongPrimitive} with the value provided.
 	 * The short value will be converted to its string representation by {@link Float#toString()}.
 	 *
 	 * @param value Value
@@ -254,8 +263,9 @@ public abstract class Among implements ToPrettyString{
 	public static AmongPrimitive value(float value){
 		return new AmongPrimitive(Float.toString(value));
 	}
+
 	/**
-	 * Creates an instance of {@link AmongPrimitive} with the value provided.
+	 * Create an instance of {@link AmongPrimitive} with the value provided.
 	 * The short value will be converted to its string representation by {@link Double#toString()}.
 	 *
 	 * @param value Value
@@ -264,8 +274,9 @@ public abstract class Among implements ToPrettyString{
 	public static AmongPrimitive value(double value){
 		return new AmongPrimitive(Double.toString(value));
 	}
+
 	/**
-	 * Creates an instance of {@link AmongPrimitive} with the value provided.
+	 * Create an instance of {@link AmongPrimitive} with the value provided.
 	 * The object will be converted to string its representation by {@link Object#toString()}.
 	 *
 	 * @param value Value
@@ -277,15 +288,28 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Creates an empty instance of {@link AmongObject}.
+	 * Create an empty instance of {@link AmongObject}.
 	 *
 	 * @return A new instance of {@link AmongObject}
 	 */
 	public static AmongObject object(){
 		return new AmongObject();
 	}
+
 	/**
-	 * Creates an empty instance of {@link AmongObject} with given name.
+	 * Create an empty instance of {@link AmongObject}.
+	 *
+	 * @param properties Map of each property of the object
+	 * @return A new instance of {@link AmongObject}
+	 * @throws NullPointerException If {@code properties == null}
+	 */
+	public static AmongObject object(Map<String, Among> properties){
+		return new AmongObject(null, properties);
+	}
+
+	/**
+	 * Create an empty instance of {@link AmongObject} with a name. Providing {@code null} or empty string for the
+	 * name essentially creates an unnamed object.
 	 *
 	 * @param name Name of the object
 	 * @return A new instance of {@link AmongObject}
@@ -295,7 +319,20 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Creates an empty instance of {@link AmongList}.
+	 * Create an instance of {@link AmongObject} with a name. Providing {@code null} or empty string for the name
+	 * essentially creates an unnamed object.
+	 *
+	 * @param name       Name of the object
+	 * @param properties Map of each property of the object
+	 * @return A new instance of {@link AmongObject}
+	 * @throws NullPointerException If {@code properties == null}
+	 */
+	public static AmongObject namedObject(@Nullable String name, Map<String, Among> properties){
+		return new AmongObject(name, properties);
+	}
+
+	/**
+	 * Create an empty instance of {@link AmongList}.
 	 *
 	 * @return A new instance of {@link AmongList}
 	 */
@@ -304,7 +341,7 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Creates an instance of {@link AmongList} with elements.
+	 * Create an instance of {@link AmongList} with elements.
 	 *
 	 * @param elements Initial elements of the object
 	 * @return A new instance of {@link AmongList}
@@ -314,7 +351,8 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Creates an empty instance of {@link AmongList} with a name.
+	 * Create an empty instance of {@link AmongList} with a name. Providing {@code null} or empty string for the name
+	 * essentially creates an unnamed list.
 	 *
 	 * @param name Name of the object
 	 * @return A new instance of {@link AmongList}
@@ -324,7 +362,9 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Creates an empty instance of {@link AmongList} with a name and elements.
+	 * Create an empty instance of {@link AmongList} with a name and elements. Providing {@code null} or empty string
+	 * for the name
+	 * essentially creates an unnamed list.
 	 *
 	 * @param name     Name of the object
 	 * @param elements Initial elements of the object
