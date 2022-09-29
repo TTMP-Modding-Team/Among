@@ -139,6 +139,60 @@ public class EqualityTests{
 				list("a", "b", "$p5", "$p6"),
 				list(list(list("a"), list("b"), "$p5", "$p6"))));
 
+		list.add(simpleEqualityTest("json1", object()
+				.prop("glossary", object()
+						.prop("title", "example glossary")
+						.prop("GlossDiv", object()
+								.prop("title", "S")
+								.prop("GlossList",
+										object().prop("GlossEntry", object()
+												.prop("ID", "SGML")
+												.prop("SortAs", "SGML")
+												.prop("GlossTerm", "Standard Generalized Markup Language")
+												.prop("Acronym", "SGML")
+												.prop("Abbrev", "ISO 8879:1986")
+												.prop("GlossDef", object()
+														.prop("para", "A meta-markup language, used to create markup languages such as DocBook.")
+														.prop("GlossSeeAlso", list("GML", "XML")))
+												.prop("GlossSee", "markup")))))));
+		list.add(simpleEqualityTest("json2", object()
+				.prop("menu", object()
+						.prop("id", "file")
+						.prop("value", "File")
+						.prop("popup", object()
+								.prop("menuitem", list(
+										object().prop("value", "New").prop("onclick", "CreateNewDoc()"),
+										object().prop("value", "Open").prop("onclick", "OpenDoc()"),
+										object().prop("value", "Close").prop("onclick", "CloseDoc()")
+								))))));
+		list.add(simpleEqualityTest("json3", object()
+				.prop("menu", object()
+						.prop("header", "SVG Viewer")
+						.prop("items", list(
+								object().prop("id", "Open"),
+								object().prop("id", "OpenNew").prop("label", "Open New"),
+								value("null"),
+								object().prop("id", "ZoomIn").prop("label", "Zoom In"),
+								object().prop("id", "ZoomOut").prop("label", "Zoom Out"),
+								object().prop("id", "OriginalView").prop("label", "Original View"),
+								value("null"),
+								object().prop("id", "Quality"),
+								object().prop("id", "Pause"),
+								object().prop("id", "Mute"),
+								value("null"),
+								object().prop("id", "Find").prop("label", "Find..."),
+								object().prop("id", "FindAgain").prop("label", "Find Again"),
+								object().prop("id", "Copy"),
+								object().prop("id", "CopyAgain").prop("label", "Copy Again"),
+								object().prop("id", "CopySVG").prop("label", "Copy SVG"),
+								object().prop("id", "ViewSVG").prop("label", "View SVG"),
+								object().prop("id", "ViewSource").prop("label", "View Source"),
+								object().prop("id", "SaveAs").prop("label", "Save As"),
+								value("null"),
+								object().prop("id", "Help"),
+								object().prop("id", "About").prop("label", "About Adobe CVG Viewer...")
+						)))));
+
 		list.add(simpleEqualityTest("1",
 				object().prop("Property", "Value")
 						.prop("P2", "123")
