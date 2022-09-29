@@ -22,7 +22,7 @@ public class AmongUs{
 	private static final Pattern KEY_SPECIALS = Pattern.compile("[\\\\{}\"']|/[*/]");
 	private static final Pattern NAME_SPECIALS = Pattern.compile("[\\\\{}\\[\\]()\"']|/[*/]");
 	private static final Pattern PARAM_SPECIALS = Pattern.compile("[\\s\\\\{}\\[\\]()\"'=]|/[*/]");
-	private static final Pattern VALUE_SPECIALS = Pattern.compile("[\\\\{}\\[\\]()\"]|/[*/]");
+	private static final Pattern VALUE_SPECIALS = Pattern.compile("[\\\\{}\\[\\]()\",]|/[*/]");
 
 	public static boolean isSimpleName(String name){
 		return SIMPLE_NAME.matcher(name).matches();
