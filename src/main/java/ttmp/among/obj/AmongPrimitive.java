@@ -42,9 +42,7 @@ public class AmongPrimitive extends Among{
 	}
 
 	@Override public AmongPrimitive copy(){
-		AmongPrimitive a = new AmongPrimitive(this.value);
-		a.setParamRef(isParamRef());
-		return a;
+		return new AmongPrimitive(this.value);
 	}
 
 	@Override public boolean equals(Object o){

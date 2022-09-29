@@ -156,9 +156,10 @@ public class AmongObject extends AmongNamed{
 	}
 
 	@Override public AmongObject copy(){
-		AmongObject a = new AmongObject(this.getName(), this.properties);
-		a.setParamRef(isParamRef());
-		return a;
+		AmongObject o = new AmongObject(this.getName());
+		for(Map.Entry<String, Among> e : this.properties.entrySet())
+			o.setProperty(e.getKey(), e.getValue().copy());
+		return o;
 	}
 
 	@Override public boolean equals(Object o){

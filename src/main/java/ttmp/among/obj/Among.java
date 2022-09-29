@@ -155,7 +155,9 @@ public abstract class Among implements ToPrettyString{
 	@Override public abstract String toString();
 
 	/**
-	 * Create a deep copy of the object.
+	 * Create a deep copy of the object; all child nodes will be copied over new object.<br>
+	 * Note that {@link Among#paramRef} flag for the resulting object will always be {@code false}, even if the original
+	 * object had the flag set to {@code true}.
 	 *
 	 * @return Copy of the object
 	 */

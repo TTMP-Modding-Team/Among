@@ -135,6 +135,9 @@ public class EqualityTests{
 						namedList("-", "3")),
 				namedList("-", namedList(".", "1", namedList("toString"))),
 				namedList("-", namedList("1.35234"))));
+		list.add(simpleEqualityTest("crossRef",
+				list("a", "b", "$p5", "$p6"),
+				list(list(list("a"), list("b"), "$p5", "$p6"))));
 
 		list.add(simpleEqualityTest("1",
 				object().prop("Property", "Value")

@@ -109,9 +109,10 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 	}
 
 	@Override public AmongList copy(){
-		AmongList a = new AmongList(this.getName(), this.values);
-		a.setParamRef(isParamRef());
-		return a;
+		AmongList l = new AmongList(this.getName());
+		for(Among among : this.values)
+			l.add(among.copy());
+		return l;
 	}
 
 	@Override public boolean equals(Object o){
