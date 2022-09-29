@@ -5,7 +5,7 @@
 The features of **Among** include...
 * Clean syntax that eliminates most of redundant characters compared to JSON.
 * Macros, which makes data easier to view for humans and reduces repetition to minimum.
-* Operations and user definable operators and keywords, which gets parsed to syntax tree. It provides capability of expressing equations or code, and even an ability to create domain-specific language fully enclosed within the range of the core language itself.
+* Operations - new syntactic alternative for lists, and user definable operators and keywords, which gets parsed to syntax tree. It provides capability of expressing equations or code, and even an ability to create domain-specific language fully enclosed within the range of the core language itself.
 * And absolutely cringeworthy naming which will brighten your everyday life!
 
 Online docs coming Soon(tm).
