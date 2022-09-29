@@ -4,12 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.obj.Among;
 import ttmp.among.util.AmongUs;
+import ttmp.among.util.PrettyFormatOption;
 import ttmp.among.util.ToPrettyString;
 
 import java.util.Objects;
 
 /**
  * Parameter of the {@link MacroDefinition} - name, and default value(optional).
+ *
  * @see MacroDefinition
  * @see MacroParameterList
  */
@@ -45,19 +47,15 @@ public final class MacroParameter implements Comparable<MacroParameter>, ToPrett
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
 		AmongUs.paramToString(stb, name());
-		if(defaultValue()!=null){
-			stb.append(" = ");
-			stb.append(defaultValue());
-		}
+		if(defaultValue()!=null)
+			stb.append('=').append(defaultValue());
 		return stb.toString();
 	}
-	@Override public String toPrettyString(int indents, String indent){
+	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
 		AmongUs.paramToString(stb, name());
-		if(defaultValue()!=null){
-			stb.append(" = ");
-			stb.append(defaultValue().toPrettyString(indents+1, indent));
-		}
+		if(defaultValue()!=null)
+			stb.append(" = ").append(defaultValue().toPrettyString(indents+1, option));
 		return stb.toString();
 	}
 }

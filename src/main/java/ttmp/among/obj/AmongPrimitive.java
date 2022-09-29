@@ -3,6 +3,7 @@ package ttmp.among.obj;
 import ttmp.among.util.AmongUs;
 import ttmp.among.util.AmongWalker;
 import ttmp.among.util.NodePath;
+import ttmp.among.util.PrettyFormatOption;
 
 import java.util.Objects;
 
@@ -62,9 +63,9 @@ public class AmongPrimitive extends Among{
 		return stb.toString();
 	}
 
-	@Override public String toPrettyString(int indents, String indent){
+	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
-		AmongUs.valueToPrettyString(stb, this, indents, indent);
+		AmongUs.valueToPrettyString(stb, this, indents, option);
 		return stb.toString();
 	}
 }

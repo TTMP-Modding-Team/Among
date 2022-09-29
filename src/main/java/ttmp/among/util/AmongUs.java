@@ -42,9 +42,9 @@ public class AmongUs{
 		else primitiveToString(stb, key);
 	}
 
-	public static void keyToPrettyString(StringBuilder stb, String key, boolean paramRef, int indents, String indent){
+	public static void keyToPrettyString(StringBuilder stb, String key, boolean paramRef, int indents, PrettyFormatOption option){
 		if(paramRef||isSimpleKey(key)) stb.append(standardReplace(KEY_SPECIALS, key, true));
-		else primitiveToPrettyString(stb, key, indents, indent);
+		else primitiveToPrettyString(stb, key, indents, option);
 	}
 
 	public static void nameToString(StringBuilder stb, String name, boolean paramRef){
@@ -52,9 +52,9 @@ public class AmongUs{
 		else primitiveToString(stb, name);
 	}
 
-	public static void nameToPrettyString(StringBuilder stb, String name, boolean paramRef, int indents, String indent){
+	public static void nameToPrettyString(StringBuilder stb, String name, boolean paramRef, int indents, PrettyFormatOption option){
 		if(paramRef||isSimpleName(name)) stb.append(standardReplace(NAME_SPECIALS, name, true));
-		else primitiveToPrettyString(stb, name, indents, indent);
+		else primitiveToPrettyString(stb, name, indents, option);
 	}
 
 	public static void paramToString(StringBuilder stb, String param){
@@ -70,12 +70,12 @@ public class AmongUs{
 		}
 	}
 
-	public static void valueToPrettyString(StringBuilder stb, Among value, int indents, String indent){
-		if(!value.isPrimitive()) stb.append(value.toPrettyString(indents, indent));
+	public static void valueToPrettyString(StringBuilder stb, Among value, int indents, PrettyFormatOption option){
+		if(!value.isPrimitive()) stb.append(value.toPrettyString(indents, option));
 		else{
 			String s = value.asPrimitive().getValue();
 			if(value.isParamRef()||isSimpleValue(s)) stb.append(standardReplace(VALUE_SPECIALS, s, true));
-			else primitiveToPrettyString(stb, s, indents, indent);
+			else primitiveToPrettyString(stb, s, indents, option);
 		}
 	}
 
@@ -83,15 +83,20 @@ public class AmongUs{
 		stb.append('"').append(standardReplace(PRIMITIVE_SPECIALS, primitive, true)).append('"');
 	}
 
-	public static void primitiveToPrettyString(StringBuilder stb, String primitive, int indents, String indent){
-		primitive = NEWLINE.matcher(standardReplace(PRIMITIVE_SPECIALS, primitive, false)).replaceAll("\n"+repeat(indents+2, indent)+'|');
+	public static void primitiveToPrettyString(StringBuilder stb, String primitive, int indents, PrettyFormatOption option){
+		primitive = NEWLINE.matcher(standardReplace(PRIMITIVE_SPECIALS, primitive, false)).replaceAll(newlineAndIndent(indents+2, option)+'|');
 		stb.append('"').append(primitive).append('"');
 	}
 
-	private static String repeat(int indents, String indent){
+	public static String newlineAndIndent(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
-		for(int i = 0; i<indents; i++) stb.append(indent);
+		newlineAndIndent(stb, indents, option);
 		return stb.toString();
+	}
+
+	public static void newlineAndIndent(StringBuilder stb, int indents, PrettyFormatOption option){
+		stb.append('\n');
+		for(int i = 0; i<indents; i++) stb.append(option.indent);
 	}
 
 	private static String standardReplace(Pattern specialPattern, String value, boolean newline){

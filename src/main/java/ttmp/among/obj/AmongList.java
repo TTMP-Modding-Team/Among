@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 import ttmp.among.util.AmongUs;
 import ttmp.among.util.AmongWalker;
 import ttmp.among.util.NodePath;
+import ttmp.among.util.PrettyFormatOption;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -141,22 +142,24 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 		return stb.toString();
 	}
 
-	@Override public String toPrettyString(int indents, String indent){
+	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
 		if(hasName()){
-			AmongUs.nameToPrettyString(stb, getName(), isParamRef(), indents+1, indent);
+			AmongUs.nameToPrettyString(stb, getName(), isParamRef(), indents+1, option);
 			stb.append(' ');
 		}
 		if(isEmpty()) stb.append("[]");
 		else{
 			stb.append('[');
-			for(Among among : values){
-				stb.append('\n');
-				for(int i = 0; i<indents+1; i++) stb.append(indent);
-				AmongUs.valueToPrettyString(stb, among, indents+1, indent);
+			boolean isCompact = values.size()<=option.compactListSize;
+			for(int j = 0; j<values.size(); j++){
+				if(!isCompact) AmongUs.newlineAndIndent(stb, indents+1, option);
+				else if(j>0) stb.append(", ");
+				else stb.append(' ');
+				AmongUs.valueToPrettyString(stb, values.get(j), indents+1, option);
 			}
-			stb.append('\n');
-			for(int i = 0; i<indents; i++) stb.append(indent);
+			if(!isCompact) AmongUs.newlineAndIndent(stb, indents, option);
+			else stb.append(' ');
 			stb.append(']');
 		}
 		return stb.toString();

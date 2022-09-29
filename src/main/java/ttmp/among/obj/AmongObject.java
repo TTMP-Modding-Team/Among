@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 import ttmp.among.util.AmongUs;
 import ttmp.among.util.AmongWalker;
 import ttmp.among.util.NodePath;
+import ttmp.among.util.PrettyFormatOption;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -128,6 +129,7 @@ public class AmongObject extends AmongNamed{
 
 	/**
 	 * Returns if this object has no property.
+	 *
 	 * @return Whether this object has no property
 	 */
 	public boolean isEmpty(){
@@ -189,24 +191,29 @@ public class AmongObject extends AmongNamed{
 		return stb.toString();
 	}
 
-	@Override public String toPrettyString(int indents, String indent){
+	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
 		if(hasName()){
-			AmongUs.nameToPrettyString(stb, getName(), isParamRef(), indents+1, indent);
+			AmongUs.nameToPrettyString(stb, getName(), isParamRef(), indents+1, option);
 			stb.append(' ');
 		}
 		if(isEmpty()) stb.append("{}");
 		else{
 			stb.append('{');
+			boolean isCompact = properties.size()<=option.compactObjectSize;
+			boolean first = true;
 			for(Map.Entry<String, Among> e : properties.entrySet()){
-				stb.append('\n');
-				for(int i = 0; i<indents+1; i++) stb.append(indent);
-				AmongUs.keyToPrettyString(stb, e.getKey(), false, indents+1, indent);
+				if(!isCompact) AmongUs.newlineAndIndent(stb, indents+1, option);
+				else if(first){
+					first = false;
+					stb.append(' ');
+				}else stb.append(", ");
+				AmongUs.keyToPrettyString(stb, e.getKey(), false, indents+1, option);
 				stb.append(": ");
-				AmongUs.valueToPrettyString(stb, e.getValue(), indents+1, indent);
+				AmongUs.valueToPrettyString(stb, e.getValue(), indents+1, option);
 			}
-			stb.append('\n');
-			for(int i = 0; i<indents; i++) stb.append(indent);
+			if(!isCompact) AmongUs.newlineAndIndent(stb, indents, option);
+			else stb.append(' ');
 			stb.append('}');
 		}
 		return stb.toString();

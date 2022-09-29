@@ -1,6 +1,7 @@
 package ttmp.among.definition;
 
 import org.jetbrains.annotations.Nullable;
+import ttmp.among.util.PrettyFormatOption;
 import ttmp.among.util.ToPrettyString;
 
 import java.util.Collections;
@@ -81,11 +82,11 @@ public final class AmongDefinition implements ToPrettyString{
 		});
 		return stb.toString();
 	}
-	@Override public String toPrettyString(int indents, String indent){
+	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
 		for(MacroDefinition def : macros.values()){
 			if(stb.length()>0) stb.append('\n');
-			stb.append(def.toPrettyString(indents, indent));
+			stb.append(def.toPrettyString(indents, option));
 		}
 		operators.forEachOperatorAndKeyword(def -> {
 			if(stb.length()>0) stb.append('\n');

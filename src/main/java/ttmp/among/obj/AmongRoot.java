@@ -2,6 +2,7 @@ package ttmp.among.obj;
 
 import ttmp.among.exception.Sussy;
 import ttmp.among.util.AmongUs;
+import ttmp.among.util.PrettyFormatOption;
 import ttmp.among.util.ToPrettyString;
 
 import java.util.ArrayList;
@@ -91,18 +92,18 @@ public final class AmongRoot implements ToPrettyString{
 	 * result will produce identical object to this.
 	 *
 	 * @param indents Number of indentations
-	 * @param indent  Indentation to use
+	 * @param option  Option to use
 	 * @return String representation of this root
 	 */
-	@Override public String toPrettyString(int indents, String indent){
+	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
 		boolean first = true;
 		for(Among object : objects){
 			if(first) first = false;
 			else stb.append('\n');
 			if(object.isPrimitive())
-				AmongUs.primitiveToPrettyString(stb, object.asPrimitive().getValue(), indents, indent);
-			else stb.append(object.toPrettyString(indents, indent));
+				AmongUs.primitiveToPrettyString(stb, object.asPrimitive().getValue(), indents, option);
+			else stb.append(object.toPrettyString(indents, option));
 		}
 		return stb.toString();
 	}

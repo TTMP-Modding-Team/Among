@@ -10,6 +10,7 @@ import ttmp.among.obj.AmongPrimitive;
 import ttmp.among.util.AmongUs;
 import ttmp.among.util.AmongWalker;
 import ttmp.among.util.NodePath;
+import ttmp.among.util.PrettyFormatOption;
 import ttmp.among.util.ToPrettyString;
 
 import java.util.ArrayList;
@@ -177,11 +178,11 @@ public final class MacroDefinition implements ToPrettyString{
 				for(int i = 0; i<this.parameter.size(); i++){
 					MacroParameter p = this.parameter.paramAt(i);
 					if(p.defaultValue()==null&&!o.hasProperty(p.name()))
-						reportHandler.accept(Report.ReportType.ERROR, "Missing argument '"+p.name()+"'");
+						reportHandler.accept(Report.ReportType.ERROR, "Missing argument '"+p.name()+'\'');
 				}
 				for(String key : argument.asObj().properties().keySet())
 					if(this.parameter.indexOf(key)==-1)
-						reportHandler.accept(Report.ReportType.WARN, "Unused argument '"+key+"'");
+						reportHandler.accept(Report.ReportType.WARN, "Unused argument '"+key+'\'');
 				return;
 			}
 			case LIST: case OPERATION:{
@@ -211,7 +212,7 @@ public final class MacroDefinition implements ToPrettyString{
 					Among val = o.getProperty(p.name());
 					if(val==null){
 						if(p.defaultValue()!=null) val = p.defaultValue();
-						else throw new Sussy("Missing argument '"+p.name()+"'");
+						else throw new Sussy("Missing argument '"+p.name()+'\'');
 					}
 					args.add(val);
 				}
@@ -248,33 +249,33 @@ public final class MacroDefinition implements ToPrettyString{
 		AmongUs.nameToString(stb, name(), false);
 		switch(this.type()){
 			case OBJECT:
-				stb.append("{").append(parameter).append("}");
+				stb.append('{').append(parameter).append('}');
 				break;
 			case LIST:
-				stb.append("[").append(parameter).append("]");
+				stb.append('[').append(parameter).append(']');
 				break;
 			case OPERATION:
-				stb.append("(").append(parameter).append(")");
+				stb.append('(').append(parameter).append(')');
 				break;
 		}
-		return stb.append(" : ").append(template).toString();
+		return stb.append(':').append(template).toString();
 	}
-	@Override public String toPrettyString(int indents, String indent){
+	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
 		stb.append("macro ");
-		AmongUs.nameToPrettyString(stb, name(), false, indents, indent);
+		AmongUs.nameToPrettyString(stb, name(), false, indents, option);
 		switch(this.type()){
 			case OBJECT:
-				stb.append("{").append(parameter.toPrettyString(indents, indent)).append("}");
+				stb.append('{').append(parameter.toPrettyString(indents, option)).append('}');
 				break;
 			case LIST:
-				stb.append("[").append(parameter.toPrettyString(indents, indent)).append("]");
+				stb.append('[').append(parameter.toPrettyString(indents, option)).append(']');
 				break;
 			case OPERATION:
-				stb.append("(").append(parameter.toPrettyString(indents, indent)).append(")");
+				stb.append('(').append(parameter.toPrettyString(indents, option)).append(')');
 				break;
 		}
-		return stb.append(" : ").append(template.toPrettyString(indents, indent)).toString();
+		return stb.append(" : ").append(template.toPrettyString(indents, option)).toString();
 	}
 
 	public static List<MacroReplacement> replacementFromObject(MacroParameterList params, Among object){

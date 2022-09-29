@@ -102,7 +102,11 @@ public class RecompileTests{
 			for(Among v : original) root.addObject(v);
 			System.out.println("========== Original ==========");
 			System.out.println(root.toPrettyString());
+			System.out.println();
+			System.out.println("Re-compiling toString() result");
 			assertArrayEquals(original, TestUtil.make(root.toString()).root().objects().toArray(new Among[0]));
+			System.out.println();
+			System.out.println("Re-compiling toPrettyString() result");
 			assertArrayEquals(original, TestUtil.make(root.toPrettyString()).root().objects().toArray(new Among[0]));
 		});
 	}
@@ -117,7 +121,11 @@ public class RecompileTests{
 			}
 			System.out.println("========== Original ==========");
 			System.out.println(root.toPrettyString());
+			System.out.println();
+			System.out.println("Re-compiling toString() result");
 			assertEquals(root.macros(), TestUtil.make(root.toString()).definition().macros());
+			System.out.println();
+			System.out.println("Re-compiling toPrettyString() result");
 			assertEquals(root.macros(), TestUtil.make(root.toPrettyString()).definition().macros());
 		});
 	}
@@ -132,7 +140,11 @@ public class RecompileTests{
 			}
 			System.out.println("========== Original ==========");
 			System.out.println(root.toPrettyString());
+			System.out.println();
+			System.out.println("Re-compiling toString() result");
 			assertEquals(root.operators().allOperatorsAndKeywords(), TestUtil.make(root.toString()).definition().operators().allOperatorsAndKeywords());
+			System.out.println();
+			System.out.println("Re-compiling toPrettyString() result");
 			assertEquals(root.operators().allOperatorsAndKeywords(), TestUtil.make(root.toPrettyString()).definition().operators().allOperatorsAndKeywords());
 		});
 	}

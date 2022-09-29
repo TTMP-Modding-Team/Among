@@ -1,6 +1,7 @@
 package ttmp.among.definition;
 
 import ttmp.among.exception.Sussy;
+import ttmp.among.util.PrettyFormatOption;
 import ttmp.among.util.ToPrettyString;
 
 import java.util.ArrayList;
@@ -169,9 +170,9 @@ public final class MacroParameterList implements ToPrettyString{
 				.collect(Collectors.joining(","));
 	}
 
-	@Override public String toPrettyString(int indents, String indent){
+	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		return params.stream()
-				.map(p -> p.toPrettyString(indents+1, indent))
+				.map(p -> p.toPrettyString(indents+1, option))
 				.collect(Collectors.joining(", "));
 	}
 }

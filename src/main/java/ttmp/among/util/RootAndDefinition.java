@@ -35,10 +35,10 @@ public final class RootAndDefinition implements ToPrettyString{
 						definition+"\n"+root;
 	}
 
-	@Override public String toPrettyString(int indents, String indent){
+	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		return definition.isEmpty() ?
-				root.isEmpty() ? "" : root.toPrettyString() :
-				root.isEmpty() ? definition.toPrettyString() :
+				root.isEmpty() ? "" : root.toPrettyString(indents, option) :
+				root.isEmpty() ? definition.toPrettyString(indents, option) :
 						definition+"\n"+root;
 	}
 }
