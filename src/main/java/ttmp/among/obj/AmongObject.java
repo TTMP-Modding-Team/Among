@@ -209,9 +209,9 @@ public class AmongObject extends AmongNamed{
 					first = false;
 					stb.append(' ');
 				}else stb.append(", ");
-				AmongUs.keyToPrettyString(stb, e.getKey(), false, indents+1, option);
+				AmongUs.keyToPrettyString(stb, e.getKey(), false, isCompact ? indents : indents+1, option);
 				stb.append(": ");
-				AmongUs.valueToPrettyString(stb, e.getValue(), indents+1, option);
+				AmongUs.valueToPrettyString(stb, e.getValue(), isCompact ? indents : indents+1, option);
 			}
 			if(!isCompact) AmongUs.newlineAndIndent(stb, indents, option);
 			else stb.append(' ');

@@ -157,7 +157,7 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 				if(!isCompact) AmongUs.newlineAndIndent(stb, indents+1, option);
 				else if(j>0) stb.append(", ");
 				else stb.append(' ');
-				AmongUs.valueToPrettyString(stb, values.get(j), indents+1, option);
+				AmongUs.valueToPrettyString(stb, values.get(j), isCompact ? indents : indents+1, option);
 			}
 			if(!isCompact) AmongUs.newlineAndIndent(stb, indents, option);
 			else stb.append(' ');
