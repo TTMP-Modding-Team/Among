@@ -4,14 +4,16 @@ import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.AmongParser;
 import ttmp.among.compile.CompileResult;
 import ttmp.among.compile.Source;
-import ttmp.among.macro.MacroDefinition;
+import ttmp.among.definition.AmongDefinition;
+import ttmp.among.definition.MacroDefinition;
+import ttmp.among.definition.OperatorDefinition;
+import ttmp.among.definition.OperatorRegistry;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.operator.OperatorDefinition;
-import ttmp.among.operator.OperatorRegistry;
 import ttmp.among.util.DefaultInstanceProvider;
 import ttmp.among.util.ErrorHandling;
 import ttmp.among.util.Provider;
+import ttmp.among.util.RootAndDefinition;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,8 +102,8 @@ public class AmongEngine{
 	public int invalidUnicodeHandling = ErrorHandling.ERROR;
 
 	private final List<Provider<Source>> sourceProviders = new ArrayList<>();
-	private final List<Provider<AmongRoot>> instanceProviders = new ArrayList<>();
-	private final Map<String, AmongRoot> pathByInstance = new HashMap<>();
+	private final List<Provider<RootAndDefinition>> instanceProviders = new ArrayList<>();
+	private final Map<String, RootAndDefinition> pathByInstance = new HashMap<>();
 
 	{
 		instanceProviders.add(DefaultInstanceProvider.instance());
@@ -125,7 +127,7 @@ public class AmongEngine{
 	 * @param instanceProvider The instance provider to be registered
 	 * @throws NullPointerException If {@code sourceProvider == null}
 	 */
-	public final void addInstanceProvider(Provider<AmongRoot> instanceProvider){
+	public final void addInstanceProvider(Provider<RootAndDefinition> instanceProvider){
 		instanceProviders.add(Objects.requireNonNull(instanceProvider));
 	}
 
@@ -135,22 +137,26 @@ public class AmongEngine{
 	 *
 	 * @param source Source to be read from
 	 * @return Result with new root containing objects parsed from {@code source}
-	 * @see AmongEngine#read(Source, AmongRoot)
+	 * @see AmongEngine#read(Source, AmongRoot, AmongDefinition)
 	 */
 	public final CompileResult read(Source source){
-		return read(source, null);
+		return read(source, null, null);
 	}
 
 	/**
 	 * Reads and parses the source into given {@link AmongRoot}, or new one if {@code null} is supplied.
 	 *
-	 * @param source Source to be read from
-	 * @param root   Root to be used
+	 * @param source           Source to be read from
+	 * @param root             Root to be used; will be modified returned as compilation result. If {@code null} is
+	 *                         supplied, new root will be created.
+	 * @param importDefinition Imported definitions to be used; will be modified. Does not get returned as compilation
+	 *                         result.
 	 * @return Result with {@code root} (or new root if it was {@code null}) containing objects parsed from {@code source}
 	 */
-	public final CompileResult read(Source source, @Nullable AmongRoot root){
+	public final CompileResult read(Source source, @Nullable AmongRoot root, @Nullable AmongDefinition importDefinition){
 		return new AmongParser(source, this,
-				root==null ? AmongRoot.empty() : root)
+				root==null ? new AmongRoot() : root,
+				importDefinition==null ? new AmongDefinition() : importDefinition)
 				.parse();
 	}
 
@@ -168,8 +174,8 @@ public class AmongEngine{
 	 * @return Instance of {@link AmongRoot} correlated to the path, or {@code null} if the search failed
 	 * @throws NullPointerException If {@code path == null}
 	 */
-	@Nullable public final AmongRoot getOrReadFrom(String path){
-		AmongRoot r = pathByInstance.get(path);
+	@Nullable public final RootAndDefinition getOrReadFrom(String path){
+		RootAndDefinition r = pathByInstance.get(path);
 		if(r==null){
 			r = resolve(path);
 			pathByInstance.put(path, r);
@@ -192,15 +198,15 @@ public class AmongEngine{
 	 * @return Instance of {@link AmongRoot} correlated to the path, or {@code null} if the search failed
 	 * @throws NullPointerException If {@code path == null}
 	 */
-	@Nullable public final AmongRoot readFrom(String path){
-		AmongRoot r = resolve(path);
+	@Nullable public final RootAndDefinition readFrom(String path){
+		RootAndDefinition r = resolve(path);
 		pathByInstance.put(path, r);
 		return r;
 	}
 
 	private final LinkedHashSet<String> resolvingPathCache = new LinkedHashSet<>();
 
-	@Nullable private AmongRoot resolve(String path){
+	@Nullable private RootAndDefinition resolve(String path){
 		if(!resolvingPathCache.add(path)){
 			List<String> trace = new ArrayList<>();
 			boolean found = false;
@@ -214,15 +220,15 @@ public class AmongEngine{
 			handleCircularReference(path, trace);
 			return null;
 		}
-		AmongRoot r = resolveInternal(path);
+		RootAndDefinition r = resolveInternal(path);
 		resolvingPathCache.remove(path);
 		return r;
 	}
 
-	@Nullable private AmongRoot resolveInternal(String path){
-		for(Provider<AmongRoot> ip : instanceProviders){
+	@Nullable private RootAndDefinition resolveInternal(String path){
+		for(Provider<RootAndDefinition> ip : instanceProviders){
 			try{
-				AmongRoot resolve = ip.resolve(path);
+				RootAndDefinition resolve = ip.resolve(path);
 				if(resolve!=null) return resolve;
 			}catch(Exception ex){
 				handleInstanceResolveException(path, ex);
@@ -235,7 +241,7 @@ public class AmongEngine{
 					CompileResult res = read(source);
 					if(res.isSuccess()){
 						handleCompileSuccess(path, res);
-						return res.root();
+						return res.rootAndDefinition();
 					}else{
 						handleCompileError(path, res);
 						return null;

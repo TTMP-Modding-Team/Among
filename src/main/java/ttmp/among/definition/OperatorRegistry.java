@@ -1,4 +1,4 @@
-package ttmp.among.operator;
+package ttmp.among.definition;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,8 +16,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
-import static ttmp.among.operator.OperatorType.BINARY;
-import static ttmp.among.operator.OperatorType.POSTFIX;
+import static ttmp.among.definition.OperatorType.BINARY;
+import static ttmp.among.definition.OperatorType.POSTFIX;
 
 /**
  * Collection of {@link OperatorDefinition}s organized in various format to ensure faster access during compilation.<br>
@@ -96,6 +96,15 @@ public final class OperatorRegistry{
 				removeFromParsingOrder(def);
 			}
 		}
+	}
+
+	public boolean isEmpty(){
+		return operators.isEmpty();
+	}
+	public void clear(){
+		operators.clear();
+		priorityGroup.clear();
+		priorityGroupList = null;
 	}
 
 	private boolean isPriorityOccupiedByWrongType(OperatorDefinition definition){

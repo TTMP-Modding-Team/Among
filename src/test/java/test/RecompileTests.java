@@ -2,15 +2,16 @@ package test;
 
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
+import ttmp.among.definition.AmongDefinition;
+import ttmp.among.definition.MacroDefinition;
+import ttmp.among.definition.MacroDefinitionBuilder;
+import ttmp.among.definition.MacroType;
+import ttmp.among.definition.OperatorDefinition;
+import ttmp.among.definition.OperatorPriorities;
+import ttmp.among.definition.OperatorRegistry;
+import ttmp.among.definition.OperatorType;
 import ttmp.among.obj.Among;
-import ttmp.among.macro.MacroDefinition;
-import ttmp.among.operator.OperatorDefinition;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.macro.MacroDefinitionBuilder;
-import ttmp.among.macro.MacroType;
-import ttmp.among.operator.OperatorPriorities;
-import ttmp.among.operator.OperatorRegistry;
-import ttmp.among.operator.OperatorType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,40 +98,42 @@ public class RecompileTests{
 
 	private static DynamicTest recompileTest(String name, Among... original){
 		return DynamicTest.dynamicTest(name, () -> {
-			AmongRoot root = AmongRoot.empty();
+			AmongRoot root = new AmongRoot();
 			for(Among v : original) root.addObject(v);
 			System.out.println("========== Original ==========");
 			System.out.println(root.toPrettyString());
-			assertArrayEquals(original, TestUtil.make(root.toString(), AmongRoot.empty()).objects().toArray(new Among[0]));
-			assertArrayEquals(original, TestUtil.make(root.toPrettyString(), AmongRoot.empty()).objects().toArray(new Among[0]));
+			assertArrayEquals(original, TestUtil.make(root.toString()).root().objects().toArray(new Among[0]));
+			assertArrayEquals(original, TestUtil.make(root.toPrettyString()).root().objects().toArray(new Among[0]));
 		});
 	}
 
 	private static DynamicTest recompileTest(String name, MacroDefinitionBuilder... original){
 		return DynamicTest.dynamicTest(name, () -> {
-			AmongRoot root = AmongRoot.empty();
+			AmongDefinition root = new AmongDefinition();
 			for(MacroDefinitionBuilder v : original){
 				MacroDefinition orig = root.addMacro(v.build());
 				if(orig!=null)
 					throw new RuntimeException("Macro definition '"+v+"' is duplicate of '"+orig+"'");
 			}
 			System.out.println("========== Original ==========");
-			System.out.println(root.definitionsToPrettyString());
-			assertEquals(root.macros(), TestUtil.make(root.definitionsToPrettyString(), AmongRoot.empty()).macros());
+			System.out.println(root.toPrettyString());
+			assertEquals(root.macros(), TestUtil.make(root.toString()).definition().macros());
+			assertEquals(root.macros(), TestUtil.make(root.toPrettyString()).definition().macros());
 		});
 	}
 
 	private static DynamicTest recompileTest(String name, OperatorDefinition... original){
 		return DynamicTest.dynamicTest(name, () -> {
-			AmongRoot root = AmongRoot.empty();
+			AmongDefinition root = new AmongDefinition();
 			for(OperatorDefinition v : original){
 				OperatorRegistry.RegistrationResult r = root.operators().add(v);
 				if(!r.isSuccess())
 					throw new RuntimeException("Cannot register operator '"+v+"': "+r.message(v));
 			}
 			System.out.println("========== Original ==========");
-			System.out.println(root.definitionsToPrettyString());
-			assertEquals(root.operators().allOperatorsAndKeywords(), TestUtil.make(root.definitionsToPrettyString(), AmongRoot.empty()).operators().allOperatorsAndKeywords());
+			System.out.println(root.toPrettyString());
+			assertEquals(root.operators().allOperatorsAndKeywords(), TestUtil.make(root.toString()).definition().operators().allOperatorsAndKeywords());
+			assertEquals(root.operators().allOperatorsAndKeywords(), TestUtil.make(root.toPrettyString()).definition().operators().allOperatorsAndKeywords());
 		});
 	}
 }

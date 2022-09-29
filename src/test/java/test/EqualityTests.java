@@ -211,6 +211,7 @@ public class EqualityTests{
 	private static DynamicTest simpleEqualityTest(String name, Among... expected){
 		return DynamicTest.dynamicTest(name, () -> assertArrayEquals(expected,
 				TestUtil.make(TestUtil.expectSourceFrom("equality_tests", name))
+						.root()
 						.objects()
 						.toArray(new Among[0])));
 	}

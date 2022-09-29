@@ -1,8 +1,10 @@
 package ttmp.among.compile;
 
 import org.jetbrains.annotations.Nullable;
+import ttmp.among.definition.AmongDefinition;
 import ttmp.among.exception.SussyCompile;
 import ttmp.among.obj.AmongRoot;
+import ttmp.among.util.RootAndDefinition;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,13 +20,14 @@ import java.util.function.Consumer;
 public final class CompileResult{
 	private final Source source;
 	private final AmongRoot root;
+	private final AmongDefinition definition;
+	private final List<Report> reports;
 
-	private final List<Report> reports = new ArrayList<>();
-
-	public CompileResult(Source source, AmongRoot root, List<Report> reports){
+	public CompileResult(Source source, AmongRoot root, AmongDefinition definition, List<Report> reports){
 		this.source = source;
 		this.root = root;
-		this.reports.addAll(reports);
+		this.definition = definition;
+		this.reports = new ArrayList<>(reports);
 	}
 
 	/**
@@ -39,18 +42,42 @@ public final class CompileResult{
 	 * The root modified during operation. This object is always present, regardless of whether error was
 	 * reported or not.<br>
 	 * Success or failure of the operation does not indicate whether content of this root was modified; in fact the
-	 * root may have picked up erroneous interpretation of faulty script, after recovering from error. Because of that,
-	 * checking presence of any errors reports before using root is recommended.
+	 * root may have picked up erroneous interpretation of faulty script, after recovering from error. Checking presence
+	 * of any errors reports before using this object is recommended.
 	 *
-	 * @return The root modified during operation.
+	 * @return The root modified during operation
 	 */
 	public AmongRoot root(){
 		return root;
 	}
 	/**
+	 * Macros and operators defined during operation. Definitions imported are not included in this object. This object
+	 * is always present, regardless of whether error was reported or not.<br>
+	 * Success or failure of the operation does not indicate whether content of this definition was modified; in fact
+	 * the definition may have picked up erroneous interpretation of faulty script, after recovering from error.
+	 * Checking presence of any errors reports before using this object is recommended.
+	 *
+	 * @return The definition modified during operation
+	 */
+	public AmongDefinition definition(){
+		return definition;
+	}
+	/**
+	 * Objects and definitions modified during operation. Both the objects and definitions are always present,
+	 * regardless of whether error was reported or not.<br>
+	 * Success or failure of the operation does not indicate whether content of the objects were modified; in fact the
+	 * objects may have picked up erroneous interpretation of faulty script, after recovering from error. Checking
+	 * presence of any errors reports before using these objects are recommended.
+	 *
+	 * @return Objects and definitions modified during operation
+	 */
+	public RootAndDefinition rootAndDefinition(){
+		return new RootAndDefinition(root, definition);
+	}
+	/**
 	 * Unmodifiable list of all reports.
 	 *
-	 * @return Unmodifiable list of all reports.
+	 * @return Unmodifiable list of all reports
 	 */
 	public List<Report> reports(){
 		return Collections.unmodifiableList(reports);
@@ -89,15 +116,12 @@ public final class CompileResult{
 	}
 
 	/**
-	 * Returns {@link CompileResult#root} after checking for {@link CompileResult#isSuccess()}. If {@code isSuccess() ==
-	 * false}, this method will throw exception.
+	 * Check for {@link CompileResult#isSuccess()}. If {@code isSuccess() == false}, an exception will be thrown.
 	 *
-	 * @return Root
 	 * @throws SussyCompile If {@code isSuccess() == false}
 	 */
-	public AmongRoot expectSuccess(){
+	public void expectSuccess(){
 		if(!isSuccess()) throw new SussyCompile("Failed to compile");
-		return root;
 	}
 
 	public void printReports(){

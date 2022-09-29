@@ -1,4 +1,4 @@
-package ttmp.among.macro;
+package ttmp.among.definition;
 
 /**
  * Types of macro. Snippet below shows macros with each type written in Among.

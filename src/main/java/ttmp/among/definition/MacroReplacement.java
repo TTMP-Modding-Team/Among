@@ -1,4 +1,4 @@
-package ttmp.among.macro;
+package ttmp.among.definition;
 
 import ttmp.among.obj.Among;
 import ttmp.among.util.NodePath;

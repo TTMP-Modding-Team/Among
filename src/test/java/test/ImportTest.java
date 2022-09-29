@@ -3,10 +3,11 @@ package test;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import ttmp.among.AmongEngine;
-import ttmp.among.macro.MacroDefinition;
-import ttmp.among.macro.MacroType;
+import ttmp.among.definition.AmongDefinition;
+import ttmp.among.definition.MacroDefinition;
+import ttmp.among.definition.MacroType;
 import ttmp.among.obj.Among;
-import ttmp.among.obj.AmongRoot;
+import ttmp.among.util.RootAndDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,20 +23,20 @@ public class ImportTest{
 		engine.addInstanceProvider(path -> {
 			switch(path){
 				case "provided_instance/1":{
-					AmongRoot root = AmongRoot.empty();
-					root.addMacro(MacroDefinition.builder()
+					AmongDefinition definition = new AmongDefinition();
+					definition.addMacro(MacroDefinition.builder()
 							.signature("filename", MacroType.OPERATION)
 							.template(value("Provided Instance #1"))
 							.build());
-					return root;
+					return new RootAndDefinition(definition);
 				}
 				case "provided_instance/2":{
-					AmongRoot root = AmongRoot.empty();
-					root.addMacro(MacroDefinition.builder()
+					AmongDefinition definition = new AmongDefinition();
+					definition.addMacro(MacroDefinition.builder()
 							.signature("filename", MacroType.OPERATION)
 							.template(value("Provided Instance #2"))
 							.build());
-					return root;
+					return new RootAndDefinition(definition);
 				}
 				default: return null;
 			}
@@ -81,11 +82,11 @@ public class ImportTest{
 	private static DynamicTest eq(AmongEngine engine, String name, Among... expected){
 		return DynamicTest.dynamicTest(name, () -> {
 			long t = System.currentTimeMillis();
-			AmongRoot root = engine.getOrReadFrom(name);
+			RootAndDefinition root = engine.getOrReadFrom(name);
 			t = System.currentTimeMillis()-t;
 			assertNotNull(root, "Compilation failed");
 			TestUtil.log(root, t);
-			assertArrayEquals(expected, root.objects().toArray(new Among[0]));
+			assertArrayEquals(expected, root.root().objects().toArray(new Among[0]));
 		});
 	}
 	private static DynamicTest err(AmongEngine engine, String name){

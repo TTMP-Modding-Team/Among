@@ -1,4 +1,4 @@
-package ttmp.among.operator;
+package ttmp.among.definition;
 
 import ttmp.among.util.AmongUs;
 

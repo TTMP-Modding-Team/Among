@@ -1,4 +1,4 @@
-package ttmp.among.macro;
+package ttmp.among.definition;
 
 import org.jetbrains.annotations.NotNull;
 import ttmp.among.util.AmongUs;

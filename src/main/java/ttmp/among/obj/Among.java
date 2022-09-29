@@ -3,8 +3,8 @@ package ttmp.among.obj;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.AmongEngine;
 import ttmp.among.compile.Source;
+import ttmp.among.definition.MacroDefinition;
 import ttmp.among.exception.SussyCast;
-import ttmp.among.macro.MacroDefinition;
 import ttmp.among.util.AmongWalker;
 import ttmp.among.util.NodePath;
 import ttmp.among.util.ToPrettyString;
@@ -147,8 +147,8 @@ public abstract class Among implements ToPrettyString{
 	}
 
 	/**
-	 * Returns a string representation of this object. Parsing the string with {@link AmongEngine#read(Source,
-	 * AmongRoot)} will create identical copy of this object, excluding {@link Among#paramRef} field.
+	 * Returns a string representation of this object. Parsing the string with {@link AmongEngine#read(Source)} will
+	 * create identical copy of this object, excluding {@link Among#paramRef} field.
 	 *
 	 * @return String representation of this object
 	 */
