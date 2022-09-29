@@ -357,39 +357,8 @@ public final class AmongParser{
 	@Nullable private Among nameable(TokenizationMode mode, boolean macro){
 		tokenizer.discard();
 		AmongToken next = tokenizer.next(true, mode, macro);
-		boolean paramRef = false, applyMacro = false;
 		Among nameable;
 		switch(next.type){
-			case PARAM_REF: paramRef = true;
-			case NAME: applyMacro = true;
-			case COMPLEX_PRIMITIVE:{
-				// lookahead to find if it's nameable instance
-				switch(tokenizer.next(false, mode, macro).type){
-					case L_BRACE:{
-						AmongObject o = obj(next.expectLiteral(), macro);
-						if(applyMacro&&!paramRef) return objectMacro(o, next.start);
-						else nameable = o;
-						break;
-					}
-					case L_BRACKET:{
-						AmongList l = list(next.expectLiteral(), macro);
-						if(applyMacro&&!paramRef) return listMacro(l, next.start);
-						else nameable = l;
-						break;
-					}
-					case L_PAREN:{
-						AmongList o = oper(next.expectLiteral(), macro);
-						if(applyMacro&&!paramRef) return operationMacro(o, next.start);
-						else nameable = engine.collapseUnaryOperation&&!o.hasName()&&o.size()==1 ? o.get(0) : o;
-						break;
-					}
-					default:
-						tokenizer.reset();
-						return null;
-				}
-				nameable.setParamRef(paramRef);
-				return nameable;
-			}
 			case L_BRACE: return obj(null, macro);
 			case L_BRACKET: return list(null, macro);
 			case L_PAREN:{
@@ -397,6 +366,33 @@ public final class AmongParser{
 				return engine.collapseUnaryOperation&&!o.hasName()&&o.size()==1 ? o.get(0) : o;
 			}
 			default:
+				if(next.isLiteral()){
+					boolean paramRef = next.is(PARAM_REF), applyMacro = next.is(NAME);
+					// lookahead to find if it's nameable instance
+					switch(tokenizer.next(false, mode, macro).type){
+						case L_BRACE:{
+							AmongObject o = obj(next.expectLiteral(), macro);
+							if(applyMacro&&!paramRef) return objectMacro(o, next.start);
+							else nameable = o;
+							break;
+						}
+						case L_BRACKET:{
+							AmongList l = list(next.expectLiteral(), macro);
+							if(applyMacro&&!paramRef) return listMacro(l, next.start);
+							else nameable = l;
+							break;
+						}
+						case L_PAREN:{
+							AmongList o = oper(next.expectLiteral(), macro);
+							if(applyMacro&&!paramRef) return operationMacro(o, next.start);
+							else nameable = engine.collapseUnaryOperation&&!o.hasName()&&o.size()==1 ? o.get(0) : o;
+							break;
+						}
+						default: tokenizer.reset(); return null;
+					}
+					nameable.setParamRef(paramRef);
+					return nameable;
+				}
 				tokenizer.reset();
 				return null;
 		}

@@ -86,7 +86,7 @@ public final class AmongToken{
 		/** , */ COMMA,
 		/** : */ COLON,
 		// Literal shits
-		WORD, NAME, KEY, PARAM_NAME, COMPLEX_PRIMITIVE, VALUE, OPERATOR, KEYWORD, PARAM_REF,
+		WORD, NAME, KEY, PARAM_NAME, COMPLEX_PRIMITIVE, VALUE, OPERATOR, KEYWORD, PARAM_REF, NUMBER,
 		/** Generic error token; only emitted on special occasions */ ERROR;
 
 		public String friendlyName(){
@@ -111,6 +111,7 @@ public final class AmongToken{
 				case OPERATOR: return "operator";
 				case KEYWORD: return "keyword";
 				case PARAM_REF: return "parameter reference";
+				case NUMBER: return "number";
 				case ERROR: return "error";
 				default: throw new IllegalStateException("Unreachable");
 			}

@@ -3,7 +3,7 @@ package ttmp.among.compile;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.AmongToken.TokenType;
 import ttmp.among.compile.Report.ReportType;
-import ttmp.among.operator.OperatorRegistry;
+import ttmp.among.operator.OperatorRegistry.NameGroup;
 import ttmp.among.util.ErrorHandling;
 
 import java.util.ArrayList;
@@ -286,54 +286,146 @@ public final class AmongTokenizer{
 
 	private void operation(boolean macro){
 		int start = srcIndex;
-		OperatorRegistry.NameGroup keyword = match(true);
-		OperatorRegistry.NameGroup operator = null;
-
-		int nameStart = srcIndex;
-		int operatorStart = srcIndex;
-
+		NameGroup keyword = match(true);
 		StringBuilder stb = new StringBuilder();
-		L:
 		while(true){
 			int prev = srcIndex;
 			int c = nextCodePoint();
 			switch(c){
-				case EOF: case ' ': case '\t': case '\n': case ':': case ',':
+				case ' ': case '\t': case '\n': case ':': case ',':
 				case '{': case '}': case '[': case ']': case '(': case ')':
 					srcIndex = prev;
-					break L;
+				case EOF:
+					addOperationTokens(keyword, start, stb, macro);
+					return;
 			}
 			srcIndex = prev;
-			operator = match(false);
+			NameGroup operator = match(false);
 			if(operator!=null){
-				operatorStart = prev;
-				break;
+				addOperationTokens(keyword, start, stb, macro);
+				tokens.add(new AmongToken(TokenType.OPERATOR, prev, operator.name()));
+				return;
 			}
 			if(keyword!=null){
 				stb.append(keyword.name());
 				keyword = null;
+			}else if(prev==start){ // first character
+				if(number()) return;
 			}
 			stb.appendCodePoint(nextLiteralChar());
 		}
-		if(keyword!=null) tokens.add(new AmongToken(TokenType.KEYWORD, start, keyword.name()));
-		else if(stb.length()>0)
-			tokens.add(new AmongToken(macro&&source.codePointAt(nameStart)=='$' ? TokenType.PARAM_REF : TokenType.NAME, nameStart, stb.toString()));
-		if(operator!=null) tokens.add(new AmongToken(TokenType.OPERATOR, operatorStart, operator.name()));
 	}
 
-	@Nullable private OperatorRegistry.NameGroup match(boolean keyword){
+	private void addOperationTokens(@Nullable NameGroup keyword, int start,
+	                                StringBuilder stb, boolean macro){
+		if(keyword!=null) tokens.add(new AmongToken(TokenType.KEYWORD, start, keyword.name()));
+		else if(stb.length()>0)
+			tokens.add(new AmongToken(
+					macro&&source.codePointAt(start)=='$' ? TokenType.PARAM_REF : TokenType.NAME,
+					start, stb.toString()));
+	}
+
+	@Nullable private NameGroup match(boolean keyword){
 		int prev = srcIndex;
-		Set<OperatorRegistry.NameGroup> set = keyword ?
+		Set<NameGroup> set = keyword ?
 				parser.importRoot().operators().getKeywords(nextLiteralChar()) :
 				parser.importRoot().operators().getOperators(nextLiteralChar());
 		srcIndex = prev;
 		if(!set.isEmpty())
-			for(OperatorRegistry.NameGroup o : set)
+			for(NameGroup o : set)
 				if(matches(o)) return o;
 		return null;
 	}
 
-	private boolean matches(OperatorRegistry.NameGroup operator){
+	private boolean number(){
+		int start = srcIndex;
+		int numberStart = start;
+		switch(nextCodePoint()){
+			case '+': numberStart = srcIndex;
+			case '-': switch(nextCodePoint()){
+				case '0': case '1': case '2': case '3': case '4':
+				case '5': case '6': case '7': case '8': case '9':
+					break;
+				default: srcIndex = start; return false;
+			}
+			case '0': case '1': case '2': case '3': case '4':
+			case '5': case '6': case '7': case '8': case '9':
+				break;
+			default: srcIndex = start; return false;
+		}
+		srcIndex = numberStart;
+		while(true){
+			int prev = srcIndex;
+			int c = nextCodePoint();
+			switch(c){
+				case '0': case '1': case '2': case '3': case '4':
+				case '5': case '6': case '7': case '8': case '9':
+					continue;
+				case ' ': case '\t': case '\n': case ':': case ',':
+				case '{': case '}': case '[': case ']': case '(': case ')':
+					srcIndex = prev;
+				case EOF:
+					addNumber(numberStart, prev);
+					return true;
+				case '.':{
+					boolean first = true;
+					while(true){
+						int prev2 = srcIndex;
+						c = nextCodePoint();
+						switch(c){
+							case '0': case '1': case '2': case '3': case '4':
+							case '5': case '6': case '7': case '8': case '9':
+								if(first) first = false;
+								continue;
+							case ' ': case '\t': case '\n': case ':': case ',':
+							case '{': case '}': case '[': case ']': case '(': case ')':
+							case EOF:
+								if(!first){
+									srcIndex = prev2;
+									addNumber(numberStart, prev2);
+									return true;
+								}
+								break;
+							default:
+								if(!first){
+									srcIndex = prev2;
+									NameGroup operator = match(false);
+									if(operator!=null){
+										addNumber(numberStart, prev2);
+										tokens.add(new AmongToken(TokenType.OPERATOR, prev2, operator.name()));
+										return true;
+									}
+								}
+						}
+						break;
+					}
+				}
+				default:
+					srcIndex = prev;
+					NameGroup operator = match(false);
+					if(operator!=null){
+						addNumber(numberStart, prev);
+						tokens.add(new AmongToken(TokenType.OPERATOR, prev, operator.name()));
+						return true;
+					}else{
+						srcIndex = start;
+						return false;
+					}
+			}
+		}
+	}
+
+	private void addNumber(int numberStartInclusive, int numberEndExclusive){
+		int cache = srcIndex;
+		srcIndex = numberStartInclusive;
+		StringBuilder stb = new StringBuilder();
+		while(srcIndex<numberEndExclusive)
+			stb.appendCodePoint(nextLiteralChar());
+		tokens.add(new AmongToken(TokenType.NUMBER, numberStartInclusive, stb.toString()));
+		srcIndex = cache;
+	}
+
+	private boolean matches(NameGroup operator){
 		int prev = srcIndex;
 		for(int i = 0; i<operator.codePointLength(); i++){
 			if(operator.codePointAt(i)!=nextLiteralChar()){

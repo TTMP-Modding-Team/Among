@@ -108,6 +108,33 @@ public class EqualityTests{
 				list("When the imposter is sus!", "\uD83E\uDD75\uD83E\uDD75\uD83D\uDE31\uD83D\uDE31\uD83D\uDE30\uD83D\uDE30\uD83D\uDE2D\uD83D\uDE37\uD83E\uDD25\uD83D\uDC1B"),
 				namedList("\uD83D\uDE02\uD83D\uDE02\uD83D\uDE02\uD83D\uDE02", "\uD83D\uDE33")));
 		list.add(simpleEqualityTest("keywordTest", namedList("pika", "pikachu", namedList("pikapika", "chu!!!!!!"))));
+		list.add(simpleEqualityTest("numberTest",
+				value("01234"),
+				value("01234.45678"),
+				list("01234", "01234.45678"),
+				list("-01234", "-01234.45678"),
+				namedList("-1.toString"),
+				namedList("-1.35234"),
+				value("01234"),
+				value("01234.45678"),
+				namedList("+", "01234", "45678"),
+				list(namedList("+", "01234"), namedList("+", "01234.45678")),
+				list(namedList("-", "01234"), namedList("-", "01234.45678")),
+				namedList(".", "01234", "a5678"),
+				namedList(".", "0123a", "45678"),
+				namedList(".", "a1234", "45678"),
+				namedList("!", "1234.45678"),
+				namedList("-", "1234.45678"),
+				namedList(".", "01234", "45a78"),
+				namedList(".", namedList(".", "0.0", "0.0"), "0"),
+				namedList("==",
+						namedList("*", "3", namedList("-", "1")),
+						namedList("-", "3")),
+				namedList("==",
+						namedList("*", "3", namedList("-", "1")),
+						namedList("-", "3")),
+				namedList("-", namedList(".", "1", namedList("toString"))),
+				namedList("-", namedList("1.35234"))));
 
 		list.add(simpleEqualityTest("1",
 				object().prop("Property", "Value")
