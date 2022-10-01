@@ -91,6 +91,12 @@ public final class MacroDefinition implements ToPrettyString{
 	}
 
 	/**
+	 * Returns deep copy of the raw template used in this macro. All parameter references will be gone. This method is strictly for debugging purposes.
+	 */
+	public Among template(){
+		return template.copy();
+	}
+	/**
 	 * Whether this macro has a characteristic of being a constant macro.<br>
 	 * A macro is considered 'constant' when no element is modified with parameter. Macro with no parameter is always
 	 * constant.<br>
