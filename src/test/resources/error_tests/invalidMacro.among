@@ -9,8 +9,8 @@ macro "don't do this" "now it should error the shit out": "ok" {  // ERROR
 macro .
 
 macro notConsecutive[par1=default, par2]: [  // ERROR
-  $par1
-  $par2
+  par1
+  par2
 ]
 
 macro m: {  // ERROR
@@ -23,8 +23,8 @@ macro m: {  // ERROR
 
 
 macro notConsecutive{par1=default, par2}: [
-  $par1
-  $par2
+  par1
+  par2
 ]
 
 undef macro . ()()  // ERROR

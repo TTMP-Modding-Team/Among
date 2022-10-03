@@ -283,21 +283,21 @@ public final class MacroDefinition implements ToPrettyString{
 		List<MacroReplacement> replacements = new ArrayList<>();
 		object.walk(new AmongWalker(){
 			@Override public void walk(AmongPrimitive primitive, NodePath path){
-				if(primitive.isParamRef()&&primitive.getValue().startsWith("$")){
-					int i = params.indexOf(primitive.getValue().substring(1));
+				if(primitive.isParamRef()){
+					int i = params.indexOf(primitive.getValue());
 					if(i>=0) replacements.add(new MacroReplacement(path, i, MacroReplacement.Target.VALUE));
 				}
 			}
 			@Override public boolean walk(AmongObject object, NodePath path){
-				if(object.isParamRef()&&object.getName().startsWith("$")){
-					int i = params.indexOf(object.getName().substring(1));
+				if(object.isParamRef()){
+					int i = params.indexOf(object.getName());
 					if(i>=0) replacements.add(new MacroReplacement(path, i, MacroReplacement.Target.NAMEABLE_NAME));
 				}
 				return true;
 			}
 			@Override public boolean walk(AmongList list, NodePath path){
-				if(list.isParamRef()&&list.getName().startsWith("$")){
-					int i = params.indexOf(list.getName().substring(1));
+				if(list.isParamRef()){
+					int i = params.indexOf(list.getName());
 					if(i>=0) replacements.add(new MacroReplacement(path, i, MacroReplacement.Target.NAMEABLE_NAME));
 				}
 				return true;

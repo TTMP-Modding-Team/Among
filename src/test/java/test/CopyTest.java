@@ -41,9 +41,9 @@ public class CopyTest{
 				.param("p2", value("default"))
 				.param("p3")
 				.template(object()
-						.prop("P1", value("$p1").paramRef())
-						.prop("P2", value("$p2").paramRef())
-						.prop("P3", value("$p3").paramRef()))
+						.prop("P1", value("p1").paramRef())
+						.prop("P2", value("p2").paramRef())
+						.prop("P3", value("p3").paramRef()))
 				.build());
 
 		def.operators().addOperator("~~", OperatorType.PREFIX);

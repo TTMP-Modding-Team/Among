@@ -70,20 +70,20 @@ public class RecompileTests{
 				MacroDefinition.builder().signature("macro2", MacroType.LIST)
 						.param("1")
 						.template(list(value("Macro with 1 parameter"), object()
-								.prop("param 1", value("$1").paramRef())
+								.prop("param 1", value("1").paramRef())
 						)),
 				MacroDefinition.builder().signature("macro3", MacroType.LIST)
 						.param("1").param("2", value("default"))
 						.template(list(value("Macro with 2 parameters"), object()
-								.prop("param 1", value("$1").paramRef())
-								.prop("param 2", value("$2").paramRef())
+								.prop("param 1", value("1").paramRef())
+								.prop("param 2", value("2").paramRef())
 						)),
 				MacroDefinition.builder().signature("macro4", MacroType.LIST)
 						.param("1").param("2", value("default")).param("3", namedList("default 2", 1, 2, 3))
 						.template(list(value("Macro with 3 parameters"), object()
-								.prop("param 1", value("$1").paramRef())
-								.prop("param 2", value("$2").paramRef())
-								.prop("param 3", value("$3").paramRef())
+								.prop("param 1", value("1").paramRef())
+								.prop("param 2", value("2").paramRef())
+								.prop("param 3", value("3").paramRef())
 						))));
 
 		list.add(recompileTest("Operator 1", new OperatorDefinition("yo", true, OperatorType.PREFIX)));

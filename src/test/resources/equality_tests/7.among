@@ -5,24 +5,24 @@ use among/default_operators
 // lol
 
 // As seen below, name of the collections can be modified
-macro name=name(name=name): $name [1, 2, 3]
+macro name=name(name=name): name [1, 2, 3]
 
 name=name(awsdsf) // awsdsf [1, 2, 3]
 
 
-// This code doesn't work, though. The compiler have no idea $op is supposed to be a binary operator
+// This code doesn't work, though. The compiler have no idea op is supposed to be a binary operator
 /*
-macro oper(a, b, op): ($a $op $b) // Compilation error
+macro oper(a, b, op): (a op b) // Compilation error
 
 (oper(1, 2, +) = 3) // User expects = [+ [1, 2], 3], gets slapped over
 */
 // "correct" way to write it......
-macro oper(a, b, op): $op [ $a, $b ]
+macro oper(a, b, op): op [ a, b ]
 
 (oper(1, 2, "+") = 3) // = [+ [1, 2], 3]
 
 // Also you cannot use parameters in keys
 
-macro bullshit(key, value): { $key: $value }
-bullshit(among, us) // User expects { among: us }, actual result is { $key: us }
+macro bullshit(key, value): { key: value }
+bullshit(among, us) // User expects { among: us }, actual result is { key: us }
 // Maybe it will be implemented in future?????? nah

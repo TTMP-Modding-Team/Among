@@ -12,22 +12,19 @@ macro Pikachu: Pokemon{Name: Pikachu, Type: [Electric]}
 
 // Object/List/Operation macros can have parameters
 
-macro flip[a, b]: [$b, $a]
-macro sq(x): ($x * $x)
-macro hypercubed(x): (sq($x) * sq($x))
+macro flip[a, b]: [b, a]
+macro sq(x): (x * x)
+macro hypercubed(x): (sq(x) * sq(x))
 {
 	BatMan: flip [man, bat] // [bat, man]
 	2: sq(sqrt(2)) // (sqrt(2) * sqrt(2))
 	16: hypercubed(2) // ((2 * 2) * (2 * 2))
 }
 
-
-// The first x refers to plaintext "x"
-// the second x refers to the parameter
-// the third x refers to plaintext "$x"
-macro xxx[x]: [x, $x, "$x"]
+// quoted primitives are not considered as parameter refs
+macro xxx[x]: [x, \x, "x"]
 {
-	That's a lot of X's: xxx["Indeed!"] // [x, Indeed!, $x]
+	That's a lot of X's: xxx["Indeed!"] // [Indeed!, Indeed!, x]
 }
 
 
@@ -38,7 +35,7 @@ macro xxx[x]: [x, $x, "$x"]
 
 
 // Obviously shits like this don't work
-macro fib(a): (fib($a-2) + fib($a-1))
+macro fib(a): (fib(a-2) + fib(a-1))
 {
 	Fib1: fib(1) // + [fib [- [1, 2]], fib [- [1, 1]]]
 }
@@ -52,7 +49,7 @@ undef macro fib()
 
 
 // Here, have some more examples
-macro vec(x, y, z): {X: $x, Y: $y, Z: $z}
+macro vec(x, y, z): {X: x, Y: y, Z: z}
 macro FUNNY_NUMBER: 69420
 {
 	Vector1: vec(1, 2, 3) // {X: 1, Y: 2, Z: 3}

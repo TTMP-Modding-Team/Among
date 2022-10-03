@@ -362,9 +362,9 @@ public final class AmongParser{
 			return null;
 		}
 		AmongPrimitive p = Among.value(next.expectLiteral());
-		if(next.is(QUOTED_PRIMITIVE)) return p;
-		if(isParamRef(next)) p.setParamRef(true);
-		return primitiveMacro(p, next.start);
+		return next.is(QUOTED_PRIMITIVE) ? p :
+				isParamRef(next) ? p.paramRef() :
+						primitiveMacro(p, next.start);
 	}
 
 	private boolean isParamRef(AmongToken token){
@@ -377,7 +377,6 @@ public final class AmongParser{
 	@Nullable private Among nameable(boolean operation){
 		tokenizer.discard();
 		AmongToken next = tokenizer.next(true, operation ? TokenizationMode.OPERATION : TokenizationMode.VALUE);
-		Among nameable;
 		switch(next.type){
 			case L_BRACE: return obj(null);
 			case L_BRACKET: return list(null);
@@ -387,31 +386,25 @@ public final class AmongParser{
 			}
 			default:
 				if(next.isLiteral()){
-					boolean paramRef = isParamRef(next), applyMacro = !next.is(QUOTED_PRIMITIVE);
 					// lookahead to find if it's nameable instance
 					switch(tokenizer.next(operation, TokenizationMode.UNEXPECTED).type){
 						case L_BRACE:{
 							AmongObject o = obj(next.expectLiteral());
-							if(applyMacro&&!paramRef) return objectMacro(o, next.start);
-							else nameable = o;
-							break;
+							if(isParamRef(next)) return o.paramRef();
+							return next.is(QUOTED_PRIMITIVE) ? o : objectMacro(o, next.start);
 						}
 						case L_BRACKET:{
 							AmongList l = list(next.expectLiteral());
-							if(applyMacro&&!paramRef) return listMacro(l, next.start);
-							else nameable = l;
-							break;
+							if(isParamRef(next)) return l.paramRef();
+							return next.is(QUOTED_PRIMITIVE) ? l : listMacro(l, next.start);
 						}
 						case L_PAREN:{
 							AmongList o = oper(next.expectLiteral());
-							if(applyMacro&&!paramRef) return operationMacro(o, next.start);
-							else nameable = engine.collapseUnaryOperation&&!o.hasName()&&o.size()==1 ? o.get(0) : o;
-							break;
+							if(isParamRef(next)) return o.paramRef();
+							return next.is(QUOTED_PRIMITIVE) ? o : operationMacro(o, next.start);
 						}
 						default: tokenizer.reset(true); return null;
 					}
-					nameable.setParamRef(paramRef);
-					return nameable;
 				}
 				tokenizer.reset();
 				return null;

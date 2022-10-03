@@ -136,8 +136,8 @@ public class EqualityTests{
 				namedList("-", namedList(".", "1", namedList("toString"))),
 				namedList("-", namedList("1.35234"))));
 		list.add(simpleEqualityTest("crossRef",
-				list("a", "b", "$p5", "$p6"),
-				list(list(list("a"), list("b"), "$p5", "$p6"))));
+				list("a", "b", "p5", "p6"),
+				list(list(list("a"), list("b"), "p5", "p6"))));
 
 		list.add(simpleEqualityTest("json1", object()
 				.prop("glossary", object()
@@ -244,7 +244,7 @@ public class EqualityTests{
 						.prop("16", namedList("*",
 								namedList("*", 2, 2),
 								namedList("*", 2, 2))),
-				object().prop("That's a lot of X's", list("x", "Indeed!", "$x")),
+				object().prop("That's a lot of X's", list("Indeed!", "Indeed!", "x")),
 				object().prop("Fib1",
 						namedList("+",
 								namedList("fib", namedList("-", 1, 2)),
@@ -261,7 +261,7 @@ public class EqualityTests{
 		list.add(simpleEqualityTest("7",
 				namedList("awsdsf", 1, 2, 3),
 				namedList("=", namedList("+", 1, 2), 3),
-				object().prop("$key", "us")));
+				object().prop("key", "us")));
 		return list;
 	}
 
