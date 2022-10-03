@@ -33,7 +33,7 @@ public final class AmongToken{
 	}
 
 	public String keywordOrEmpty(){
-		return is(TokenType.WORD)&&literal!=null ? literal : "";
+		return is(TokenType.PLAIN_WORD)&&literal!=null ? literal : "";
 	}
 
 	public boolean is(TokenType type){
@@ -44,7 +44,7 @@ public final class AmongToken{
 	}
 
 	public boolean isSimpleLiteral(){
-		return !is(TokenType.COMPLEX_PRIMITIVE)&&isLiteral();
+		return !is(TokenType.QUOTED_PRIMITIVE)&&isLiteral();
 	}
 
 	/**
@@ -86,7 +86,15 @@ public final class AmongToken{
 		/** , */ COMMA,
 		/** : */ COLON,
 		// Literal shits
-		WORD, NAME, KEY, PARAM_NAME, COMPLEX_PRIMITIVE, VALUE, OPERATOR, KEYWORD, PARAM_REF, NUMBER,
+		/**
+		 * One-letter literal.
+		 */
+		WORD,
+		/**
+		 * One-letter literal with no escape sequences.
+		 */
+		PLAIN_WORD,
+		KEY, PARAM_NAME, MACRO_NAME, QUOTED_PRIMITIVE, VALUE, OPERATOR, KEYWORD, NUMBER,
 		/** Generic error token; only emitted on special occasions */ ERROR;
 
 		public String friendlyName(){
@@ -102,15 +110,15 @@ public final class AmongToken{
 				case EQ: return "'='";
 				case COMMA: return "','";
 				case COLON: return "':'";
+				case PLAIN_WORD: return "plain word";
 				case WORD: return "word";
-				case NAME: return "name";
 				case KEY: return "key";
 				case PARAM_NAME: return "parameter name";
-				case COMPLEX_PRIMITIVE: return "primitive";
+				case MACRO_NAME: return "macro name";
+				case QUOTED_PRIMITIVE: return "quoted primitive";
 				case VALUE: return "value";
 				case OPERATOR: return "operator";
 				case KEYWORD: return "keyword";
-				case PARAM_REF: return "parameter reference";
 				case NUMBER: return "number";
 				case ERROR: return "error";
 				default: throw new IllegalStateException("Unreachable");

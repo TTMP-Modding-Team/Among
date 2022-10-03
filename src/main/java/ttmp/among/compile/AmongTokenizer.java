@@ -51,25 +51,14 @@ public final class AmongTokenizer{
 	 * @return The next token
 	 */
 	public AmongToken next(boolean skipLineBreak, TokenizationMode mode){
-		return next(skipLineBreak, mode, false);
-	}
-	/**
-	 * Advances to the next token. New token is read if necessary.
-	 *
-	 * @param skipLineBreak If {@code true}, line break tokens will be skipped.
-	 * @param mode          Mode for interpreting literal expressions.
-	 * @param macro         Whether it will try to read {@link TokenType#PARAM_REF} tokens.
-	 * @return The next token
-	 */
-	public AmongToken next(boolean skipLineBreak, TokenizationMode mode, boolean macro){
 		while(true){
-			AmongToken token = advance(mode, macro);
+			AmongToken token = advance(mode);
 			if(!skipLineBreak||token.type!=TokenType.BR) return token;
 		}
 	}
 
 	/**
-	 * @return Last token read and returned with {@link AmongTokenizer#next(boolean, TokenizationMode, boolean) next()},
+	 * @return Last token read and returned with {@link AmongTokenizer#next(boolean, TokenizationMode) next()},
 	 * or {@code null} if there isn't one (because either {@link AmongTokenizer#reset(boolean) reset()} was called or
 	 * nothing was read yet)
 	 */
@@ -82,9 +71,9 @@ public final class AmongTokenizer{
 	/**
 	 * Advances token index; Returns EOF if it's already at the end.
 	 */
-	private AmongToken advance(TokenizationMode mode, boolean macro){
+	private AmongToken advance(TokenizationMode mode){
 		if(tokenIndex>=tokens.size()){
-			read(mode, macro);
+			read(mode);
 			if(tokenIndex>=tokens.size())
 				return lastToken = new AmongToken(TokenType.EOF, srcIndex);
 		}
@@ -124,7 +113,7 @@ public final class AmongTokenizer{
 		lastToken = null;
 	}
 
-	private void read(TokenizationMode mode, boolean macro){
+	private void read(TokenizationMode mode){
 		while(true){
 			int idx = srcIndex;
 			switch(nextCodePoint()){
@@ -156,20 +145,21 @@ public final class AmongTokenizer{
 					tokens.add(new AmongToken(TokenType.R_BRACKET, idx));
 					return;
 				case ':':
-					if(mode==TokenizationMode.VALUE||mode==TokenizationMode.NAME) break;
-					tokens.add(new AmongToken(TokenType.COLON, idx));
-					return;
+					if(mode.emitsColon()){
+						tokens.add(new AmongToken(TokenType.COLON, idx));
+						return;
+					}else break;
 				case ',':
 					tokens.add(new AmongToken(TokenType.COMMA, idx));
 					return;
 				case '\'':
-					tokens.add(new AmongToken(TokenType.COMPLEX_PRIMITIVE, idx, primitive('\'')));
+					tokens.add(new AmongToken(TokenType.QUOTED_PRIMITIVE, idx, primitive('\'')));
 					return;
 				case '"':
-					tokens.add(new AmongToken(TokenType.COMPLEX_PRIMITIVE, idx, primitive('"')));
+					tokens.add(new AmongToken(TokenType.QUOTED_PRIMITIVE, idx, primitive('"')));
 					return;
 				case '=':
-					if(mode==TokenizationMode.PARAM){
+					if(mode==TokenizationMode.PARAM_NAME){
 						tokens.add(new AmongToken(TokenType.EQ, idx));
 						return;
 					}
@@ -180,12 +170,13 @@ public final class AmongTokenizer{
 			}
 			srcIndex = idx;
 			switch(mode){
-				case WORD: tokens.add(word(false, true, false)); return;
-				case NAME: tokens.add(word(macro, false, false)); return;
-				case KEY: tokens.add(multipleWords(macro, true)); return;
-				case PARAM: tokens.add(word(macro, false, true)); return;
-				case VALUE: tokens.add(multipleWords(macro, false)); return;
-				case OPERATION: operation(macro); return;
+				case PLAIN_WORD: tokens.add(word(true, false)); return;
+				case WORD: tokens.add(word(false, false)); return;
+				case KEY: tokens.add(multipleWords(true, false)); return;
+				case PARAM_NAME: tokens.add(word(false, true)); return;
+				case MACRO_NAME: tokens.add(multipleWords(false, true)); return;
+				case VALUE: tokens.add(multipleWords(false, false)); return;
+				case OPERATION: operation(); return;
 			}
 		}
 	}
@@ -224,10 +215,10 @@ public final class AmongTokenizer{
 		}
 	}
 
-	private AmongToken word(boolean macro, boolean word, boolean param){
+	private AmongToken word(boolean plain, boolean paramName){
+		boolean isPlain = plain;
 		StringBuilder stb = new StringBuilder();
 		int start = srcIndex;
-		boolean isParamRef = macro&&source.codePointAt(srcIndex)=='$';
 		int prev;
 		L:
 		while(true){
@@ -235,14 +226,14 @@ public final class AmongTokenizer{
 			int c = nextCodePoint();
 			switch(c){
 				case '\\':
-					if(word) word = false;
+					isPlain = false;
 					stb.appendCodePoint(backslash());
 					continue;
 				case '=':
-					if(param) break L;
+					if(paramName) break L;
 					else break;
 				case ':':
-					if(word) break L;
+					if(plain) break L;
 					break;
 				case EOF: case ' ': case '\t': case '\n': case ',':
 				case '{': case '}': case '[': case ']': case '(': case ')':
@@ -252,14 +243,13 @@ public final class AmongTokenizer{
 		}
 		srcIndex = prev;
 		return new AmongToken(
-				isParamRef ? TokenType.PARAM_REF : word ? TokenType.WORD : param ? TokenType.PARAM_NAME : TokenType.NAME,
+				paramName ? TokenType.PARAM_NAME : isPlain ? TokenType.PLAIN_WORD : TokenType.WORD,
 				start, stb.toString());
 	}
 
-	private AmongToken multipleWords(boolean macro, boolean key){
+	private AmongToken multipleWords(boolean key, boolean macroName){
 		StringBuilder stb = new StringBuilder();
 		int start = srcIndex;
-		boolean isParamRef = macro&&source.codePointAt(srcIndex)=='$';
 		int lastNonWhitespaceSeen = srcIndex;
 		int prev;
 		L:
@@ -268,7 +258,7 @@ public final class AmongTokenizer{
 			switch(nextCodePoint()){
 				case ' ': case '\t': continue;
 				case ':':
-					if(key) break L;
+					if(key||macroName) break L;
 					else break;
 				case '[': case ']': case '(': case ')':
 					if(key) break;
@@ -280,11 +270,12 @@ public final class AmongTokenizer{
 			lastNonWhitespaceSeen = srcIndex;
 		}
 		srcIndex = prev;
-		return new AmongToken(isParamRef ? TokenType.PARAM_REF : key ? TokenType.KEY : TokenType.VALUE,
+		return new AmongToken(
+				key ? TokenType.KEY : macroName ? TokenType.MACRO_NAME : TokenType.VALUE,
 				start, stb.toString());
 	}
 
-	private void operation(boolean macro){
+	private void operation(){
 		int start = srcIndex;
 		NameGroup keyword = match(true);
 		StringBuilder stb = new StringBuilder();
@@ -296,19 +287,19 @@ public final class AmongTokenizer{
 				case '{': case '}': case '[': case ']': case '(': case ')':
 					srcIndex = prev;
 				case EOF:
-					addOperationTokens(keyword, start, stb, macro);
+					addOperationTokens(keyword, start, stb);
 					return;
 			}
 			srcIndex = prev;
 			NameGroup operator = match(false);
 			if(operator!=null){
-				addOperationTokens(keyword, start, stb, macro);
+				addOperationTokens(keyword, start, stb);
 				tokens.add(new AmongToken(TokenType.OPERATOR, prev, operator.name()));
 				return;
 			}
 			if(keyword!=null){
-				stb.append(keyword.name());
 				keyword = null;
+				srcIndex = start;
 			}else if(prev==start){ // first character
 				if(number()) return;
 			}
@@ -317,12 +308,9 @@ public final class AmongTokenizer{
 	}
 
 	private void addOperationTokens(@Nullable NameGroup keyword, int start,
-	                                StringBuilder stb, boolean macro){
+	                                StringBuilder stb){
 		if(keyword!=null) tokens.add(new AmongToken(TokenType.KEYWORD, start, keyword.name()));
-		else if(stb.length()>0)
-			tokens.add(new AmongToken(
-					macro&&source.codePointAt(start)=='$' ? TokenType.PARAM_REF : TokenType.NAME,
-					start, stb.toString()));
+		else if(stb.length()>0) tokens.add(new AmongToken(TokenType.WORD, start, stb.toString()));
 	}
 
 	@Nullable private NameGroup match(boolean keyword){

@@ -45,6 +45,7 @@ public final class AmongParser{
 	private final List<Report> reports = new ArrayList<>();
 
 	private boolean recovering;
+	@Nullable private MacroParameterList currentMacroParameter;
 
 	public AmongParser(Source source, AmongEngine engine, AmongRoot root, AmongDefinition importDefinition){
 		this.engine = engine;
@@ -75,13 +76,13 @@ public final class AmongParser{
 	private void among(){
 		while(true){
 			tokenizer.discard();
-			AmongToken next = tokenizer.next(true, TokenizationMode.WORD);
+			AmongToken next = tokenizer.next(true, TokenizationMode.PLAIN_WORD);
 			if(next.is(EOF)) return;
 			switch(next.keywordOrEmpty()){
 				case "macro": macroDefinition(next.start); continue;
 				case "operator": operatorDefinition(next.start, false); continue;
 				case "keyword": operatorDefinition(next.start, true); continue;
-				case "undef": switch(tokenizer.next(true, TokenizationMode.WORD).keywordOrEmpty()){
+				case "undef": switch(tokenizer.next(true, TokenizationMode.PLAIN_WORD).keywordOrEmpty()){
 					case "macro": undefMacro(); continue;
 					case "operator": undefOperation(false); continue;
 					case "keyword": undefOperation(true); continue;
@@ -93,14 +94,14 @@ public final class AmongParser{
 				case "use": use(); continue;
 			}
 			tokenizer.reset(next.isSimpleLiteral());
-			Among a = nameable(TokenizationMode.NAME, false);
+			Among a = nameable(false);
 			if(a==null){
-				next = tokenizer.next(true, TokenizationMode.NAME);
-				if(!next.is(COMPLEX_PRIMITIVE)){
+				next = tokenizer.next(true, TokenizationMode.WORD);
+				if(!next.is(QUOTED_PRIMITIVE)){
 					reportError("Top level statements can only be macro/operator/"+
 							"keyword definition, undef statement, named/unnamed collections,"+
 							" or primitives denoted with ' or \"");
-					tryToRecover(TokenizationMode.NAME);
+					tryToRecover(TokenizationMode.WORD);
 					continue;
 				}
 				a = Among.value(next.expectLiteral());
@@ -122,10 +123,10 @@ public final class AmongParser{
 	}
 
 	private void macroDefinition(int startIndex){
-		String name = definitionName(TokenizationMode.WORD);
+		String name = definitionName(TokenizationMode.MACRO_NAME);
 		if(name==null) return;
 		tokenizer.discard();
-		switch(tokenizer.next(true, TokenizationMode.WORD).type){
+		switch(tokenizer.next(true, TokenizationMode.PLAIN_WORD).type){
 			case COLON: macroDefinition(startIndex, name, MacroType.CONST); break;
 			case L_BRACE: macroDefinition(startIndex, name, MacroType.OBJECT); break;
 			case L_BRACKET: macroDefinition(startIndex, name, MacroType.LIST); break;
@@ -133,7 +134,7 @@ public final class AmongParser{
 			default:
 				reportError("Invalid macro statement; expected '{', '[', '(' or ':'");
 				tokenizer.reset();
-				tryToRecover(TokenizationMode.WORD);
+				tryToRecover(TokenizationMode.PLAIN_WORD);
 		}
 	}
 	private void macroDefinition(int startIndex, String name, MacroType type){
@@ -150,17 +151,23 @@ public final class AmongParser{
 			if(!tokenizer.next(true, TokenizationMode.UNEXPECTED).is(COLON)){
 				reportError("Expected ':' after parameter definition");
 				tokenizer.reset();
-				tryToRecover(TokenizationMode.NAME);
+				tryToRecover(TokenizationMode.WORD);
 				return;
 			}
 		}
-		Among expr = exprOrError(true);
+		if(params!=null){
+			if(this.currentMacroParameter!=null)
+				reportError("Previous macro parameter is not cleaned up properly, this shouldn't happen");
+			this.currentMacroParameter = params;
+		}
+		Among expr = exprOrError();
+		this.currentMacroParameter = null;
 		tokenizer.discard();
 		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 		if(!next.is(BR)&&!next.is(EOF)){
 			reportError("Expected newline after macro statement");
 			tokenizer.reset();
-			tryToRecover(TokenizationMode.WORD);
+			tryToRecover(TokenizationMode.PLAIN_WORD);
 		}
 		if(params!=null){
 			if((type==MacroType.LIST||type==MacroType.OPERATION)&&!params.hasConsecutiveOptionalParams()){
@@ -179,13 +186,13 @@ public final class AmongParser{
 		Set<String> nameSet = new HashSet<>();
 		boolean invalid = false;
 		while(true){
-			AmongToken next = tokenizer.next(true, TokenizationMode.PARAM);
+			AmongToken next = tokenizer.next(true, TokenizationMode.PARAM_NAME);
 			if(next.is(closure)) break;
 			if(next.is(EOF)) break; // It will be reported in defMacro()
 			if(!next.is(PARAM_NAME)){
 				reportError("Expected parameter name");
 				invalid = true;
-				if(tryToRecover(TokenizationMode.PARAM, closure, true)) break;
+				if(tryToRecover(TokenizationMode.PARAM_NAME, closure, true)) break;
 				else continue;
 			}
 			String name = next.expectLiteral();
@@ -193,12 +200,12 @@ public final class AmongParser{
 				reportError("Duplicated parameter '"+name+"'");
 				invalid = true;
 			}
-			next = tokenizer.next(true, TokenizationMode.PARAM);
+			next = tokenizer.next(true, TokenizationMode.PARAM_NAME);
 
 			Among defaultValue;
 			if(next.is(EQ)){
-				defaultValue = exprOrError(false);
-				next = tokenizer.next(true, TokenizationMode.PARAM);
+				defaultValue = exprOrError();
+				next = tokenizer.next(true, TokenizationMode.PARAM_NAME);
 			}else defaultValue = null;
 			if(!invalid) params.add(new MacroParameter(name, defaultValue));
 
@@ -206,22 +213,22 @@ public final class AmongParser{
 			else if(!next.is(COMMA)){
 				reportError("Expected ',' or "+closure.friendlyName());
 				invalid = true;
-				if(tryToRecover(TokenizationMode.PARAM, closure, true)) break;
+				if(tryToRecover(TokenizationMode.PARAM_NAME, closure, true)) break;
 			}
 		}
 		return invalid ? null : MacroParameterList.of(params);
 	}
 
 	private void operatorDefinition(int startIndex, boolean keyword){
-		String name = definitionName(TokenizationMode.WORD);
+		String name = definitionName(TokenizationMode.PLAIN_WORD);
 		if(name==null) return;
 		OperatorType type;
-		if(!tokenizer.next(true, TokenizationMode.WORD).is(WORD, "as")){
+		if(!tokenizer.next(true, TokenizationMode.PLAIN_WORD).is(PLAIN_WORD, "as")){
 			reportError("Expected 'as'");
 			skipUntilLineBreak();
 			return;
 		}
-		switch(tokenizer.next(true, TokenizationMode.WORD).keywordOrEmpty()){
+		switch(tokenizer.next(true, TokenizationMode.PLAIN_WORD).keywordOrEmpty()){
 			case "binary": type = OperatorType.BINARY; break;
 			case "prefix": type = OperatorType.PREFIX; break;
 			case "postfix": type = OperatorType.POSTFIX; break;
@@ -254,9 +261,9 @@ public final class AmongParser{
 	}
 
 	private void undefMacro(){
-		String name = definitionName(TokenizationMode.NAME);
+		String name = definitionName(TokenizationMode.WORD);
 		if(name==null) return;
-		AmongToken next = tokenizer.next(false, TokenizationMode.WORD);
+		AmongToken next = tokenizer.next(false, TokenizationMode.PLAIN_WORD);
 		switch(next.type){
 			case BR:
 				definition.removeMacro(name, MacroType.CONST);
@@ -290,7 +297,7 @@ public final class AmongParser{
 	}
 
 	private void undefOperation(boolean keyword){
-		String name = definitionName(TokenizationMode.NAME);
+		String name = definitionName(TokenizationMode.WORD);
 		if(name==null) return;
 		definition.operators().remove(name, keyword);
 		importDefinition.operators().remove(name, keyword);
@@ -303,7 +310,7 @@ public final class AmongParser{
 
 	private void use(){
 		tokenizer.discard();
-		AmongToken next = tokenizer.next(false, TokenizationMode.WORD);
+		AmongToken next = tokenizer.next(false, TokenizationMode.PLAIN_WORD);
 		boolean pub = next.keywordOrEmpty().equals("public");
 		if(!pub) tokenizer.reset(true);
 		next = tokenizer.next(false, TokenizationMode.VALUE);
@@ -339,61 +346,69 @@ public final class AmongParser{
 		}
 	}
 
-	private Among exprOrError(boolean macro){
-		Among among = expr(macro);
+	private Among exprOrError(){
+		Among among = expr();
 		return among==null ? Among.value("ERROR") : among;
 	}
-	@Nullable private Among expr(boolean macro){
+	@Nullable private Among expr(){
 		tokenizer.discard();
-		Among a = nameable(TokenizationMode.NAME, macro);
+		Among a = nameable(false);
 		if(a!=null) return a;
 		tokenizer.reset(true);
-		AmongToken next = tokenizer.next(true, TokenizationMode.VALUE, macro);
+		AmongToken next = tokenizer.next(true, TokenizationMode.VALUE);
 		if(!next.isLiteral()){
 			reportError("Expected value");
 			tokenizer.reset(true);
 			return null;
 		}
 		AmongPrimitive p = Among.value(next.expectLiteral());
-		if(next.is(PARAM_REF)) p.setParamRef(true);
-		return next.is(COMPLEX_PRIMITIVE) ? p : primitiveMacro(p, next.start);
+		if(next.is(QUOTED_PRIMITIVE)) return p;
+		if(isParamRef(next)) p.setParamRef(true);
+		return primitiveMacro(p, next.start);
 	}
 
-	@Nullable private Among nameable(TokenizationMode mode, boolean macro){
+	private boolean isParamRef(AmongToken token){
+		return currentMacroParameter!=null&&
+				token.isLiteral()&&
+				!token.is(QUOTED_PRIMITIVE)&&
+				currentMacroParameter.parameters().containsKey(token.expectLiteral());
+	}
+
+	@Nullable private Among nameable(boolean operation){
 		tokenizer.discard();
-		AmongToken next = tokenizer.next(true, mode, macro);
+		AmongToken next = tokenizer.next(true, operation ? TokenizationMode.OPERATION : TokenizationMode.VALUE);
 		Among nameable;
 		switch(next.type){
-			case L_BRACE: return obj(null, macro);
-			case L_BRACKET: return list(null, macro);
+			case L_BRACE: return obj(null);
+			case L_BRACKET: return list(null);
 			case L_PAREN:{
-				AmongList o = oper(null, macro);
+				AmongList o = oper(null);
 				return engine.collapseUnaryOperation&&!o.hasName()&&o.size()==1 ? o.get(0) : o;
 			}
 			default:
 				if(next.isLiteral()){
-					boolean paramRef = next.is(PARAM_REF), applyMacro = next.is(NAME);
+					boolean paramRef = isParamRef(next), applyMacro = !next.is(QUOTED_PRIMITIVE);
 					// lookahead to find if it's nameable instance
-					switch(tokenizer.next(false, mode, macro).type){
+					switch(tokenizer.next(operation, TokenizationMode.UNEXPECTED).type){
 						case L_BRACE:{
-							AmongObject o = obj(next.expectLiteral(), macro);
+							AmongObject o = obj(next.expectLiteral());
 							if(applyMacro&&!paramRef) return objectMacro(o, next.start);
 							else nameable = o;
 							break;
 						}
 						case L_BRACKET:{
-							AmongList l = list(next.expectLiteral(), macro);
+							AmongList l = list(next.expectLiteral());
 							if(applyMacro&&!paramRef) return listMacro(l, next.start);
 							else nameable = l;
 							break;
 						}
 						case L_PAREN:{
-							AmongList o = oper(next.expectLiteral(), macro);
+							AmongList o = oper(next.expectLiteral());
 							if(applyMacro&&!paramRef) return operationMacro(o, next.start);
 							else nameable = engine.collapseUnaryOperation&&!o.hasName()&&o.size()==1 ? o.get(0) : o;
 							break;
 						}
-						default: tokenizer.reset(); return null;
+						default: tokenizer.reset(true); return null;
 					}
 					nameable.setParamRef(paramRef);
 					return nameable;
@@ -403,7 +418,7 @@ public final class AmongParser{
 		}
 	}
 
-	private AmongObject obj(@Nullable String name, boolean macro){
+	private AmongObject obj(@Nullable String name){
 		AmongObject object = Among.namedObject(name);
 		L:
 		while(true){
@@ -428,7 +443,7 @@ public final class AmongParser{
 				report(engine.allowDuplicateObjectProperty ? ReportType.WARN : ReportType.ERROR,
 						"Property '"+key+"' is already defined", keyToken.start);
 
-			Among expr = exprOrError(macro);
+			Among expr = exprOrError();
 
 			if(!object.hasProperty(key)) object.setProperty(key, expr);
 			AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
@@ -449,7 +464,7 @@ public final class AmongParser{
 		return object;
 	}
 
-	private AmongList list(@Nullable String name, boolean macro){
+	private AmongList list(@Nullable String name){
 		AmongList list = Among.namedList(name);
 		L:
 		while(true){
@@ -460,7 +475,7 @@ public final class AmongParser{
 				case R_BRACKET: break L;
 			}
 			tokenizer.reset(next.is(ERROR));
-			Among expr = expr(macro);
+			Among expr = expr();
 			if(expr!=null) list.add(expr);
 			next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 			switch(next.type){
@@ -481,19 +496,19 @@ public final class AmongParser{
 		return list;
 	}
 
-	private AmongList oper(@Nullable String name, boolean macro){
+	private AmongList oper(@Nullable String name){
 		AmongList list = Among.namedList(name);
 		L:
 		while(true){
 			tokenizer.discard();
-			switch(tokenizer.next(true, TokenizationMode.OPERATION, macro).type){
+			switch(tokenizer.next(true, TokenizationMode.OPERATION).type){
 				case EOF: reportError("Unterminated operation");
 				case R_PAREN: break L;
 			}
 			tokenizer.reset();
-			list.add(operationExpression(importDefinition.operators().priorityGroup(), 0, macro));
+			list.add(operationExpression(importDefinition.operators().priorityGroup(), 0));
 			tokenizer.discard();
-			switch(tokenizer.next(true, TokenizationMode.OPERATION, macro).type){
+			switch(tokenizer.next(true, TokenizationMode.OPERATION).type){
 				case COMMA: continue;
 				case EOF: reportError("Unterminated operation");
 				case R_PAREN: break L;
@@ -505,19 +520,19 @@ public final class AmongParser{
 		return list;
 	}
 
-	private Among operationExpression(List<OperatorRegistry.PriorityGroup> operators, int i, boolean macro){
+	private Among operationExpression(List<OperatorRegistry.PriorityGroup> operators, int i){
 		if(i<operators.size()){ // check for operators and keywords
 			OperatorRegistry.PriorityGroup group = operators.get(i);
 			switch(group.type()){
 				case BINARY:{
-					Among a = operationExpression(operators, i+1, macro);
+					Among a = operationExpression(operators, i+1);
 					while(true){
 						tokenizer.discard();
 						AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
 						if(next.isOperatorOrKeyword()){
 							OperatorDefinition op = group.get(next.expectLiteral());
 							if(op!=null){
-								a = operationMacro(Among.namedList(op.name(), a, operationExpression(operators, i+1, macro)), next.start);
+								a = operationMacro(Among.namedList(op.name(), a, operationExpression(operators, i+1)), next.start);
 								continue;
 							}
 						}
@@ -526,10 +541,10 @@ public final class AmongParser{
 					}
 				}
 				case POSTFIX:{
-					Among a = operationExpression(operators, i+1, macro);
+					Among a = operationExpression(operators, i+1);
 					while(true){
 						tokenizer.discard();
-						AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION, macro);
+						AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
 						if(next.isOperatorOrKeyword()){
 							OperatorDefinition op = group.get(next.expectLiteral());
 							if(op!=null){
@@ -541,35 +556,35 @@ public final class AmongParser{
 						return a;
 					}
 				}
-				case PREFIX: return prefix(operators, i, macro);
+				case PREFIX: return prefix(operators, i);
 				default: throw new IllegalStateException("Unreachable");
 			}
 		}
 		// read primitive
 		tokenizer.discard();
-		Among a = nameable(TokenizationMode.OPERATION, macro);
+		Among a = nameable(true);
 		if(a!=null) return a;
 		tokenizer.reset();
-		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION, macro);
+		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
 		if(!next.isLiteral()){
 			reportError("Expected value");
 			tokenizer.reset();
 			return Among.value("ERROR");
 		}
 		AmongPrimitive p = Among.value(next.expectLiteral());
-		if(next.is(PARAM_REF)) p.setParamRef(true);
-		return next.is(COMPLEX_PRIMITIVE) ? p : primitiveMacro(p, next.start);
+		if(isParamRef(next)) p.setParamRef(true);
+		return next.is(QUOTED_PRIMITIVE) ? p : primitiveMacro(p, next.start);
 	}
 
-	private Among prefix(List<OperatorRegistry.PriorityGroup> operators, int i, boolean macro){
+	private Among prefix(List<OperatorRegistry.PriorityGroup> operators, int i){
 		tokenizer.discard();
-		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION, macro);
+		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
 		if(next.isOperatorOrKeyword()){
 			OperatorDefinition op = operators.get(i).get(next.expectLiteral());
-			if(op!=null) return operationMacro(Among.namedList(op.name(), prefix(operators, i, macro)), next.start);
+			if(op!=null) return operationMacro(Among.namedList(op.name(), prefix(operators, i)), next.start);
 		}
 		tokenizer.reset();
-		return operationExpression(operators, i+1, macro);
+		return operationExpression(operators, i+1);
 	}
 
 	private Among primitiveMacro(AmongPrimitive primitive, int sourcePosition){
@@ -631,7 +646,7 @@ public final class AmongParser{
 
 	private void skipUntilLineBreak(){
 		while(true){
-			switch(tokenizer.next(false, TokenizationMode.NAME).type){
+			switch(tokenizer.next(false, TokenizationMode.WORD).type){
 				case BR: case EOF: return;
 			}
 		}
@@ -683,7 +698,7 @@ public final class AmongParser{
 					return false;
 				case L_BRACE: case L_BRACKET: case L_PAREN:
 					tokenizer.reset();
-					nameable(TokenizationMode.NAME, false); // read object and throw it away
+					nameable(false); // read object and throw it away
 					continue;
 				default: if(t==closure){
 					this.recovering = prevRecovering;
