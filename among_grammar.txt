@@ -1,31 +1,45 @@
-among: BR*
-       ( "macro" BR* macroDefinition BR
-       | ( "operator" | "keyword" ) BR* operatorDefinition BR
-       | "undef" BR* undef BR+
-       | "use" value BR+
-       | nameable BR*
-       | complexPrimitive BR* )* EOF
+among: BR* ( topLevel BR* )* EOF
 
-macroDefinition: word BR*
+topLevel: ( "macro" BR* macroDefinition
+          | ( "operator" | "keyword" ) BR* operatorDefinition
+          | "undef" BR* undef
+          | "use" "public"? ( value | complexPrimitive )
+          | "fn" BR* macroDefinition )
+          ( "," | BR )
+        | nameable ( BR* "," )?
+        | complexPrimitive ( BR* "," )?
+
+macroDefinition: macroName BR*
                  ( "{" BR* macroParam? BR* "}" BR*
                  | "(" BR* macroParam? BR* ")" BR*
                  | "[" BR* macroParam? BR* "]" BR* )?
                  ":" BR* expr
-macroParam: paramName (BR* "=" BR* expr)? ( BR* "," BR* defParam? )?
+macroParam: paramName ( BR* "=" BR* expr )? ( BR* "," BR* defParam? )?
 
-operatorDefinition: word BR* "as" BR*
-                    ( "binary" | "prefix" | "postfix" )
-                    ( ":" BR* value )?  # Parsed as decimal value
+operatorDefinition: word BR*
+                    "as" BR* operatorProperties BR*
+                    ( "and" BR* operatorProperties BR* )*
+                    ( ":" BR* value )?
 
-undef: "macro" BR* name
+operatorProperties: ( operatorProperty BR* )+ ( "(" BR* value BR* ")"  # number expected
+operatorProperty: "binary"
+                | "prefix"
+                | "postfix"
+                | "left-associative"
+                | "right-associative"
+                | "accessor"
+
+undef: "macro" BR* value
        ( "{" BR* "}"
        | "[" BR* "]"
        | "(" BR* ")" )?
-     | ( "operator" | "keyword" ) BR* name
+     | ( "operator" | "keyword" ) BR* word
+     | "use" value
+     | "all" BR* ( "macros" | "operators" )
 
 expr: nameable | complexPrimitive | value
 
-nameable: name?
+nameable: ( value | complexPrimitive )?
           ( "{" BR* obj? BR* "}"
           | "[" BR* list? BR* "]"
           | "(" BR* oper? BR* ")" )
@@ -38,20 +52,30 @@ oper: operExpr ( BR* "," BR* operExpr? )?
 
 operExpr: primary # defined by script
 
-primary: nameable | name
+primary: operNameable | number | word
+
+operNameable: ( word BR* )?
+          ( "{" BR* obj? BR* "}"
+          | "[" BR* list? BR* "]"
+          | "(" BR* oper? BR* ")" )
 
 # LEXER
 
-word: regex; [^\s:,{}\[\]()]+  # used in plain keywords, such as 'macro' 'as' 'operator' and such
-name: simpleName | complexPrimitive
+word: simpleWord | complexPrimitive
 key: simpleKey | complexPrimitive
+value: simpleValue | complexPrimitive
 paramName: regex; ^[\s:,{}\[\]()=]+  # kek
+macroName: simpleMacroName | complexPrimitive
 
-simpleName: regex; [^\s,{}\[\]()]+
+plainWord: regex; [^\s:,{}\[\]()]+  # used in plain keywords, such as 'macro' 'as' 'operator' and such
+
+simpleWord: regex; [^\s,{}\[\]()]+  # one-word letter
 simpleKey: regex; [^:,{}\r\n]+
+simpleValue: regex; ^[^"'][^,{}\[\]()\r\n]*
+simpleMacroName: regex; ^[^"':][^:,{}\[\]()\r\n]*  # simpleValue that disallows use of ':'
+
 complexPrimitive: ""\"" ( BR ( "\s"* "|" )? | ^( BR | "\"" ) )* "\""
                 | "'" ( BR ( "\s"* "|" )? | ^( BR | "'" ) )* "'"
-value: regex; ^[^"'][^,{}\[\]()\r\n]*
 number: regex; [+-]?[0-9]+(\.[0-9]+)?
 
 BR: regex; \r \n? | \n
