@@ -8,13 +8,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static ttmp.among.definition.OperatorType.BINARY;
 import static ttmp.among.definition.OperatorType.POSTFIX;
@@ -30,7 +29,7 @@ public final class OperatorRegistry{
 
 	public OperatorRegistry(){}
 	public OperatorRegistry(OperatorRegistry copyFrom){
-		copyFrom.forEachOperatorAndKeyword(this::add);
+		copyFrom.allOperators().forEach(this::add);
 	}
 
 	/**
@@ -70,7 +69,12 @@ public final class OperatorRegistry{
 				(definition.isKeyword() ?
 						keywordByStartingCodepoint :
 						operatorByStartingCodepoint)
-						.computeIfAbsent(o.codePointAt(0), i -> new TreeSet<>())
+						.computeIfAbsent(o.codePointAt(0), i -> new TreeSet<>((o1, o2) -> {
+							int c = Integer.compare(o2.name.length(), o1.name.length());
+							if(c!=0) return c;
+							c = o1.name.compareTo(o2.name);
+							return c;
+						}))
 						.add(o);
 		}else{
 			RegistrationResult result = o.add(definition);
@@ -148,23 +152,22 @@ public final class OperatorRegistry{
 		return priorityGroupList;
 	}
 
-	public void forEachOperatorAndKeyword(Consumer<OperatorDefinition> consumer){
-		for(NameGroup op : operators.values())
-			op.defByType.values().forEach(consumer);
+	/**
+	 * @return Stream of all operators and keywords in registry.
+	 */
+	public Stream<OperatorDefinition> allOperators(){
+		return operators.values().stream().flatMap(g -> g.defByType.values().stream());
 	}
 
-	public Set<OperatorDefinition> allOperatorsAndKeywords(){
-		Set<OperatorDefinition> set = new HashSet<>();
-		for(NameGroup op : operators.values())
-			set.addAll(op.defByType.values());
-		return set;
+	public Stream<NameGroup> allOperatorNames(){
+		return operators.values().stream();
 	}
 
 	@Override public boolean equals(Object obj){
 		if(this==obj) return true;
 		if(!(obj instanceof OperatorRegistry)) return false;
 		OperatorRegistry reg = (OperatorRegistry)obj;
-		return this.allOperatorsAndKeywords().equals(reg.allOperatorsAndKeywords());
+		return this.operators.equals(reg.operators);
 	}
 
 	/**
@@ -213,7 +216,7 @@ public final class OperatorRegistry{
 	/**
 	 * Operators grouped by their name. Used in tokenization.
 	 */
-	public static final class NameGroup implements Comparable<NameGroup>{
+	public static final class NameGroup{
 		private final String name;
 		private final int[] codePoints;
 		private final boolean isKeyword;
@@ -257,21 +260,14 @@ public final class OperatorRegistry{
 			return RegistrationResult.OK;
 		}
 
-		@Override public int compareTo(@NotNull OperatorRegistry.NameGroup o){
-			int c = Integer.compare(o.name.length(), name.length());
-			if(c!=0) return c;
-			c = this.name.compareTo(o.name);
-			return c;
-		}
-
 		@Override public boolean equals(Object o){
 			if(this==o) return true;
 			if(o==null||getClass()!=o.getClass()) return false;
-			NameGroup operator = (NameGroup)o;
-			return Objects.equals(name, operator.name);
+			NameGroup nameGroup = (NameGroup)o;
+			return isKeyword==nameGroup.isKeyword&&name.equals(nameGroup.name)&&defByType.equals(nameGroup.defByType);
 		}
 		@Override public int hashCode(){
-			return Objects.hash(name);
+			return Objects.hash(name, isKeyword, defByType);
 		}
 
 		@Override public String toString(){

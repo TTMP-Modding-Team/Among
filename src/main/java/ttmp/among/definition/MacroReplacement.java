@@ -1,7 +1,13 @@
 package ttmp.among.definition;
 
+import org.jetbrains.annotations.Nullable;
+import ttmp.among.compile.Report;
+import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
 import ttmp.among.util.NodePath;
+
+import java.util.Objects;
+import java.util.function.BiConsumer;
 
 /**
  * Object representing one replacement operation.
@@ -9,58 +15,136 @@ import ttmp.among.util.NodePath;
  * @see MacroDefinition
  */
 public final class MacroReplacement{
-	private final NodePath path;
-	private final int param;
-	private final Target target;
+	public static MacroReplacement valueReplacement(NodePath path, int param){
+		return new MacroReplacement(path, new MacroOp.ValueReplacement(param));
+	}
+	public static MacroReplacement nameReplacement(NodePath path, int param){
+		return new MacroReplacement(path, new MacroOp.NameReplacement(param));
+	}
+	public static MacroReplacement macroCall(NodePath path, Macro macro){
+		return new MacroReplacement(path, new MacroOp.MacroCall(macro));
+	}
 
-	public MacroReplacement(NodePath path, int param, Target target){
+	private final NodePath path;
+	private final MacroOp operation;
+
+	public MacroReplacement(NodePath path, MacroOp operation){
 		this.path = path;
-		this.param = param;
-		this.target = target;
+		this.operation = operation;
 	}
 
 	public NodePath path(){
 		return path;
 	}
-	public int param(){
-		return param;
-	}
-	public Target target(){
-		return target;
+	public MacroOp operation(){
+		return operation;
 	}
 
 	/**
 	 * Applies the replacement.
 	 *
-	 * @param args   Argument for the replacement
-	 * @param target Target
+	 * @param args         Argument for the replacement
+	 * @param target       Target
+	 * @param copyConstant
 	 * @return Object after replacement; it will just return {@code target} most of the time
 	 */
-	public Among apply(Among[] args, Among target){
-		switch(this.target){
-			case VALUE:
-				if(path.isEmpty()) return args[this.param];
-				path.resolveAndSet(target, args[this.param]);
-				return target;
-			case NAMEABLE_NAME:{
-				Among resolved = path.resolveAndGet(target);
-				if(resolved!=null&&resolved.isNamed())
-					resolved.asNamed()
-							.setName(args[this.param].asPrimitive().getValue());
-				return target;
-			}
-			default: throw new IllegalStateException("Unreachable");
-		}
+	public Among apply(Among[] args, Among target, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+		return operation.applyTo(path, args, target, copyConstant, reportHandler);
 	}
 
-	public enum Target{
+	@Override public String toString(){
+		return "MacroReplacement{"+
+				"path="+path+
+				", operation="+operation+
+				'}';
+	}
+
+	public static abstract class MacroOp{
 		/**
-		 * Replace the element with arg.
+		 * Applies the replacement.
+		 *
+		 * @param args         Argument for the replacement
+		 * @param target       Target
+		 * @param copyConstant
+		 * @return Object after replacement; it will just return {@code target} most of the time
 		 */
-		VALUE,
-		/**
-		 * Rename the object to arg.
-		 */
-		NAMEABLE_NAME
+		public abstract Among applyTo(NodePath path, Among[] args, Among target, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler);
+
+		public static final class ValueReplacement extends MacroOp{
+			private final int param;
+
+			public ValueReplacement(int param){
+				this.param = param;
+			}
+
+			public int param(){
+				return param;
+			}
+
+			@Override public Among applyTo(NodePath path, Among[] args, Among target, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+				if(path.isEmpty()) return args[this.param];
+				if(!path.resolveAndSet(target, args[this.param]))
+					throw new Sussy("No replacement target");
+				return target;
+			}
+
+			@Override public String toString(){
+				return "ValueReplacement{"+
+						"param="+param+
+						'}';
+			}
+		}
+
+		public static final class NameReplacement extends MacroOp{
+			private final int param;
+
+			public NameReplacement(int param){
+				this.param = param;
+			}
+
+			public int param(){
+				return param;
+			}
+
+			@Override public Among applyTo(NodePath path, Among[] args, Among target, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+				Among resolved = path.resolveAndGet(target);
+				if(resolved==null) throw new Sussy("No replacement target");
+				resolved.asNamed().setName(args[this.param].asPrimitive().getValue());
+				return target;
+			}
+
+			@Override public String toString(){
+				return "NameReplacement{"+
+						"param="+param+
+						'}';
+			}
+		}
+
+		public static final class MacroCall extends MacroOp{
+			private final Macro macro;
+
+			public MacroCall(Macro macro){
+				this.macro = Objects.requireNonNull(macro);
+			}
+
+			public Macro macro(){
+				return macro;
+			}
+
+			@Override public Among applyTo(NodePath path, Among[] args, Among target, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+				if(path.isEmpty()) return macro.apply(target);
+				Among among = path.resolveAndGet(target);
+				if(among==null) throw new Sussy("No replacement target");
+				if(!path.resolveAndSet(target, macro.apply(among, copyConstant, reportHandler)))
+					throw new Sussy("No replacement target");
+				return target;
+			}
+
+			@Override public String toString(){
+				return "MacroCall{"+
+						"macro="+macro+
+						'}';
+			}
+		}
 	}
 }

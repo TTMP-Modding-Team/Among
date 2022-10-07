@@ -3,7 +3,6 @@ package ttmp.among.obj;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.AmongEngine;
 import ttmp.among.compile.Source;
-import ttmp.among.definition.MacroDefinition;
 import ttmp.among.exception.SussyCast;
 import ttmp.among.util.AmongWalker;
 import ttmp.among.util.NodePath;
@@ -20,56 +19,6 @@ import java.util.Map;
  * @see AmongNamed
  */
 public abstract class Among implements ToPrettyString{
-	private boolean paramRef;
-
-	/**
-	 * Mark this as a reference to macro parameter. If it is {@code true}:<br>
-	 * <ul>
-	 *     <li>For primitive value, the value itself is considered as parameter reference.</li>
-	 *     <li>For named instances, the name is considered as parameter reference.</li>
-	 * </ul>
-	 * This value does not change any behavior of this object; it is simply a flag used in {@link MacroDefinition}.
-	 * Additionally, not all the parameter reference are valid.
-	 *
-	 * @return This
-	 * @see Among#isParamRef()
-	 */
-	public final Among paramRef(){
-		setParamRef(true);
-		return this;
-	}
-
-	/**
-	 * Whether this object is a reference to macro parameter. If it is {@code true}:<br>
-	 * <ul>
-	 *     <li>For primitive value, the value itself is considered as parameter reference.</li>
-	 *     <li>For named instances, the name is considered as parameter reference.</li>
-	 * </ul>
-	 * This value does not change any behavior of this object; it is simply a flag used in {@link MacroDefinition}.
-	 * Additionally, not all the parameter reference are valid.
-	 *
-	 * @return Whether this object is a reference to macro parameter
-	 */
-	public final boolean isParamRef(){
-		return paramRef;
-	}
-
-	/**
-	 * Mark this as a reference to macro parameter. If it is {@code true}:<br>
-	 * <ul>
-	 *     <li>For primitive value, the value itself is considered as parameter reference.</li>
-	 *     <li>For named instances, the name is considered as parameter reference.</li>
-	 * </ul>
-	 * This value does not change any behavior of this object; it is simply a flag used in {@link MacroDefinition}.
-	 * Additionally, not all the parameter reference are valid.
-	 *
-	 * @param paramRef Whether this object is a reference to macro parameter
-	 * @see Among#isParamRef()
-	 */
-	public final void setParamRef(boolean paramRef){
-		this.paramRef = paramRef;
-	}
-
 	/**
 	 * Return this object as {@link AmongObject} instance.
 	 *
@@ -148,16 +97,14 @@ public abstract class Among implements ToPrettyString{
 
 	/**
 	 * Returns a string representation of this object. Parsing the string with {@link AmongEngine#read(Source)} will
-	 * create identical copy of this object, excluding {@link Among#paramRef} field.
+	 * create identical copy of this object.
 	 *
 	 * @return String representation of this object
 	 */
 	@Override public abstract String toString();
 
 	/**
-	 * Create a deep copy of the object; all child nodes will be copied over new object.<br>
-	 * Note that {@link Among#paramRef} flag for the resulting object will always be {@code false}, even if the original
-	 * object had the flag set to {@code true}.
+	 * Create a deep copy of the object; all child nodes will be copied over new object.
 	 *
 	 * @return Copy of the object
 	 */

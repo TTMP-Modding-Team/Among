@@ -3,6 +3,8 @@ macro m2(p3, p4, p5, p6): m1(p3, p4)
 
 m2(a, b, c, d)  // Should be [ a, b, p5, p6 ]
 
+undef macro m1()
+undef macro m2()
 macro m1(p1, p2): [[ p1, p2, p5, p6 ]]
 macro m2(p3, p4, p5, p6): m1([p3], [p4])
 

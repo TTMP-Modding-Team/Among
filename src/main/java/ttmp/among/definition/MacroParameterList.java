@@ -5,6 +5,7 @@ import ttmp.among.util.PrettyFormatOption;
 import ttmp.among.util.ToPrettyString;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,9 +21,6 @@ import java.util.stream.Collectors;
  * @see MacroParameter
  */
 public final class MacroParameterList implements ToPrettyString{
-	/**
-	 * Empty list.
-	 */
 	private static final MacroParameterList EMPTY = new MacroParameterList();
 
 	/**
@@ -51,13 +49,8 @@ public final class MacroParameterList implements ToPrettyString{
 	private final List<MacroParameter> params = new ArrayList<>();
 	private final Map<String, Integer> nameToIndex = new HashMap<>();
 
-	private MacroParameterList(){}
 	private MacroParameterList(MacroParameter... parameters){
-		for(MacroParameter p : parameters){
-			if(nameToIndex.put(p.name(), params.size())!=null)
-				throw new Sussy("Duplicated parameter '"+p.name()+"'");
-			params.add(p);
-		}
+		this(Arrays.asList(parameters));
 	}
 	private MacroParameterList(Collection<MacroParameter> parameters){
 		for(MacroParameter p : parameters){
@@ -96,6 +89,12 @@ public final class MacroParameterList implements ToPrettyString{
 	public int indexOf(String paramName){
 		Integer i = nameToIndex.get(paramName);
 		return i!=null ? i : -1;
+	}
+
+	public boolean hasOptionalParams(){
+		for(MacroParameter p : params)
+			if(p.defaultValue()!=null) return true;
+		return false;
 	}
 
 	/**
@@ -141,7 +140,7 @@ public final class MacroParameterList implements ToPrettyString{
 	private int requiredParameterSize = -1;
 
 	/**
-	 * Returns number of required parameters.
+	 * Returns number of required parameters. Optional parameters are not counted.
 	 *
 	 * @return Number of required parameters
 	 */
@@ -171,8 +170,11 @@ public final class MacroParameterList implements ToPrettyString{
 	}
 
 	@Override public String toPrettyString(int indents, PrettyFormatOption option){
+		return toPrettyString(indents, option, false);
+	}
+	public String toPrettyString(int indents, PrettyFormatOption option, boolean replaceDefaultValueWithStubs){
 		return params.stream()
-				.map(p -> p.toPrettyString(indents+1, option))
+				.map(p -> p.toPrettyString(indents+1, option, replaceDefaultValueWithStubs))
 				.collect(Collectors.joining(", "));
 	}
 }

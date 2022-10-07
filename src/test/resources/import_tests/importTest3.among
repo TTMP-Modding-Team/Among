@@ -1,8 +1,11 @@
 use provided_instance/1
 filename()
+undef use provided_instance/1
 use provided_instance/2
 filename()
+undef use provided_instance/2
 use provided_instance/1
 filename()
+undef use provided_instance/1
 use provided_instance/2
 filename()

@@ -28,7 +28,7 @@ public interface AmongWalker{
 	 * @return Whether it will walk down the object; returning {@code false} will prevent walker from visiting elements inside
 	 * {@code object}.
 	 */
-	default boolean walk(AmongObject object, NodePath path){
+	default boolean walkBefore(AmongObject object, NodePath path){
 		return true;
 	}
 	/**
@@ -39,7 +39,10 @@ public interface AmongWalker{
 	 * @return Whether it will walk down the list; returning {@code false} will prevent walker from visiting elements inside
 	 * {@code list}.
 	 */
-	default boolean walk(AmongList list, NodePath path){
+	default boolean walkBefore(AmongList list, NodePath path){
 		return true;
 	}
+
+	default void walkAfter(AmongObject object, NodePath path){}
+	default void walkAfter(AmongList list, NodePath path){}
 }

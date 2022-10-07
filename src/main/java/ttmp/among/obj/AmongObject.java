@@ -127,6 +127,9 @@ public class AmongObject extends AmongNamed{
 		return this.properties.remove(key);
 	}
 
+	public int size(){
+		return properties.size();
+	}
 	/**
 	 * Returns if this object has no property.
 	 *
@@ -150,9 +153,11 @@ public class AmongObject extends AmongNamed{
 	}
 
 	@Override public void walk(AmongWalker visitor, NodePath path){
-		if(visitor.walk(this, path))
+		if(visitor.walkBefore(this, path)){
 			for(Map.Entry<String, Among> e : this.properties.entrySet())
 				e.getValue().walk(visitor, path.subPath(e.getKey()));
+			visitor.walkAfter(this, path);
+		}
 	}
 
 	@Override public AmongObject copy(){
@@ -175,7 +180,7 @@ public class AmongObject extends AmongNamed{
 
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
-		if(hasName()) AmongUs.nameToString(stb, getName(), isParamRef());
+		if(hasName()) AmongUs.nameToString(stb, getName(), false);
 		if(isEmpty()) stb.append("{}");
 		else{
 			stb.append('{');
@@ -195,7 +200,7 @@ public class AmongObject extends AmongNamed{
 	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
 		if(hasName()){
-			AmongUs.nameToPrettyString(stb, getName(), isParamRef(), indents+1, option);
+			AmongUs.nameToPrettyString(stb, getName(), false, indents+1, option);
 			stb.append(' ');
 		}
 		if(isEmpty()) stb.append("{}");

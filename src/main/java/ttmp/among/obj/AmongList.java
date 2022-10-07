@@ -30,6 +30,7 @@ import java.util.Objects;
  */
 public class AmongList extends AmongNamed implements Iterable<Among>{
 	private final List<Among> values = new ArrayList<>();
+	private boolean operation;
 
 	AmongList(){}
 	AmongList(@Nullable String name){
@@ -89,6 +90,30 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 	}
 
 	/**
+	 * @return Whether this list is operation or not. This flag has no effect on equality check.
+	 */
+	public boolean isOperation(){
+		return operation;
+	}
+	/**
+	 * Mark this list as an operation or not.
+	 *
+	 * @param operation Whether this list is operation or not. This flag has no effect on equality check.
+	 */
+	public void setOperation(boolean operation){
+		this.operation = operation;
+	}
+	/**
+	 * Mark this list as an operation or not.
+	 *
+	 * @return this
+	 */
+	public AmongList operation(){
+		this.operation = true;
+		return this;
+	}
+
+	/**
 	 * @return Iterator for each element on this list. {@link Iterator#remove()} is unsupported.
 	 */
 	@Override public Iterator<Among> iterator(){
@@ -103,9 +128,11 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 	}
 
 	@Override public void walk(AmongWalker visitor, NodePath path){
-		if(visitor.walk(this, path))
+		if(visitor.walkBefore(this, path)){
 			for(int i = 0; i<this.values.size(); i++)
 				this.values.get(i).walk(visitor, path.subPath(i));
+			visitor.walkAfter(this, path);
+		}
 	}
 
 	@Override public AmongList copy(){
@@ -128,17 +155,18 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
-		if(hasName()) AmongUs.nameToString(stb, getName(), isParamRef());
-		if(isEmpty()) stb.append("[]");
+		if(hasName()) AmongUs.nameToString(stb, getName(), false);
+		if(isEmpty()) stb.append(operation ? "()" : "[]");
 		else{
-			stb.append('[');
+			stb.append(operation ? '(' : '[');
 			boolean first = true;
 			for(Among among : values){
 				if(first) first = false;
 				else stb.append(',');
-				AmongUs.valueToString(stb, among);
+				if(among.isPrimitive()&&operation) AmongUs.primitiveToString(stb, among.asPrimitive().getValue());
+				else AmongUs.valueToString(stb, among);
 			}
-			stb.append(']');
+			stb.append(operation ? ')' : ']');
 		}
 		return stb.toString();
 	}
@@ -146,22 +174,25 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
 		if(hasName()){
-			AmongUs.nameToPrettyString(stb, getName(), isParamRef(), indents+1, option);
+			AmongUs.nameToPrettyString(stb, getName(), false, indents+1, option);
 			stb.append(' ');
 		}
-		if(isEmpty()) stb.append("[]");
+		if(isEmpty()) stb.append(operation ? "()" : "[]");
 		else{
-			stb.append('[');
+			stb.append(operation ? '(' : '[');
 			boolean isCompact = values.size()<=option.compactListSize;
 			for(int j = 0; j<values.size(); j++){
 				if(!isCompact) AmongUs.newlineAndIndent(stb, indents+1, option);
 				else if(j>0) stb.append(", ");
 				else stb.append(' ');
-				AmongUs.valueToPrettyString(stb, values.get(j), isCompact ? indents : indents+1, option);
+				Among among = values.get(j);
+				if(among.isPrimitive()&&operation)
+					AmongUs.primitiveToPrettyString(stb, among.asPrimitive().getValue(), indents, option);
+				else AmongUs.valueToPrettyString(stb, among, isCompact ? indents : indents+1, option);
 			}
 			if(!isCompact) AmongUs.newlineAndIndent(stb, indents, option);
 			else stb.append(' ');
-			stb.append(']');
+			stb.append(operation ? ')' : ']');
 		}
 		return stb.toString();
 	}

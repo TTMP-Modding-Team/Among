@@ -1,15 +1,31 @@
 package ttmp.among.definition;
 
 import org.jetbrains.annotations.NotNull;
+import ttmp.among.obj.Among;
 import ttmp.among.util.AmongUs;
 
 import java.util.Objects;
 
 /**
  * Signature of the macro - name and type.
+ *
  * @see MacroDefinition
  */
 public final class MacroSignature implements Comparable<MacroSignature>{
+	/**
+	 * Create a new instance matching the Among value.
+	 *
+	 * @param among Among value
+	 * @return A new macro signature matching the value
+	 */
+	public static MacroSignature of(Among among){
+		if(among.isPrimitive()) return new MacroSignature(among.asPrimitive().getValue(), MacroType.CONST);
+		return new MacroSignature(among.asNamed().getName(),
+				among.isObj() ? MacroType.OBJECT :
+						among.asList().isOperation() ? MacroType.OPERATION :
+								MacroType.LIST);
+	}
+
 	private final String name;
 	private final MacroType type;
 

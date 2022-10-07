@@ -65,7 +65,7 @@ public class AmongUs{
 		if(!value.isPrimitive()) stb.append(value);
 		else{
 			String s = value.asPrimitive().getValue();
-			if(value.isParamRef()||isSimpleValue(s)) stb.append(standardReplace(VALUE_SPECIALS, s, true));
+			if(isSimpleValue(s)) stb.append(standardReplace(VALUE_SPECIALS, s, true));
 			else primitiveToString(stb, s);
 		}
 	}
@@ -74,7 +74,7 @@ public class AmongUs{
 		if(!value.isPrimitive()) stb.append(value.toPrettyString(indents, option));
 		else{
 			String s = value.asPrimitive().getValue();
-			if(value.isParamRef()||isSimpleValue(s)) stb.append(standardReplace(VALUE_SPECIALS, s, true));
+			if(isSimpleValue(s)) stb.append(standardReplace(VALUE_SPECIALS, s, true));
 			else primitiveToPrettyString(stb, s, indents, option);
 		}
 	}

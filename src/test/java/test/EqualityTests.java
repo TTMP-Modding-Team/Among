@@ -1,32 +1,37 @@
 package test;
 
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.Test;
 import ttmp.among.obj.Among;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static ttmp.among.obj.Among.*;
 
 public class EqualityTests{
-	@TestFactory
-	public List<DynamicTest> simpleEqualityTests(){
-		List<DynamicTest> list = new ArrayList<>();
-
-		list.add(simpleEqualityTest("objTest",
+	@Test public void objTest(){
+		simpleEqualityTest("objTest",
 				object().prop("Hello", "World!"),
 				object().prop("1", 1).prop("2", 2).prop("3", 3),
 				object().prop("Hello", "World!"),
-				object().prop("1", 1).prop("2", 2).prop("3", 3)));
-		list.add(simpleEqualityTest("listTest",
+				object().prop("1", 1).prop("2", 2).prop("3", 3));
+	}
+
+	@Test public void listTest(){
+		simpleEqualityTest("listTest",
 				list("one", "two", "oatmeal"),
-				list("one two oatmeal", "kirby is a pink guy", "one two oatmeal", "because kirby is very cute")));
-		list.add(simpleEqualityTest("operationTest",
+				list("one two oatmeal", "kirby is a pink guy", "one two oatmeal", "because kirby is very cute"));
+	}
+
+	@Test public void operationTest(){
+		simpleEqualityTest("operationTest",
 				list(1, 1, 2, 3, 5, 8, 13, 21),
-				list(1, 1, 2, 3, 5, 8, 13, 21)));
-		list.add(simpleEqualityTest("primitiveTest",
+				list(1, 1, 2, 3, 5, 8, 13, 21));
+	}
+
+	@Test public void primitiveTest(){
+		simpleEqualityTest("primitiveTest",
 				value("The Industrial Revolution and its consequences have been a disaster for the\nhuman race."),
 				value("According to all known laws of aviation, there is no way a bee should be able to fly.\n"+
 						"Its wings are too small to get its fat little body off the ground.\n"+
@@ -36,13 +41,19 @@ public class EqualityTests{
 						"Ooh, black and yellow!\n"+
 						"Let's shake it up a l\n"),
 				value("Look ma, I'm on TV!"),
-				value("\b\f\n\r\t\u0060\uD828\uDC90")));
-		list.add(simpleEqualityTest("macroTest",
+				value("\b\f\n\r\t\u0060\uD828\uDC90"));
+	}
+
+	@Test public void macroTest(){
+		simpleEqualityTest("macroTest",
 				value("This is macro"),
 				namedList("macro1"),
 				object().prop("Macro", "Hi!"),
-				object().prop("Macro", namedList("*", "amo", "gus"))));
-		list.add(simpleEqualityTest("collapseUnaryOperation",
+				object().prop("Macro", namedList("*", "amo", "gus")));
+	}
+
+	@Test public void collapseUnaryOperation(){
+		simpleEqualityTest("collapseUnaryOperation",
 				namedList("/",
 						namedList("-", "x", "y"),
 						"2"),
@@ -52,15 +63,21 @@ public class EqualityTests{
 										list(1, 2, 3),
 										list("list")),
 								list()),
-						namedList("fib", 3))));
-		list.add(simpleEqualityTest("undefTest",
+						namedList("fib", 3)));
+	}
+
+	@Test public void undefTest(){
+		simpleEqualityTest("undefTest",
 				value("Yes, I am a macro, indeed......"),
 				value("Yes, I am a macro, indeed......"),
 				namedList("areYouMacro"),
 				namedList("!!", "a", "b"),
 				namedList("!!", namedList("!!", "a"), "b"),
-				list("!!", "!!")));
-		list.add(simpleEqualityTest("unicodeTest",
+				list("!!", "!!"));
+	}
+
+	@Test public void unicodeTest(){
+		simpleEqualityTest("unicodeTest",
 				value("⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n"+
 						"⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠛⠛⠛⠛⠛⠛⢛⣿⠿⠟⠛⠛⠛⠛⠛⠛⠿⠿⣿⣟⠛⠛⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠿⣛\n"+
 						"⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣇⠀⠀⠀⠀⢠⡿⠁⣀⢀⢀⠀⣀⠀⣀⠀⠀⡀⣀⠙⢷⡀⠺⠿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠃⣰⣿⣿\n"+
@@ -106,9 +123,15 @@ public class EqualityTests{
 				list("When the imposter is sus!", "\uD83E\uDD7A"),
 				list("When the imposter is sus!", "\uD83D\uDE24\uD83D\uDE24\uD83D\uDE24"),
 				list("When the imposter is sus!", "\uD83E\uDD75\uD83E\uDD75\uD83D\uDE31\uD83D\uDE31\uD83D\uDE30\uD83D\uDE30\uD83D\uDE2D\uD83D\uDE37\uD83E\uDD25\uD83D\uDC1B"),
-				namedList("\uD83D\uDE02\uD83D\uDE02\uD83D\uDE02\uD83D\uDE02", "\uD83D\uDE33")));
-		list.add(simpleEqualityTest("keywordTest", namedList("pika", "pikachu", namedList("pikapika", "chu!!!!!!"))));
-		list.add(simpleEqualityTest("numberTest",
+				namedList("\uD83D\uDE02\uD83D\uDE02\uD83D\uDE02\uD83D\uDE02", "\uD83D\uDE33"));
+	}
+
+	@Test public void keywordTest(){
+		simpleEqualityTest("keywordTest", namedList("pika", "pikachu", namedList("pikapika", "chu!!!!!!")));
+	}
+
+	@Test public void numberTest(){
+		simpleEqualityTest("numberTest",
 				value("01234"),
 				value("01234.45678"),
 				list("01234", "01234.45678"),
@@ -134,12 +157,17 @@ public class EqualityTests{
 						namedList("*", "3", namedList("-", "1")),
 						namedList("-", "3")),
 				namedList("-", namedList(".", "1", namedList("toString"))),
-				namedList("-", namedList("1.35234"))));
-		list.add(simpleEqualityTest("crossRef",
-				list("a", "b", "p5", "p6"),
-				list(list(list("a"), list("b"), "p5", "p6"))));
+				namedList("-", namedList("1.35234")));
+	}
 
-		list.add(simpleEqualityTest("json1", object()
+	@Test public void crossRef(){
+		simpleEqualityTest("crossRef",
+				list("a", "b", "p5", "p6"),
+				list(list(list("a"), list("b"), "p5", "p6")));
+	}
+
+	@Test public void json(){
+		simpleEqualityTest("json1", object()
 				.prop("glossary", object()
 						.prop("title", "example glossary")
 						.prop("GlossDiv", object()
@@ -154,8 +182,8 @@ public class EqualityTests{
 												.prop("GlossDef", object()
 														.prop("para", "A meta-markup language, used to create markup languages such as DocBook.")
 														.prop("GlossSeeAlso", list("GML", "XML")))
-												.prop("GlossSee", "markup")))))));
-		list.add(simpleEqualityTest("json2", object()
+												.prop("GlossSee", "markup"))))));
+		simpleEqualityTest("json2", object()
 				.prop("menu", object()
 						.prop("id", "file")
 						.prop("value", "File")
@@ -164,8 +192,8 @@ public class EqualityTests{
 										object().prop("value", "New").prop("onclick", "CreateNewDoc()"),
 										object().prop("value", "Open").prop("onclick", "OpenDoc()"),
 										object().prop("value", "Close").prop("onclick", "CloseDoc()")
-								))))));
-		list.add(simpleEqualityTest("json3", object()
+								)))));
+		simpleEqualityTest("json3", object()
 				.prop("menu", object()
 						.prop("header", "SVG Viewer")
 						.prop("items", list(
@@ -191,21 +219,23 @@ public class EqualityTests{
 								value("null"),
 								object().prop("id", "Help"),
 								object().prop("id", "About").prop("label", "About Adobe CVG Viewer...")
-						)))));
+						))));
+	}
 
-		list.add(simpleEqualityTest("1",
+	@Test public void drafts(){
+		simpleEqualityTest("1",
 				object().prop("Property", "Value")
 						.prop("P2", "123")
 						.prop("P3", "1 2 3")
 						.prop("P4", "Except for this expression\nThe line break inbetween is a part of this text msg")
-						.prop("More complex key", ":thanosdaddy:")));
-		list.add(simpleEqualityTest("2",
+						.prop("More complex key", ":thanosdaddy:"));
+		simpleEqualityTest("2",
 				object().prop("Object", object())
 						.prop("NamedObj", namedObject("Named"))
 						.prop("List", list(1, 2, 3))
 						.prop("NamedList", namedList("Named", 1, 2, 3))
-						.prop("ObjectWithField", object().prop("1", 1).prop("2", 2).prop("3", 3))));
-		list.add(simpleEqualityTest("3",
+						.prop("ObjectWithField", object().prop("1", 1).prop("2", 2).prop("3", 3)));
+		simpleEqualityTest("3",
 				object().prop("Operation",
 								namedList("=",
 										namedList("+", 1, 2),
@@ -223,16 +253,16 @@ public class EqualityTests{
 								namedList("*",
 										2,
 										namedList("+", 3, 4))))
-						.prop("InsanelyNestedOperation", "This is fine.")));
-		list.add(simpleEqualityTest("4",
+						.prop("InsanelyNestedOperation", "This is fine."));
+		simpleEqualityTest("4",
 				object()
 						.prop("NamedOperation", namedList("Among", "Us"))
 						.prop("2", namedList("=",
 								namedList("fib", "a"),
 								namedList("+",
 										namedList("fib", namedList("-", "a", 2)),
-										namedList("fib", namedList("-", "a", 1)))))));
-		list.add(simpleEqualityTest("5",
+										namedList("fib", namedList("-", "a", 1))))));
+		simpleEqualityTest("5",
 				object().prop("Team", list(
 						namedObject("Pokemon")
 								.prop("Name", "Pikachu")
@@ -252,24 +282,27 @@ public class EqualityTests{
 				object().prop("Fib1", namedList("fib", 1)),
 				object().prop("Vector1", object()
 								.prop("X", 1).prop("Y", 2).prop("Z", 3))
-						.prop("The Truth", 69420)));
-		list.add(simpleEqualityTest("6",
+						.prop("The Truth", 69420));
+		simpleEqualityTest("6",
 				object().prop("A", namedList("...", "a", "b"))
 						.prop("B", namedList("eat", "shit")),
 				object().prop("Operator", namedList("...", "amo", "gus"))
-						.prop("Keyword", "great")));
-		list.add(simpleEqualityTest("7",
+						.prop("Keyword", "great"));
+		simpleEqualityTest("7",
 				namedList("awsdsf", 1, 2, 3),
 				namedList("=", namedList("+", 1, 2), 3),
-				object().prop("key", "us")));
-		return list;
+				object().prop("key", "us"));
 	}
 
-	private static DynamicTest simpleEqualityTest(String name, Among... expected){
-		return DynamicTest.dynamicTest(name, () -> assertArrayEquals(expected,
-				TestUtil.make(TestUtil.expectSourceFrom("equality_tests", name))
-						.root()
-						.objects()
-						.toArray(new Among[0])));
+	private static void simpleEqualityTest(String name, Among... expected){
+		try{
+			assertArrayEquals(expected,
+					TestUtil.make(TestUtil.expectSourceFrom("equality_tests", name))
+							.root()
+							.objects()
+							.toArray(new Among[0]));
+		}catch(IOException ex){
+			throw new UncheckedIOException(ex);
+		}
 	}
 }

@@ -11,6 +11,8 @@ use import1
   number: NUMBER
 }
 
+undef use import1
+
 use import2
 
 2 {

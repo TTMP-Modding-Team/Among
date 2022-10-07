@@ -1,56 +1,53 @@
 package test;
 
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.Test;
 import ttmp.among.AmongEngine;
 import ttmp.among.definition.AmongDefinition;
-import ttmp.among.definition.MacroDefinition;
+import ttmp.among.definition.Macro;
 import ttmp.among.definition.MacroType;
 import ttmp.among.obj.Among;
 import ttmp.among.util.RootAndDefinition;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static ttmp.among.obj.Among.*;
 
 public class ImportTest{
-	@TestFactory
-	public List<DynamicTest> importTests(){
-		AmongEngine engine = new AmongEngine();
+	AmongEngine engine = new AmongEngine();
+
+	{
 		engine.addSourceProvider(path -> TestUtil.sourceFrom("import_tests", path));
 		engine.addInstanceProvider(path -> {
 			switch(path){
 				case "provided_instance/1":{
 					AmongDefinition definition = new AmongDefinition();
-					definition.addMacro(MacroDefinition.builder()
+					definition.macros().add(Macro.builder()
 							.signature("filename", MacroType.OPERATION)
-							.template(value("Provided Instance #1"))
-							.build());
+							.build(value("Provided Instance #1")));
 					return new RootAndDefinition(definition);
 				}
 				case "provided_instance/2":{
 					AmongDefinition definition = new AmongDefinition();
-					definition.addMacro(MacroDefinition.builder()
+					definition.macros().add(Macro.builder()
 							.signature("filename", MacroType.OPERATION)
-							.template(value("Provided Instance #2"))
-							.build());
+							.build(value("Provided Instance #2")));
 					return new RootAndDefinition(definition);
 				}
 				default: return null;
 			}
 		});
+	}
 
-		List<DynamicTest> list = new ArrayList<>();
-
-		list.add(eq(engine, "defOp",
+	@Test public void defOp(){
+		eq(engine, "defOp",
 				value("+"),
 				value("++"),
 				value("+++"),
 				namedList("+", 21),
-				namedList("+", namedList("+", 1, 3), 5)));
-		list.add(eq(engine, "importTest1",
+				namedList("+", namedList("+", 1, 3), 5));
+	}
+
+	@Test public void importTest1(){
+		eq(engine, "importTest1",
 				namedObject("none")
 						.prop("filename", namedList("filename"))
 						.prop("number", "NUMBER"),
@@ -59,38 +56,45 @@ public class ImportTest{
 						.prop("number", 1),
 				namedObject("2")
 						.prop("filename", "import_tests/import2.among")
-						.prop("number", 2)));
-		list.add(eq(engine, "importTest2",
+						.prop("number", 2));
+	}
+
+	@Test public void importTest2(){
+		eq(engine, "importTest2",
 				value("coolMacro"),
 				value("coolMacro"),
 				value("Cool Macro"),
 				value("coolMacro"),
-				value("Cool Macro")));
-		list.add(eq(engine, "importTest3",
+				value("Cool Macro"));
+	}
+
+	@Test public void importTest3(){
+		eq(engine, "importTest3",
 				value("Provided Instance #1"),
 				value("Provided Instance #2"),
 				value("Provided Instance #1"),
-				value("Provided Instance #2")));
-
-		list.add(err(engine, "invalidRef"));
-		list.add(err(engine, "selfRef"));
-		list.add(err(engine, "circRef1"));
-
-		return list;
+				value("Provided Instance #2"));
 	}
 
-	private static DynamicTest eq(AmongEngine engine, String name, Among... expected){
-		return DynamicTest.dynamicTest(name, () -> {
-			long t = System.currentTimeMillis();
-			RootAndDefinition root = engine.getOrReadFrom(name);
-			t = System.currentTimeMillis()-t;
-			assertNotNull(root, "Compilation failed");
-			TestUtil.log(root, t);
-			assertArrayEquals(expected, root.root().objects().toArray(new Among[0]));
-		});
+	@Test public void invalidRef(){
+		err(engine, "invalidRef");
 	}
-	private static DynamicTest err(AmongEngine engine, String name){
-		return DynamicTest.dynamicTest(name, () ->
-				assertNull(engine.getOrReadFrom(name), "Cannot even fail smh smh"));
+	@Test public void selfRef(){
+		err(engine, "selfRef");
+	}
+	@Test public void circRef(){
+		err(engine, "circRef1");
+	}
+
+	private static void eq(AmongEngine engine, String name, Among... expected){
+		long t = System.currentTimeMillis();
+		RootAndDefinition root = engine.getOrReadFrom(name);
+		t = System.currentTimeMillis()-t;
+		assertNotNull(root, "Compilation failed");
+		TestUtil.log(root, t);
+		assertArrayEquals(expected, root.root().objects().toArray(new Among[0]));
+	}
+	private static void err(AmongEngine engine, String name){
+		assertNull(engine.getOrReadFrom(name), "Cannot even fail smh smh");
 	}
 }

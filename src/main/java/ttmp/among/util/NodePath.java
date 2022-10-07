@@ -41,6 +41,23 @@ public final class NodePath implements Iterable<NodePath.Element>{
 	public static NodePath of(Element... path){
 		return path.length==0 ? EMPTY : new NodePath(path);
 	}
+	/**
+	 * Returns path instance with given elements.
+	 *
+	 * @param path Relative path of the node
+	 * @return Path with given path
+	 * @throws NullPointerException If either {@code path} or one of its elements are {@code null}
+	 */
+	public static NodePath of(List<Element> path){
+		return path.isEmpty() ? EMPTY : new NodePath(path);
+	}
+
+	public static NodePathBuilder index(int idx){
+		return new NodePathBuilder().index(idx);
+	}
+	public static NodePathBuilder prop(String prop){
+		return new NodePathBuilder().prop(prop);
+	}
 
 	private final Element[] path;
 
@@ -49,6 +66,11 @@ public final class NodePath implements Iterable<NodePath.Element>{
 	}
 	private NodePath(Element... path){
 		this.path = path.clone();
+		for(Element e : this.path)
+			Objects.requireNonNull(e);
+	}
+	private NodePath(List<Element> path){
+		this.path = path.toArray(new Element[0]);
 		for(Element e : this.path)
 			Objects.requireNonNull(e);
 	}
@@ -105,7 +127,7 @@ public final class NodePath implements Iterable<NodePath.Element>{
 	 *
 	 * @param among   Object to put {@code element} into
 	 * @param element Object to be set
-	 * @return {@code element} if it overwrites itself (on empty path), {@code among} otherwise
+	 * @return Whether the operation succeeded
 	 */
 	public boolean resolveAndSet(Among among, Among element){
 		if(isEmpty()) return false; // Overwriting itself always fails

@@ -3,10 +3,13 @@ package test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import ttmp.among.definition.AmongDefinition;
-import ttmp.among.definition.MacroDefinition;
+import ttmp.among.definition.Macro;
+import ttmp.among.definition.MacroReplacement;
 import ttmp.among.definition.MacroType;
 import ttmp.among.definition.OperatorType;
+import ttmp.among.exception.Sussy;
 import ttmp.among.obj.AmongRoot;
+import ttmp.among.util.NodePath;
 
 import static ttmp.among.obj.Among.*;
 
@@ -29,22 +32,26 @@ public class CopyTest{
 	@Test
 	public void copyDefinition(){
 		AmongDefinition def = new AmongDefinition();
-		def.addMacro(MacroDefinition.builder()
+		def.macros().add(Macro.builder()
 				.signature("This is macro", MacroType.CONST)
-				.template(object()
+				.build(object()
 						.prop("P1", "1")
-						.prop("P2", "2"))
-				.build());
-		def.addMacro(MacroDefinition.builder()
+						.prop("P2", "2")), (t, s) -> {
+			throw new Sussy(s);
+		});
+		def.macros().add(Macro.builder()
 				.signature("Macro2", MacroType.OBJECT)
 				.param("p1")
 				.param("p2", value("default"))
 				.param("p3")
-				.template(object()
-						.prop("P1", value("p1").paramRef())
-						.prop("P2", value("p2").paramRef())
-						.prop("P3", value("p3").paramRef()))
-				.build());
+				.build(object()
+						.prop("P1", value("p1"))
+						.prop("P2", value("p2"))
+						.prop("P3", value("p3")),
+						MacroReplacement.valueReplacement(NodePath.prop("P1").of(), 0),
+						MacroReplacement.valueReplacement(NodePath.prop("P2").of(), 1),
+						MacroReplacement.valueReplacement(NodePath.prop("P3").of(), 2)
+				));
 
 		def.operators().addOperator("~~", OperatorType.PREFIX);
 		def.operators().addOperator("~~", OperatorType.POSTFIX);

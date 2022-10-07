@@ -1,29 +1,24 @@
 package ttmp.among.definition;
 
-import org.jetbrains.annotations.Nullable;
 import ttmp.among.util.PrettyFormatOption;
 import ttmp.among.util.ToPrettyString;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Represents a definition side of the source, i.e. macro and operator definitions.
  */
 public final class AmongDefinition implements ToPrettyString{
-	private final Map<MacroSignature, MacroDefinition> macros;
+	private final MacroRegistry macros;
 	private final OperatorRegistry operators;
 
 	/**
 	 * Create new empty definition - no macros, no operators, nothing.
 	 */
 	public AmongDefinition(){
-		this.macros = new HashMap<>();
+		this.macros = new MacroRegistry();
 		this.operators = new OperatorRegistry();
 	}
 	private AmongDefinition(AmongDefinition copyFrom){
-		this.macros = new HashMap<>(copyFrom.macros);
+		this.macros = new MacroRegistry(copyFrom.macros);
 		this.operators = new OperatorRegistry(copyFrom.operators);
 	}
 
@@ -35,28 +30,9 @@ public final class AmongDefinition implements ToPrettyString{
 		operators.clear();
 	}
 
-	public Map<MacroSignature, MacroDefinition> macros(){
-		return Collections.unmodifiableMap(macros);
+	public MacroRegistry macros(){
+		return macros;
 	}
-	@Nullable public MacroDefinition searchMacro(String name, MacroType type){
-		return searchMacro(new MacroSignature(name, type));
-	}
-	@Nullable public MacroDefinition searchMacro(MacroSignature signature){
-		return macros.get(signature);
-	}
-	@Nullable public MacroDefinition addMacro(MacroDefinition def){
-		return macros.put(def.signature(), def);
-	}
-	@Nullable public MacroDefinition removeMacro(String name, MacroType type){
-		return removeMacro(new MacroSignature(name, type));
-	}
-	@Nullable public MacroDefinition removeMacro(MacroSignature signature){
-		return macros.remove(signature);
-	}
-	public void clearMacros(){
-		macros.clear();
-	}
-
 	public OperatorRegistry operators(){
 		return operators;
 	}
@@ -72,11 +48,11 @@ public final class AmongDefinition implements ToPrettyString{
 
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
-		for(MacroDefinition def : macros.values()){
+		macros.macros().forEach(macro -> {
 			if(stb.length()>0) stb.append('\n');
-			stb.append(def.toString());
-		}
-		operators.forEachOperatorAndKeyword(def -> {
+			stb.append(macro.toString());
+		});
+		operators.allOperators().forEach(def -> {
 			if(stb.length()>0) stb.append('\n');
 			stb.append(def.toString());
 		});
@@ -84,11 +60,11 @@ public final class AmongDefinition implements ToPrettyString{
 	}
 	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
-		for(MacroDefinition def : macros.values()){
+		macros.macros().forEach(macro -> {
 			if(stb.length()>0) stb.append('\n');
-			stb.append(def.toPrettyString(indents, option));
-		}
-		operators.forEachOperatorAndKeyword(def -> {
+			stb.append(macro.toPrettyString(indents, option));
+		});
+		operators.allOperators().forEach(def -> {
 			if(stb.length()>0) stb.append('\n');
 			stb.append(def.toString());
 		});

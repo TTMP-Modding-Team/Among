@@ -4,25 +4,36 @@ import org.jetbrains.annotations.Nullable;
 import ttmp.among.AmongEngine;
 import ttmp.among.compile.Report.ReportType;
 import ttmp.among.definition.AmongDefinition;
+import ttmp.among.definition.Macro;
 import ttmp.among.definition.MacroDefinition;
 import ttmp.among.definition.MacroParameter;
+import ttmp.among.definition.MacroParameter.TypeInference;
 import ttmp.among.definition.MacroParameterList;
+import ttmp.among.definition.MacroRegistry;
+import ttmp.among.definition.MacroReplacement;
+import ttmp.among.definition.MacroReplacement.MacroOp;
+import ttmp.among.definition.MacroReplacement.MacroOp.MacroCall;
+import ttmp.among.definition.MacroReplacement.MacroOp.NameReplacement;
+import ttmp.among.definition.MacroReplacement.MacroOp.ValueReplacement;
 import ttmp.among.definition.MacroType;
 import ttmp.among.definition.OperatorDefinition;
 import ttmp.among.definition.OperatorRegistry;
 import ttmp.among.definition.OperatorType;
-import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
 import ttmp.among.obj.AmongObject;
 import ttmp.among.obj.AmongPrimitive;
 import ttmp.among.obj.AmongRoot;
+import ttmp.among.util.AmongWalker;
+import ttmp.among.util.NodePath;
 import ttmp.among.util.RootAndDefinition;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static ttmp.among.compile.AmongToken.TokenType.*;
 
@@ -45,7 +56,7 @@ public final class AmongParser{
 	private final List<Report> reports = new ArrayList<>();
 
 	private boolean recovering;
-	@Nullable private MacroParameterList currentMacroParameter;
+	@Nullable private ParsingMacro currentMacro;
 
 	public AmongParser(Source source, AmongEngine engine, AmongRoot root, AmongDefinition importDefinition){
 		this.engine = engine;
@@ -65,8 +76,6 @@ public final class AmongParser{
 	public CompileResult parse(){
 		try{
 			among();
-		}catch(Halt ignored){
-			// no-op
 		}catch(RuntimeException ex){
 			reportError("Unexpected error", ex);
 		}
@@ -86,6 +95,7 @@ public final class AmongParser{
 					case "macro": undefMacro(); continue;
 					case "operator": undefOperation(false); continue;
 					case "keyword": undefOperation(true); continue;
+					case "use": undefUse(); continue;
 					default:
 						reportError("Expected 'macro', 'operator' or 'keyword'");
 						skipUntilLineBreak();
@@ -138,13 +148,12 @@ public final class AmongParser{
 		}
 	}
 	private void macroDefinition(int startIndex, String name, MacroType type){
-		MacroParameterList params;
-		if(type==MacroType.CONST) params = MacroParameterList.of();
-		else{
+		ParsingMacro m = new ParsingMacro(startIndex, name, type);
+		if(type!=MacroType.CONST){
 			switch(type){
-				case OBJECT: params = macroParam(R_BRACE); break;
-				case LIST: params = macroParam(R_BRACKET); break;
-				case OPERATION: params = macroParam(R_PAREN); break;
+				case OBJECT: macroParam(m, R_BRACE); break;
+				case LIST: macroParam(m, R_BRACKET); break;
+				case OPERATION: macroParam(m, R_PAREN); break;
 				default: throw new IllegalStateException("Unreachable");
 			}
 			tokenizer.discard();
@@ -155,13 +164,11 @@ public final class AmongParser{
 				return;
 			}
 		}
-		if(params!=null){
-			if(this.currentMacroParameter!=null)
-				reportError("Previous macro parameter is not cleaned up properly, this shouldn't happen");
-			this.currentMacroParameter = params;
-		}
+
+		if(this.currentMacro!=null)
+			reportError("Previous macro parameter is not cleaned up properly, this shouldn't happen");
+		this.currentMacro = m;
 		Among expr = exprOrError();
-		this.currentMacroParameter = null;
 		tokenizer.discard();
 		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 		if(!next.is(BR)&&!next.is(EOF)){
@@ -169,37 +176,23 @@ public final class AmongParser{
 			tokenizer.reset();
 			tryToRecover(TokenizationMode.PLAIN_WORD);
 		}
-		if(params!=null){
-			if((type==MacroType.LIST||type==MacroType.OPERATION)&&!params.hasConsecutiveOptionalParams()){
-				reportError("Optional parameters of "+(type==MacroType.LIST ? "list" : "operation")+
-						" macro should be consecutive, placed at end of the parameter list", startIndex);
-				return;
-			}
-			MacroDefinition macro = new MacroDefinition(name, type, params, expr);
-			definition.addMacro(macro);
-			importDefinition.addMacro(macro);
-		}
+		m.register(expr);
+		this.currentMacro = null;
 	}
 
-	@Nullable private MacroParameterList macroParam(AmongToken.TokenType closure){
-		List<MacroParameter> params = new ArrayList<>();
-		Set<String> nameSet = new HashSet<>();
-		boolean invalid = false;
+	private void macroParam(ParsingMacro macro, AmongToken.TokenType closure){
 		while(true){
 			AmongToken next = tokenizer.next(true, TokenizationMode.PARAM_NAME);
 			if(next.is(closure)) break;
 			if(next.is(EOF)) break; // It will be reported in defMacro()
 			if(!next.is(PARAM_NAME)){
 				reportError("Expected parameter name");
-				invalid = true;
+				macro.invalid = true;
 				if(tryToRecover(TokenizationMode.PARAM_NAME, closure, true)) break;
 				else continue;
 			}
 			String name = next.expectLiteral();
-			if(!nameSet.add(name)){
-				reportError("Duplicated parameter '"+name+"'");
-				invalid = true;
-			}
+			int nameStart = next.start;
 			next = tokenizer.next(true, TokenizationMode.PARAM_NAME);
 
 			Among defaultValue;
@@ -207,16 +200,15 @@ public final class AmongParser{
 				defaultValue = exprOrError();
 				next = tokenizer.next(true, TokenizationMode.PARAM_NAME);
 			}else defaultValue = null;
-			if(!invalid) params.add(new MacroParameter(name, defaultValue));
+			macro.newParam(name, defaultValue, nameStart);
 
 			if(next.is(closure)) break;
 			else if(!next.is(COMMA)){
 				reportError("Expected ',' or "+closure.friendlyName());
-				invalid = true;
+				macro.invalid = true;
 				if(tryToRecover(TokenizationMode.PARAM_NAME, closure, true)) break;
 			}
 		}
-		return invalid ? null : MacroParameterList.of(params);
 	}
 
 	private void operatorDefinition(int startIndex, boolean keyword){
@@ -241,8 +233,7 @@ public final class AmongParser{
 		double priority = Double.NaN;
 		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 		if(next.is(COLON)){
-			priority = tokenizer.next(true, TokenizationMode.VALUE)
-					.asNumber();
+			priority = tokenizer.next(true, TokenizationMode.VALUE).asNumber();
 			if(Double.isNaN(priority)) reportError("Expected number");
 		}else tokenizer.reset(next.is(ERROR));
 		next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
@@ -264,31 +255,20 @@ public final class AmongParser{
 		String name = definitionName(TokenizationMode.WORD);
 		if(name==null) return;
 		AmongToken next = tokenizer.next(false, TokenizationMode.PLAIN_WORD);
+		MacroType type;
 		switch(next.type){
-			case BR:
-				definition.removeMacro(name, MacroType.CONST);
-				importDefinition.removeMacro(name, MacroType.CONST);
-				return;
-			case L_BRACE:
-				expectNext(R_BRACE);
-				definition.removeMacro(name, MacroType.OBJECT);
-				importDefinition.removeMacro(name, MacroType.OBJECT);
-				break;
-			case L_BRACKET:
-				expectNext(R_BRACKET);
-				definition.removeMacro(name, MacroType.LIST);
-				importDefinition.removeMacro(name, MacroType.LIST);
-				break;
-			case L_PAREN:
-				expectNext(R_PAREN);
-				definition.removeMacro(name, MacroType.OPERATION);
-				importDefinition.removeMacro(name, MacroType.OPERATION);
-				break;
+			case BR: type = MacroType.CONST; break;
+			case L_BRACE: expectNext(R_BRACE); type = MacroType.OBJECT; break;
+			case L_BRACKET: expectNext(R_BRACKET); type = MacroType.LIST; break;
+			case L_PAREN: expectNext(R_PAREN); type = MacroType.OPERATION; break;
 			default:
 				reportError("Expected '{', '[', '(' or line break");
 				skipUntilLineBreak();
 				return;
 		}
+		definition.macros().remove(name, type);
+		importDefinition.macros().remove(name, type);
+		if(type==MacroType.CONST) return;
 		next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 		if(!next.is(BR)&&!next.is(EOF)){
 			reportError("Expected newline after undef statement");
@@ -302,6 +282,35 @@ public final class AmongParser{
 		definition.operators().remove(name, keyword);
 		importDefinition.operators().remove(name, keyword);
 		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
+		if(!next.is(BR)&&!next.is(EOF)){
+			reportError("Expected newline after undef statement");
+			skipUntilLineBreak();
+		}
+	}
+
+	private void undefUse(){
+		AmongToken next = tokenizer.next(false, TokenizationMode.VALUE);
+		if(!next.isLiteral()){
+			reportError("Expected path");
+			skipUntilLineBreak();
+			return;
+		}
+		String path = next.expectLiteral();
+		RootAndDefinition imported = engine.getOrReadFrom(path);
+		if(imported==null){
+			reportError("Invalid use statement: Cannot resolve definitions from path '"+path+"'");
+		}else{
+			imported.definition().macros().macroSignatures().forEach(s -> {
+				importDefinition.macros().remove(s);
+				definition.macros().remove(s);
+			});
+			imported.definition().operators().allOperatorNames().forEach(g -> {
+				importDefinition.operators().remove(g.name(), g.isKeyword());
+				definition.operators().remove(g.name(), g.isKeyword());
+			});
+		}
+
+		next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
 		if(!next.is(BR)&&!next.is(EOF)){
 			reportError("Expected newline after undef statement");
 			skipUntilLineBreak();
@@ -335,8 +344,10 @@ public final class AmongParser{
 	}
 
 	private void copyDefinitions(AmongDefinition from, AmongDefinition to){
-		for(MacroDefinition macro : from.macros().values()) to.addMacro(macro);
-		from.operators().forEachOperatorAndKeyword(to.operators()::add); // TODO log failure
+		// TODO log failure :p
+		from.macros().macros().forEach(to.macros()::add);
+		// TODO log failure
+		from.operators().allOperators().forEach(to.operators()::add);
 	}
 
 	private void expectNext(AmongToken.TokenType type){
@@ -362,16 +373,11 @@ public final class AmongParser{
 			return null;
 		}
 		AmongPrimitive p = Among.value(next.expectLiteral());
-		return next.is(QUOTED_PRIMITIVE) ? p :
-				isParamRef(next) ? p.paramRef() :
-						primitiveMacro(p, next.start);
+		return next.is(QUOTED_PRIMITIVE)||resolveParamRef(p) ? p : primitiveMacro(p, next.start);
 	}
 
-	private boolean isParamRef(AmongToken token){
-		return currentMacroParameter!=null&&
-				token.isLiteral()&&
-				!token.is(QUOTED_PRIMITIVE)&&
-				currentMacroParameter.parameters().containsKey(token.expectLiteral());
+	private boolean resolveParamRef(Among target){
+		return currentMacro!=null&&currentMacro.resolveParamRef(target);
 	}
 
 	@Nullable private Among nameable(boolean operation){
@@ -390,18 +396,15 @@ public final class AmongParser{
 					switch(tokenizer.next(operation, TokenizationMode.UNEXPECTED).type){
 						case L_BRACE:{
 							AmongObject o = obj(next.expectLiteral());
-							if(isParamRef(next)) return o.paramRef();
-							return next.is(QUOTED_PRIMITIVE) ? o : objectMacro(o, next.start);
+							return next.is(QUOTED_PRIMITIVE)||resolveParamRef(o) ? o : objectMacro(o, next.start);
 						}
 						case L_BRACKET:{
 							AmongList l = list(next.expectLiteral());
-							if(isParamRef(next)) return l.paramRef();
-							return next.is(QUOTED_PRIMITIVE) ? l : listMacro(l, next.start);
+							return next.is(QUOTED_PRIMITIVE)||resolveParamRef(l) ? l : listMacro(l, next.start);
 						}
 						case L_PAREN:{
 							AmongList o = oper(next.expectLiteral());
-							if(isParamRef(next)) return o.paramRef();
-							return next.is(QUOTED_PRIMITIVE) ? o : operationMacro(o, next.start);
+							return next.is(QUOTED_PRIMITIVE)||resolveParamRef(o) ? o : operationMacro(o, next.start);
 						}
 						default: tokenizer.reset(true); return null;
 					}
@@ -490,7 +493,7 @@ public final class AmongParser{
 	}
 
 	private AmongList oper(@Nullable String name){
-		AmongList list = Among.namedList(name);
+		AmongList list = Among.namedList(name).operation();
 		L:
 		while(true){
 			tokenizer.discard();
@@ -525,7 +528,7 @@ public final class AmongParser{
 						if(next.isOperatorOrKeyword()){
 							OperatorDefinition op = group.get(next.expectLiteral());
 							if(op!=null){
-								a = operationMacro(Among.namedList(op.name(), a, operationExpression(operators, i+1)), next.start);
+								a = operationMacro(Among.namedList(op.name(), a, operationExpression(operators, i+1)).operation(), next.start);
 								continue;
 							}
 						}
@@ -541,7 +544,7 @@ public final class AmongParser{
 						if(next.isOperatorOrKeyword()){
 							OperatorDefinition op = group.get(next.expectLiteral());
 							if(op!=null){
-								a = operationMacro(Among.namedList(op.name(), a), next.start);
+								a = operationMacro(Among.namedList(op.name(), a).operation(), next.start);
 								continue;
 							}
 						}
@@ -565,8 +568,7 @@ public final class AmongParser{
 			return Among.value("ERROR");
 		}
 		AmongPrimitive p = Among.value(next.expectLiteral());
-		if(isParamRef(next)) p.setParamRef(true);
-		return next.is(QUOTED_PRIMITIVE) ? p : primitiveMacro(p, next.start);
+		return next.is(QUOTED_PRIMITIVE)||resolveParamRef(p) ? p : primitiveMacro(p, next.start);
 	}
 
 	private Among prefix(List<OperatorRegistry.PriorityGroup> operators, int i){
@@ -574,7 +576,7 @@ public final class AmongParser{
 		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
 		if(next.isOperatorOrKeyword()){
 			OperatorDefinition op = operators.get(i).get(next.expectLiteral());
-			if(op!=null) return operationMacro(Among.namedList(op.name(), prefix(operators, i)), next.start);
+			if(op!=null) return operationMacro(Among.namedList(op.name(), prefix(operators, i)).operation(), next.start);
 		}
 		tokenizer.reset();
 		return operationExpression(operators, i+1);
@@ -593,14 +595,22 @@ public final class AmongParser{
 		return macro(operation, operation.getName(), MacroType.OPERATION, sourcePosition);
 	}
 	private Among macro(Among target, String macroName, MacroType macroType, int sourcePosition){
-		MacroDefinition macro = importDefinition.searchMacro(macroName, macroType);
-		if(macro==null) return target;
-		try{
-			return macro.apply(target, engine.copyMacroConstant,
-					(t, s) -> report(t, s, sourcePosition));
-		}catch(Sussy sussy){
-			return Among.value("ERROR");
+		MacroRegistry.Group g = importDefinition.macros().groupFor(macroName, macroType);
+		if(g==null) return target;
+		Macro macro = g.search(target, (t, s) -> report(t, s, sourcePosition));
+		if(macro!=null){
+			if(currentMacro!=null){
+				currentMacro.resolveMacroCall(macro, target);
+				return target;
+			}
+			try{
+				Among among = macro.apply(target, engine.copyMacroConstant, (t, s) -> report(t, s, sourcePosition));
+				if(among!=null) return among;
+			}catch(RuntimeException ex){
+				report(ReportType.ERROR, "Unexpected error on macro processing", sourcePosition, ex);
+			}
 		}
+		return Among.value("ERROR");
 	}
 
 	void reportWarning(String message, String... hints){
@@ -701,8 +711,122 @@ public final class AmongParser{
 		}
 	}
 
-	/**
-	 * Special exception for halting the process
-	 */
-	private static final class Halt extends Sussy{}
+	private final class ParsingMacro{
+		private final int start;
+		private final String name;
+		private final MacroType type;
+		private final List<MacroParameter> params = new ArrayList<>();
+		private final List<Map.Entry<MacroOp, Among>> operationToTarget = new ArrayList<>();
+
+		private boolean optionalParamSeen;
+		private boolean invalid;
+
+		private ParsingMacro(int start, String name, MacroType type){
+			this.start = start;
+			this.name = name;
+			this.type = type;
+		}
+
+		public void newParam(String name, @Nullable Among defaultValue, int pos){
+			if(type==MacroType.CONST){
+				reportError("Constant macros cannot have parameters");
+				invalid = true;
+			}else if(paramIndex(name)>=0){
+				reportError("Duplicated parameter '"+name+"'.", pos);
+				invalid = true;
+			}else{
+				if(type==MacroType.LIST||type==MacroType.OPERATION){
+					if(defaultValue==null){
+						if(optionalParamSeen){
+							reportError("Optional parameters of "+(type==MacroType.LIST ? "list" : "operation")+
+									" macro should be consecutive, placed at end of the parameter list", pos);
+							invalid = true;
+						}
+					}else optionalParamSeen = true;
+				}
+				params.add(new MacroParameter(name, defaultValue));
+			}
+		}
+
+		public int paramIndex(String name){
+			for(int i = 0; i<params.size(); i++){
+				MacroParameter p = params.get(i);
+				if(p.name().equals(name)) return i;
+			}
+			return -1;
+		}
+
+		public void inferTypeAs(int paramIndex, byte typeInference){
+			MacroParameter p = params.get(paramIndex);
+			if(p.typeInference()==0) return; // already reported
+			byte newTi = (byte)(typeInference&p.typeInference());
+			if(p.typeInference()!=typeInference){
+				if(newTi==0){
+					reportError("Parameter '"+p.name()+"' has no valid input: needs to satisfy both "+
+							TypeInference.toString(p.typeInference())+" AND "+TypeInference.toString(typeInference));
+					invalid = true;
+				}else if(p.defaultValue()!=null&&!TypeInference.matches(newTi, p.defaultValue())){
+					reportError("Default value of the parameter '"+p.name()+"' is invalid");
+					invalid = true;
+				}
+				params.set(paramIndex, new MacroParameter(p.name(), p.defaultValue(), newTi));
+			}
+		}
+
+		public boolean resolveParamRef(Among target){
+			String name;
+			if(target.isPrimitive()) name = target.asPrimitive().getValue();
+			else if(target.isNamed()) name = target.asNamed().getName();
+			else return false;
+			int i = paramIndex(name);
+			if(i<0) return false;
+			if(target.isNamed()) inferTypeAs(i, TypeInference.PRIMITIVE);
+			if(!invalid)
+				operationToTarget.add(new SimpleEntry<>(
+						target.isPrimitive() ?
+								new ValueReplacement(i) :
+								new NameReplacement(i),
+						target));
+			return true;
+		}
+
+		public void resolveMacroCall(Macro macro, Among target){
+			operationToTarget.add(new SimpleEntry<>(new MacroCall(macro), target));
+		}
+
+		public void register(Among expr){
+			if(invalid) return;
+			invalid = true;
+			List<MacroReplacement> replacements = new ArrayList<>(this.operationToTarget.size());
+			expr.walk(new AmongWalker(){
+				@Override public void walk(AmongPrimitive primitive, NodePath path){
+					resolve(primitive, path);
+				}
+				@Override public void walkAfter(AmongObject object, NodePath path){
+					resolve(object, path);
+				}
+				@Override public void walkAfter(AmongList list, NodePath path){
+					resolve(list, path);
+				}
+				private void resolve(Among target, NodePath path){
+					for(Iterator<Map.Entry<MacroOp, Among>> it = operationToTarget.iterator(); it.hasNext(); ){
+						Map.Entry<MacroOp, Among> e = it.next();
+						if(e.getValue()==target){
+							replacements.add(new MacroReplacement(path, e.getKey()));
+							it.remove();
+							return;
+						}
+					}
+				}
+			});
+			if(!operationToTarget.isEmpty()){
+				reportError("Unresolved macro operation: "+
+						operationToTarget.stream().map(e -> e.getKey().toString()).collect(Collectors.joining(", ")), start);
+				return;
+			}
+			MacroDefinition macro = new MacroDefinition(name, type, MacroParameterList.of(params), expr, replacements);
+			definition.macros().add(macro, (t, s) -> report(t, s, start));
+			importDefinition.macros().add(macro, (t, s) -> report(t, s, start));
+		}
+	}
 }
