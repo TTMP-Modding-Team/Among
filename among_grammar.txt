@@ -14,7 +14,7 @@ macroDefinition: macroName BR*
                  | "(" BR* macroParam? BR* ")" BR*
                  | "[" BR* macroParam? BR* "]" BR* )?
                  ":" BR* expr
-macroParam: paramName ( BR* "=" BR* expr )? ( BR* "," BR* defParam? )?
+macroParam: paramName ( BR* "=" BR* expr )? ( BR* "," BR* macroParam? )?
 
 operatorDefinition: word BR*
                     "as" BR* operatorProperties BR*
