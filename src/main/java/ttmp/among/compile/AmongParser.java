@@ -91,32 +91,67 @@ public final class AmongParser{
 				case "macro": macroDefinition(next.start); continue;
 				case "operator": operatorDefinition(next.start, false); continue;
 				case "keyword": operatorDefinition(next.start, true); continue;
-				case "undef": switch(tokenizer.next(true, TokenizationMode.PLAIN_WORD).keywordOrEmpty()){
-					case "macro": undefMacro(); continue;
-					case "operator": undefOperation(false); continue;
-					case "keyword": undefOperation(true); continue;
-					case "use": undefUse(); continue;
-					default:
-						reportError("Expected 'macro', 'operator' or 'keyword'");
-						skipUntilLineBreak();
-						continue;
-				}
-				case "use": use(); continue;
-			}
-			tokenizer.reset(next.isSimpleLiteral());
-			Among a = nameable(false);
-			if(a==null){
-				next = tokenizer.next(true, TokenizationMode.WORD);
-				if(!next.is(QUOTED_PRIMITIVE)){
-					reportError("Top level statements can only be macro/operator/"+
-							"keyword definition, undef statement, named/unnamed collections,"+
-							" or primitives denoted with ' or \"");
-					tryToRecover(TokenizationMode.WORD);
+				case "undef":
+					switch(tokenizer.next(true, TokenizationMode.PLAIN_WORD).keywordOrEmpty()){
+						case "macro": undefMacro(); break;
+						case "operator": undefOperation(false); break;
+						case "keyword": undefOperation(true); break;
+						case "use": undefUse(); break;
+						default:
+							reportError("Expected 'macro', 'operator' or 'keyword'");
+							tryToRecover(TokenizationMode.UNEXPECTED, null, true, true);
+							skipUntilLineBreak();
+							continue;
+					}
+					expectStmtEnd("Expected ',' or newline after undef statement");
 					continue;
-				}
-				a = Among.value(next.expectLiteral());
+				case "use": use(); continue;
+				default:
+					tokenizer.reset(next.isSimpleLiteral());
+					Among a = nameable(false);
+					if(a==null){
+						next = tokenizer.next(true, TokenizationMode.WORD);
+						if(!next.is(QUOTED_PRIMITIVE)){
+							reportError("Top level statements can only be macro/operator/"+
+									"keyword definition, undef statement, named/unnamed collections,"+
+									" or primitives denoted with ' or \"");
+							tryToRecover(TokenizationMode.WORD);
+							continue;
+						}
+						a = Among.value(next.expectLiteral());
+					}
+					root.addObject(a);
+					stmtEnd();
 			}
-			root.addObject(a);
+		}
+	}
+
+	/**
+	 * Checks if there's appropriate statement end; if not, tokens are discarded until a statement end is found.
+	 * @param errorMessage Error message to report if statement end is missing
+	 * @return Whether there is appropriate statement end
+	 */
+	private boolean expectStmtEnd(String errorMessage){
+		if(stmtEnd()) return true;
+		reportError(errorMessage);
+		tryToRecover(TokenizationMode.UNEXPECTED, null, true, true);
+		return false;
+	}
+
+	/**
+	 * Checks if there's appropriate statement end.
+	 * @return Whether there is appropriate statement end
+	 */
+	private boolean stmtEnd(){
+		tokenizer.discard();
+		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
+		switch(next.type){
+			case BR:
+				tokenizer.discard();
+				next = tokenizer.next(true, TokenizationMode.UNEXPECTED);
+				if(!next.is(COMMA)) tokenizer.reset(next.is(ERROR));
+			case EOF: case COMMA: return true;
+			default: tokenizer.reset(next.is(ERROR)); return false;
 		}
 	}
 
@@ -170,12 +205,7 @@ public final class AmongParser{
 		this.currentMacro = m;
 		Among expr = exprOrError();
 		tokenizer.discard();
-		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
-		if(!next.is(BR)&&!next.is(EOF)){
-			reportError("Expected newline after macro statement");
-			tokenizer.reset();
-			tryToRecover(TokenizationMode.PLAIN_WORD);
-		}
+		expectStmtEnd("Expected ',' or newline after macro statement");
 		m.register(expr);
 		this.currentMacro = null;
 	}
@@ -236,12 +266,7 @@ public final class AmongParser{
 			priority = tokenizer.next(true, TokenizationMode.VALUE).asNumber();
 			if(Double.isNaN(priority)) reportError("Expected number");
 		}else tokenizer.reset(next.is(ERROR));
-		next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
-		if(!next.is(BR)&&!next.is(EOF)){
-			reportError("Expected newline after "+(keyword ? "keyword" : "operator")+" statement");
-			skipUntilLineBreak();
-			return;
-		}
+		expectStmtEnd("Expected newline after "+(keyword ? "keyword" : "operator")+" statement");
 		OperatorDefinition operator = new OperatorDefinition(name, keyword, type, priority);
 		OperatorRegistry.RegistrationResult result = importDefinition.operators().add(operator);
 		if(!result.isSuccess())
@@ -252,28 +277,23 @@ public final class AmongParser{
 	}
 
 	private void undefMacro(){
-		String name = definitionName(TokenizationMode.WORD);
+		String name = definitionName(TokenizationMode.MACRO_NAME);
 		if(name==null) return;
+		tokenizer.discard();
 		AmongToken next = tokenizer.next(false, TokenizationMode.PLAIN_WORD);
 		MacroType type;
 		switch(next.type){
-			case BR: type = MacroType.CONST; break;
+			case BR: case EOF: case COMMA: tokenizer.reset(); type = MacroType.CONST; break;
 			case L_BRACE: expectNext(R_BRACE); type = MacroType.OBJECT; break;
 			case L_BRACKET: expectNext(R_BRACKET); type = MacroType.LIST; break;
 			case L_PAREN: expectNext(R_PAREN); type = MacroType.OPERATION; break;
 			default:
-				reportError("Expected '{', '[', '(' or line break");
+				reportError("Expected '{', '[', '(' or end of statement");
 				skipUntilLineBreak();
 				return;
 		}
 		definition.macros().remove(name, type);
 		importDefinition.macros().remove(name, type);
-		if(type==MacroType.CONST) return;
-		next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
-		if(!next.is(BR)&&!next.is(EOF)){
-			reportError("Expected newline after undef statement");
-			skipUntilLineBreak();
-		}
 	}
 
 	private void undefOperation(boolean keyword){
@@ -281,11 +301,6 @@ public final class AmongParser{
 		if(name==null) return;
 		definition.operators().remove(name, keyword);
 		importDefinition.operators().remove(name, keyword);
-		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
-		if(!next.is(BR)&&!next.is(EOF)){
-			reportError("Expected newline after undef statement");
-			skipUntilLineBreak();
-		}
 	}
 
 	private void undefUse(){
@@ -309,12 +324,6 @@ public final class AmongParser{
 				definition.operators().remove(g.name(), g.isKeyword());
 			});
 		}
-
-		next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
-		if(!next.is(BR)&&!next.is(EOF)){
-			reportError("Expected newline after undef statement");
-			skipUntilLineBreak();
-		}
 	}
 
 	private void use(){
@@ -336,11 +345,7 @@ public final class AmongParser{
 			copyDefinitions(imported.definition(), importDefinition);
 			if(pub) copyDefinitions(imported.definition(), definition);
 		}
-		next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
-		if(!next.is(BR)&&!next.is(EOF)){
-			reportError("Expected newline after undef statement");
-			skipUntilLineBreak();
-		}
+		expectStmtEnd("Expected ',' or newline after use statement");
 	}
 
 	private void copyDefinitions(AmongDefinition from, AmongDefinition to){

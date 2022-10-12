@@ -1,13 +1,13 @@
-among: BR* ( topLevel BR* )* EOF
+among: BR* (topLevel BR*)* EOF
 
 topLevel: ( "macro" BR* macroDefinition
           | ( "operator" | "keyword" ) BR* operatorDefinition
           | "undef" BR* undef
           | "use" "public"? ( value | complexPrimitive )
-          | "fn" BR* macroDefinition )
-          ( "," | BR )
-        | nameable ( BR* "," )?
-        | complexPrimitive ( BR* "," )?
+          | "fn" BR* macroDefinition ) stmtEnd
+        | ( nameable | complexPrimitive) stmtEnd?
+
+stmtEnd: "," | BR+ ","? | EOF
 
 macroDefinition: macroName BR*
                  ( "{" BR* macroParam? BR* "}" BR*
