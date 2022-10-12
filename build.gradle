@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'ttmp'
-version '0.1.0'
+version "${spec_version}.${build_version}"
 
 repositories {
     mavenCentral()
@@ -23,3 +23,15 @@ test {
 
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
+
+jar {
+    manifest {
+        attributes(
+                "Name": "ttmp/among",
+                "Specification-Title": "Among",
+                "Specification-Version": "${spec_version}",
+                "Implementation-Title": "ttmp.among",
+                "Implementation-Version": "${build_version}"
+        )
+    }
+}
