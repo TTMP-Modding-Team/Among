@@ -6,9 +6,10 @@ package ttmp.among.definition;
 public enum OperatorType{
 	BINARY, POSTFIX, PREFIX;
 
-	public double defaultPriority(){
+	public double defaultPriority(byte properties){
 		switch(this){
-			case BINARY: return OperatorPriorities.BINARY_CUSTOM;
+			case BINARY: return (properties&OperatorProperty.RIGHT_ASSOCIATIVE)!=0 ?
+					OperatorPriorities.BINARY_ASSIGN : OperatorPriorities.BINARY_CUSTOM;
 			case POSTFIX: return OperatorPriorities.POSTFIX_CUSTOM;
 			case PREFIX: default: return OperatorPriorities.PREFIX;
 		}

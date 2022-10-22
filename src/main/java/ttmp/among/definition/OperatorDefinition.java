@@ -77,7 +77,7 @@ public final class OperatorDefinition{
 		this.type = Objects.requireNonNull(type);
 		this.alias = alias;
 		this.properties = OperatorProperty.normalize(type, properties);
-		this.priority = Double.isNaN(priority) ? type.defaultPriority() : priority;
+		this.priority = Double.isNaN(priority) ? type.defaultPriority(properties) : priority;
 	}
 
 	public String name(){
@@ -124,7 +124,7 @@ public final class OperatorDefinition{
 		StringBuilder stb = new StringBuilder().append(isKeyword ? "keyword " : "operator ");
 		AmongUs.nameToString(stb, this.name, false);
 		stb.append(" as ").append(OperatorProperty.typeToString(type, properties));
-		if(Double.compare(priority, type.defaultPriority())!=0)
+		if(Double.compare(priority, type.defaultPriority(properties))!=0)
 			stb.append("(").append(FORMAT.format(priority)).append(")");
 		if(alias!=null){
 			stb.append(" : ");
