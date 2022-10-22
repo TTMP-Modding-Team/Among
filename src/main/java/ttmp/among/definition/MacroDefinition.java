@@ -100,13 +100,13 @@ public final class MacroDefinition extends Macro{
 
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
-		stb.append("macro ");
+		stb.append(type().isFunctionMacro() ? "fn " : "macro ");
 		signatureToString(stb);
 		return stb.append(':').append(template).toString();
 	}
 	@Override public String toPrettyString(int indents, PrettyFormatOption option){
 		StringBuilder stb = new StringBuilder();
-		stb.append("macro ");
+		stb.append(type().isFunctionMacro() ? "fn " : "macro ");
 		signatureToPrettyString(stb, indents, option);
 		return stb.append(" : ").append(template.toPrettyString(indents, option)).toString();
 	}

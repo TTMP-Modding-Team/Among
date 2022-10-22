@@ -204,16 +204,16 @@ public abstract class Macro implements ToPrettyString{
 	public final void signatureToString(StringBuilder stb){
 		AmongUs.nameToString(stb, name(), false);
 		switch(this.type()){
-			case OBJECT: stb.append('{'); break;
-			case LIST: stb.append('['); break;
-			case OPERATION: stb.append('('); break;
+			case OBJECT: case OBJECT_FN: stb.append('{'); break;
+			case LIST: case LIST_FN: stb.append('['); break;
+			case OPERATION: case OPERATION_FN: stb.append('('); break;
 			default: return;
 		}
 		stb.append(parameter);
 		switch(this.type()){
-			case OBJECT: stb.append('}'); break;
-			case LIST: stb.append(']'); break;
-			case OPERATION: stb.append(')'); break;
+			case OBJECT: case OBJECT_FN: stb.append('}'); break;
+			case LIST: case LIST_FN: stb.append(']'); break;
+			case OPERATION: case OPERATION_FN: stb.append(')'); break;
 		}
 	}
 
@@ -231,18 +231,17 @@ public abstract class Macro implements ToPrettyString{
 	}
 	public final void signatureToPrettyString(StringBuilder stb, int indents, PrettyFormatOption option, boolean replaceDefaultValueWithStubs){
 		AmongUs.nameToPrettyString(stb, name(), false, indents, option);
-
 		switch(this.type()){
-			case OBJECT: stb.append('{'); break;
-			case LIST: stb.append('['); break;
-			case OPERATION: stb.append('('); break;
+			case OBJECT: case OBJECT_FN: stb.append('{'); break;
+			case LIST: case LIST_FN: stb.append('['); break;
+			case OPERATION: case OPERATION_FN: stb.append('('); break;
 			default: return;
 		}
 		stb.append(parameter.toPrettyString(indents, option, replaceDefaultValueWithStubs));
 		switch(this.type()){
-			case OBJECT: stb.append('}'); break;
-			case LIST: stb.append(']'); break;
-			case OPERATION: stb.append(')'); break;
+			case OBJECT: case OBJECT_FN: stb.append('}'); break;
+			case LIST: case LIST_FN: stb.append(']'); break;
+			case OPERATION: case OPERATION_FN: stb.append(')'); break;
 		}
 	}
 }
