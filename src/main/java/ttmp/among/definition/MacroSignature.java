@@ -61,16 +61,16 @@ public final class MacroSignature implements Comparable<MacroSignature>{
 		StringBuilder stb = new StringBuilder();
 		AmongUs.nameToString(stb, name, false);
 		switch(type){
-			case OBJECT:
+			case OBJECT: case OBJECT_FN:
 				stb.append("{}");
 				break;
-			case LIST:
+			case LIST: case LIST_FN:
 				stb.append("[]");
 				break;
-			case OPERATION:
+			case OPERATION: case OPERATION_FN:
 				stb.append("()");
 				break;
-			case CONST: break;
+			case CONST: case ACCESS: break;
 			default: throw new IllegalStateException("unreachable");
 		}
 		return stb.toString();

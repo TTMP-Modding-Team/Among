@@ -77,7 +77,7 @@ public final class MacroDefinition extends Macro{
 	 * @return Whether this macro has a characteristic of being a constant macro
 	 */
 	public boolean isConstant(){
-		return parameter().isEmpty()||replacements.isEmpty();
+		return replacements.isEmpty();
 	}
 
 	@Override protected Among applyMacro(Among[] args, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler){

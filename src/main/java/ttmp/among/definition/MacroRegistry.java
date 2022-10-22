@@ -37,7 +37,7 @@ public final class MacroRegistry{
 	public void add(Macro macro, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
 		Group g = groups.computeIfAbsent(macro.signature(), s -> {
 			switch(s.type()){
-				case CONST: case FIELD: return new ConstGroup();
+				case CONST: case ACCESS: return new ConstGroup();
 				case OBJECT: return new ObjectGroup();
 				case LIST: case OPERATION: return new ListGroup();
 				case OBJECT_FN: return new ObjectFunctionGroup();

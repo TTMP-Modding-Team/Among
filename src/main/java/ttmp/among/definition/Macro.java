@@ -28,7 +28,7 @@ public abstract class Macro implements ToPrettyString{
 
 	protected Macro(MacroSignature signature, MacroParameterList parameter){
 		switch(signature.type()){
-			case CONST: case FIELD:
+			case CONST: case ACCESS:
 				if(!parameter.isEmpty())
 					throw new Sussy("Constant definitions cannot have parameter");
 				break;
@@ -127,20 +127,20 @@ public abstract class Macro implements ToPrettyString{
 			case CONST: return new Among[0];
 			case OBJECT: return objectMacro(argument, reportHandler, null);
 			case LIST: case OPERATION: return listMacro(argument, reportHandler, null);
-			case FIELD: case OBJECT_FN: case LIST_FN: case OPERATION_FN:
+			case ACCESS: case OBJECT_FN: case LIST_FN: case OPERATION_FN:
 				if(argument.isList()){
 					AmongList l = argument.asList();
-					int requiredSize = this.type()==MacroType.FIELD ? 1 : 2;
+					int requiredSize = this.type()==MacroType.ACCESS ? 1 : 2;
 					if(l.size()>=requiredSize){
 						if(l.size()>requiredSize&&reportHandler!=null)
 							reportHandler.accept(Report.ReportType.WARN, "Unused function parameters: "+l.size()+" provided");
 						Among self = l.get(0);
-						return this.type()==MacroType.FIELD ? new Among[]{self} :
+						return this.type()==MacroType.ACCESS ? new Among[]{self} :
 								this.type()==MacroType.OBJECT_FN ? objectMacro(l.get(1), reportHandler, self) :
 										listMacro(l.get(1), reportHandler, self);
 					}
 				}
-				if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, this.type()==MacroType.FIELD ?
+				if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, this.type()==MacroType.ACCESS ?
 						"Expected 'self' as argument" :
 						"Expected pair of 'self' and 'args' as argument");
 				return null;
@@ -192,6 +192,7 @@ public abstract class Macro implements ToPrettyString{
 						"Unused parameters: maximum of "+parameter().size()+" expected, "+l.size()+" provided");
 			}
 			List<Among> args = new ArrayList<>();
+			if(self!=null) args.add(self);
 			for(int i = 0; i<parameter().size(); i++)
 				args.add(i<l.size() ?
 						l.get(i) :

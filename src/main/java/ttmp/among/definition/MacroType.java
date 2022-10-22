@@ -29,7 +29,7 @@ public enum MacroType{
 	/**
 	 * Field access.
 	 */
-	FIELD,
+	ACCESS,
 	/**
 	 * Object method invocation.
 	 */
@@ -44,7 +44,7 @@ public enum MacroType{
 	OPERATION_FN;
 
 	public boolean isFunctionMacro(){
-		return this==FIELD||this==OBJECT_FN||this==LIST_FN||this==OPERATION_FN;
+		return this==ACCESS||this==OBJECT_FN||this==LIST_FN||this==OPERATION_FN;
 	}
 
 	public String friendlyName(){
@@ -53,7 +53,7 @@ public enum MacroType{
 			case OBJECT: return "object";
 			case LIST: return "list";
 			case OPERATION: return "operation";
-			case FIELD: return "field";
+			case ACCESS: return "access";
 			case OBJECT_FN: return "object function";
 			case LIST_FN: return "list function";
 			case OPERATION_FN: return "operation function";

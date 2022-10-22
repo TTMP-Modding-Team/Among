@@ -300,6 +300,27 @@ public class EqualityTests{
 				namedList("+", namedList("+", "a", "b"), "c"));
 	}
 
+	@Test public void fn(){
+		simpleEqualityTest("fn",
+				object().prop("Field", "abc").prop("Self", 1),
+				object().prop("Field", "abc").prop("Self", 2),
+
+				object().prop("Method", "abc").prop("A", 1).prop("B", 2).prop("Type", "Obj").prop("Self", "a"),
+				object().prop("Method", "abc").prop("A", 1).prop("B", 2).prop("Type", "Obj").prop("Self", "b"),
+				object().prop("Method", "abc").prop("A", 1).prop("B", 3).prop("Type", "Obj").prop("Self", "c"),
+				object().prop("Method", "abc").prop("A", 1).prop("B", 2).prop("Type", "List").prop("Self", "d"),
+				object().prop("Method", "abc").prop("A", 1).prop("B", 2).prop("Type", "List").prop("Self", "e"),
+				object().prop("Method", "abc").prop("A", 1).prop("B", 3).prop("Type", "List").prop("Self", "f"),
+				object().prop("Method", "abc").prop("A", 1).prop("B", 2).prop("Type", "Oper").prop("Self", "g"),
+				object().prop("Method", "abc").prop("A", 1).prop("B", 2).prop("Type", "Oper").prop("Self", "h"),
+				object().prop("Method", "abc").prop("A", 1).prop("B", 3).prop("Type", "Oper").prop("Self", "i"),
+				object().prop("Method", "abc").prop("A", 1).prop("B", 4).prop("C", 16).prop("Type", "Oper").prop("Self", "j"),
+
+				namedList(".abc", 1),
+				namedList(".abc", 2)
+		);
+	}
+
 	private static void simpleEqualityTest(String name, Among... expected){
 		try{
 			assertArrayEquals(expected,

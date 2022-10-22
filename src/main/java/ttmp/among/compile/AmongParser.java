@@ -178,7 +178,7 @@ public final class AmongParser{
 		if(name==null) return;
 		tokenizer.discard();
 		switch(tokenizer.next(true, TokenizationMode.PLAIN_WORD).type){
-			case COLON: macroDefinition(startIndex, name, fn ? MacroType.FIELD : MacroType.CONST); break;
+			case COLON: macroDefinition(startIndex, name, fn ? MacroType.ACCESS : MacroType.CONST); break;
 			case L_BRACE: macroDefinition(startIndex, name, fn ? MacroType.OBJECT_FN : MacroType.OBJECT); break;
 			case L_BRACKET: macroDefinition(startIndex, name, fn ? MacroType.LIST_FN : MacroType.LIST); break;
 			case L_PAREN: macroDefinition(startIndex, name, fn ? MacroType.OPERATION_FN : MacroType.OPERATION); break;
@@ -190,11 +190,11 @@ public final class AmongParser{
 	}
 	private void macroDefinition(int startIndex, String name, MacroType type){
 		ParsingMacro m = new ParsingMacro(startIndex, name, type);
-		if(type!=MacroType.CONST&&type!=MacroType.FIELD){
+		if(type!=MacroType.CONST&&type!=MacroType.ACCESS){
 			switch(type){
-				case OBJECT: macroParam(m, R_BRACE); break;
-				case LIST: macroParam(m, R_BRACKET); break;
-				case OPERATION: macroParam(m, R_PAREN); break;
+				case OBJECT: case OBJECT_FN: macroParam(m, R_BRACE); break;
+				case LIST: case LIST_FN: macroParam(m, R_BRACKET); break;
+				case OPERATION: case OPERATION_FN: macroParam(m, R_PAREN); break;
 				default: throw new IllegalStateException("Unreachable");
 			}
 			tokenizer.discard();
@@ -371,7 +371,7 @@ public final class AmongParser{
 		AmongToken next = tokenizer.next(false, TokenizationMode.PLAIN_WORD);
 		MacroType type;
 		switch(next.type){
-			case BR: case EOF: case COMMA: tokenizer.reset(); type = fn ? MacroType.FIELD : MacroType.CONST; break;
+			case BR: case EOF: case COMMA: tokenizer.reset(); type = fn ? MacroType.ACCESS : MacroType.CONST; break;
 			case L_BRACE: expectNext(R_BRACE); type = fn ? MacroType.OBJECT_FN : MacroType.OBJECT; break;
 			case L_BRACKET: expectNext(R_BRACKET); type = fn ? MacroType.LIST_FN : MacroType.LIST; break;
 			case L_PAREN: expectNext(R_PAREN); type = fn ? MacroType.OPERATION_FN : MacroType.OPERATION; break;
@@ -645,7 +645,7 @@ public final class AmongParser{
 					Among b = operationExpression(operators, i+1);
 					if(op.hasProperty(OperatorProperty.ACCESSOR)){
 						if(b.isPrimitive()){
-							a = fieldMacro(Among.namedList(op.aliasOrName()+b.asPrimitive().getValue(), a), next.start);
+							a = accessMacro(Among.namedList(op.aliasOrName()+b.asPrimitive().getValue(), a), next.start);
 						}else{
 							AmongNamed b2 = b.asNamed().copy();
 							b2.setName("");
@@ -715,8 +715,8 @@ public final class AmongParser{
 	private Among operationMacro(AmongList operation, int sourcePosition){
 		return macro(operation, operation.getName(), MacroType.OPERATION, sourcePosition);
 	}
-	private Among fieldMacro(AmongList call, int sourcePosition){
-		return macro(call, call.getName(), MacroType.FIELD, sourcePosition);
+	private Among accessMacro(AmongList call, int sourcePosition){
+		return macro(call, call.getName(), MacroType.ACCESS, sourcePosition);
 	}
 	private Among objectFnMacro(AmongList call, int sourcePosition){
 		return macro(call, call.getName(), MacroType.OBJECT_FN, sourcePosition);
@@ -858,14 +858,16 @@ public final class AmongParser{
 			this.start = start;
 			this.name = name;
 			this.type = type;
+			if(type.isFunctionMacro())
+				params.add(new MacroParameter("self", null));
 		}
 
 		public void newParam(String name, @Nullable Among defaultValue, int pos){
 			if(type==MacroType.CONST){
 				reportError("Constant macros cannot have parameters");
 				invalid = true;
-			}else if(type==MacroType.FIELD){
-				reportError("Field macros cannot have parameters");
+			}else if(type==MacroType.ACCESS){
+				reportError("Access macros cannot have parameters");
 				invalid = true;
 			}else if(paramIndex(name)>=0){
 				reportError("Duplicated parameter '"+name+"'.", pos);
@@ -961,7 +963,9 @@ public final class AmongParser{
 						operationToTarget.stream().map(e -> e.getKey().toString()).collect(Collectors.joining(", ")), start);
 				return;
 			}
-			MacroDefinition macro = new MacroDefinition(name, type, MacroParameterList.of(params), expr, replacements);
+			MacroDefinition macro = new MacroDefinition(name, type, type.isFunctionMacro() ?
+					MacroParameterList.of(params.subList(1, params.size())) :
+					MacroParameterList.of(params), expr, replacements);
 			definition.macros().add(macro, (t, s) -> report(t, s, start));
 			importDefinition.macros().add(macro, (t, s) -> report(t, s, start));
 		}
