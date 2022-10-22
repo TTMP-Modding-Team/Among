@@ -1,0 +1,10 @@
+operator = as right-associative binary(0)
+operator + as binary(6)
+
+// right-associative
+
+(a = b = c)
+
+// left-associative
+
+(a + b + c)

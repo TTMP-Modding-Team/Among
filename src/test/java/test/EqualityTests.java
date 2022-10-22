@@ -294,6 +294,12 @@ public class EqualityTests{
 				object().prop("key", "us"));
 	}
 
+	@Test public void associativity(){
+		simpleEqualityTest("associativity",
+				namedList("=", "a", namedList("=", "b", "c")),
+				namedList("+", namedList("+", "a", "b"), "c"));
+	}
+
 	private static void simpleEqualityTest(String name, Among... expected){
 		try{
 			assertArrayEquals(expected,
