@@ -325,6 +325,9 @@ public final class OperatorRegistry{
 		public OperatorType type(){
 			return type;
 		}
+		public boolean isRightAssociative(){
+			return rightAssociative;
+		}
 
 		public boolean isEmpty(){
 			return operators.isEmpty();

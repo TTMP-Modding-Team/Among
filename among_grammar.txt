@@ -29,7 +29,7 @@ operatorProperty: "binary"
                 | "right-associative"
                 | "accessor"
 
-undef: "macro" BR* value
+undef: ( "macro" | "fn" ) BR* value
        ( "{" BR* "}"
        | "[" BR* "]"
        | "(" BR* ")" )?

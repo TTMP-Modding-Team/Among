@@ -56,4 +56,6 @@ public abstract class AmongNamed extends Among{
 	@Override public boolean isNamed(){
 		return true;
 	}
+
+	@Override public abstract AmongNamed copy();
 }

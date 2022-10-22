@@ -37,9 +37,11 @@ public final class MacroRegistry{
 	public void add(Macro macro, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
 		Group g = groups.computeIfAbsent(macro.signature(), s -> {
 			switch(s.type()){
-				case CONST: return new ConstGroup();
+				case CONST: case FIELD: return new ConstGroup();
 				case OBJECT: return new ObjectGroup();
 				case LIST: case OPERATION: return new ListGroup();
+				case OBJECT_FN: return new ObjectFunctionGroup();
+				case LIST_FN: case OPERATION_FN: return new ListFunctionGroup();
 				default: throw new IllegalStateException("Unreachable");
 			}
 		});
@@ -165,7 +167,7 @@ public final class MacroRegistry{
 		}
 	}
 
-	public static final class ListGroup extends MatchBasedGroup<AmongList>{
+	public static class ListGroup extends MatchBasedGroup<AmongList>{
 		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
 			return searchInternal(argument.asList(), reportHandler);
 		}
@@ -175,7 +177,7 @@ public final class MacroRegistry{
 		}
 	}
 
-	public static final class ObjectGroup extends MatchBasedGroup<AmongObject>{
+	public static class ObjectGroup extends MatchBasedGroup<AmongObject>{
 		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
 			return searchInternal(argument.asObj(), reportHandler);
 		}
@@ -189,6 +191,18 @@ public final class MacroRegistry{
 				}else if(args.hasProperty(p.name())) defaultArgsProvided++;
 			}
 			return Math.max(0, args.size()-macro.parameter().requiredParameters()-defaultArgsProvided);
+		}
+	}
+
+	public static class ListFunctionGroup extends ListGroup{
+		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+			return searchInternal(argument.asList().get(1).asList(), reportHandler);
+		}
+	}
+
+	public static class ObjectFunctionGroup extends ObjectGroup{
+		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+			return searchInternal(argument.asList().get(1).asObj(), reportHandler);
 		}
 	}
 

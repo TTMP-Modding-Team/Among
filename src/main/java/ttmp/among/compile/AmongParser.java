@@ -22,6 +22,7 @@ import ttmp.among.definition.OperatorRegistry;
 import ttmp.among.definition.OperatorType;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
+import ttmp.among.obj.AmongNamed;
 import ttmp.among.obj.AmongObject;
 import ttmp.among.obj.AmongPrimitive;
 import ttmp.among.obj.AmongRoot;
@@ -90,7 +91,8 @@ public final class AmongParser{
 			AmongToken next = tokenizer.next(true, TokenizationMode.PLAIN_WORD);
 			if(next.is(EOF)) return;
 			switch(next.keywordOrEmpty()){
-				case "macro": macroDefinition(next.start); continue;
+				case "macro": macroDefinition(false, next.start); continue;
+				case "fn": macroDefinition(true, next.start); continue;
 				case "operator": operatorDefinition(next.start, false); continue;
 				case "keyword": operatorDefinition(next.start, true); continue;
 				case "undef":
@@ -170,15 +172,15 @@ public final class AmongParser{
 		return next.expectLiteral();
 	}
 
-	private void macroDefinition(int startIndex){
+	private void macroDefinition(boolean fn, int startIndex){
 		String name = definitionName(TokenizationMode.MACRO_NAME);
 		if(name==null) return;
 		tokenizer.discard();
 		switch(tokenizer.next(true, TokenizationMode.PLAIN_WORD).type){
-			case COLON: macroDefinition(startIndex, name, MacroType.CONST); break;
-			case L_BRACE: macroDefinition(startIndex, name, MacroType.OBJECT); break;
-			case L_BRACKET: macroDefinition(startIndex, name, MacroType.LIST); break;
-			case L_PAREN: macroDefinition(startIndex, name, MacroType.OPERATION); break;
+			case COLON: macroDefinition(startIndex, name, fn ? MacroType.FIELD : MacroType.CONST); break;
+			case L_BRACE: macroDefinition(startIndex, name, fn ? MacroType.OBJECT_FN : MacroType.OBJECT); break;
+			case L_BRACKET: macroDefinition(startIndex, name, fn ? MacroType.LIST_FN : MacroType.LIST); break;
+			case L_PAREN: macroDefinition(startIndex, name, fn ? MacroType.OPERATION_FN : MacroType.OPERATION); break;
 			default:
 				reportError("Invalid macro statement; expected '{', '[', '(' or ':'");
 				tokenizer.reset();
@@ -187,7 +189,7 @@ public final class AmongParser{
 	}
 	private void macroDefinition(int startIndex, String name, MacroType type){
 		ParsingMacro m = new ParsingMacro(startIndex, name, type);
-		if(type!=MacroType.CONST){
+		if(type!=MacroType.CONST&&type!=MacroType.FIELD){
 			switch(type){
 				case OBJECT: macroParam(m, R_BRACE); break;
 				case LIST: macroParam(m, R_BRACKET); break;
@@ -349,10 +351,13 @@ public final class AmongParser{
 			reportError("Prefix and postfix operators cannot have additional properties");
 		else if(properties.contains(OperatorPropertyEnum.LEFT_ASSOCIATIVE)&&properties.contains(OperatorPropertyEnum.RIGHT_ASSOCIATIVE))
 			reportError("'left-associative' and 'right-associative' at the same place");
+		else if(properties.contains(OperatorPropertyEnum.RIGHT_ASSOCIATIVE)&&properties.contains(OperatorPropertyEnum.ACCESSOR))
+			reportError("Cannot be 'right-associative' and 'accessor' at the same time");
 		else{
-			byte flags = 0;
-			if(properties.contains(OperatorPropertyEnum.RIGHT_ASSOCIATIVE)) flags |= OperatorProperty.RIGHT_ASSOCIATIVE;
-			if(properties.contains(OperatorPropertyEnum.ACCESSOR)) flags |= OperatorProperty.ACCESSOR;
+			byte flags;
+			if(properties.contains(OperatorPropertyEnum.RIGHT_ASSOCIATIVE)) flags = OperatorProperty.RIGHT_ASSOCIATIVE;
+			else if(properties.contains(OperatorPropertyEnum.ACCESSOR)) flags = OperatorProperty.ACCESSOR;
+			else flags = 0;
 			return new TypeAndProperty(type, flags, priority);
 		}
 		return null;
@@ -607,7 +612,7 @@ public final class AmongParser{
 		if(i<operators.size()){ // check for operators and keywords
 			OperatorRegistry.PriorityGroup group = operators.get(i);
 			switch(group.type()){
-				case BINARY: return binary(operators, i);
+				case BINARY: return group.isRightAssociative() ? rightAssociativeBinary(operators, i) : binary(operators, i);
 				case POSTFIX: return postfix(operators, i);
 				case PREFIX: return prefix(operators, i);
 				default: throw new IllegalStateException("Unreachable");
@@ -636,24 +641,37 @@ public final class AmongParser{
 			if(next.isOperatorOrKeyword()){
 				OperatorDefinition op = operators.get(i).get(next.expectLiteral());
 				if(op!=null){
-					if(op.hasProperty(OperatorProperty.RIGHT_ASSOCIATIVE)){
-						if(op.hasProperty(OperatorProperty.ACCESSOR)){
-							// TODO
+					Among b = operationExpression(operators, i+1);
+					if(op.hasProperty(OperatorProperty.ACCESSOR)){
+						if(b.isPrimitive()){
+							a = fieldMacro(Among.namedList(op.aliasOrName()+b.asPrimitive().getValue(), a), next.start);
+						}else{
+							AmongNamed b2 = b.asNamed().copy();
+							b2.setName("");
+							AmongList call = Among.namedList(op.aliasOrName()+b.asNamed().getName(), a, b2);
+							a = b.isObj() ? objectFnMacro(call, next.start) :
+									b.asList().isOperation() ? operationFnMacro(call, next.start) :
+											listFnMacro(call, next.start);
 						}
-						return operationMacro(Among.namedList(op.aliasOrName(), a, binary(operators, i)).operation(), next.start);
-					}else{
-						if(op.hasProperty(OperatorProperty.ACCESSOR)){
-							// TODO
-						}
-						Among b = operationExpression(operators, i+1);
-						a = operationMacro(Among.namedList(op.aliasOrName(), a, b).operation(), next.start);
-					}
+					}else a = operationMacro(Among.namedList(op.aliasOrName(), a, b).operation(), next.start);
 					continue;
 				}
 			}
 			tokenizer.reset();
 			return a;
 		}
+	}
+
+	private Among rightAssociativeBinary(List<OperatorRegistry.PriorityGroup> operators, int i){
+		Among a = operationExpression(operators, i+1);
+		tokenizer.discard();
+		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
+		if(next.isOperatorOrKeyword()){
+			OperatorDefinition op = operators.get(i).get(next.expectLiteral());
+			if(op!=null) return operationMacro(Among.namedList(op.aliasOrName(), a, rightAssociativeBinary(operators, i)).operation(), next.start);
+		}
+		tokenizer.reset();
+		return a;
 	}
 
 	private Among postfix(List<OperatorRegistry.PriorityGroup> operators, int i){
@@ -695,6 +713,18 @@ public final class AmongParser{
 	}
 	private Among operationMacro(AmongList operation, int sourcePosition){
 		return macro(operation, operation.getName(), MacroType.OPERATION, sourcePosition);
+	}
+	private Among fieldMacro(AmongList call, int sourcePosition){
+		return macro(call, call.getName(), MacroType.FIELD, sourcePosition);
+	}
+	private Among objectFnMacro(AmongList call, int sourcePosition){
+		return macro(call, call.getName(), MacroType.OBJECT_FN, sourcePosition);
+	}
+	private Among listFnMacro(AmongList call, int sourcePosition){
+		return macro(call, call.getName(), MacroType.LIST_FN, sourcePosition);
+	}
+	private Among operationFnMacro(AmongList call, int sourcePosition){
+		return macro(call, call.getName(), MacroType.OPERATION_FN, sourcePosition);
 	}
 	private Among macro(Among target, String macroName, MacroType macroType, int sourcePosition){
 		MacroRegistry.Group g = importDefinition.macros().groupFor(macroName, macroType);
@@ -833,14 +863,18 @@ public final class AmongParser{
 			if(type==MacroType.CONST){
 				reportError("Constant macros cannot have parameters");
 				invalid = true;
+			}else if(type==MacroType.FIELD){
+				reportError("Field macros cannot have parameters");
+				invalid = true;
 			}else if(paramIndex(name)>=0){
 				reportError("Duplicated parameter '"+name+"'.", pos);
 				invalid = true;
 			}else{
-				if(type==MacroType.LIST||type==MacroType.OPERATION){
+				if(type==MacroType.LIST||type==MacroType.OPERATION||
+						type==MacroType.LIST_FN||type==MacroType.OPERATION_FN){
 					if(defaultValue==null){
 						if(optionalParamSeen){
-							reportError("Optional parameters of "+(type==MacroType.LIST ? "list" : "operation")+
+							reportError("Optional parameters of "+type.friendlyName()+
 									" macro should be consecutive, placed at end of the parameter list", pos);
 							invalid = true;
 						}

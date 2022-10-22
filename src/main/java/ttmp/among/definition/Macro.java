@@ -28,13 +28,14 @@ public abstract class Macro implements ToPrettyString{
 
 	protected Macro(MacroSignature signature, MacroParameterList parameter){
 		switch(signature.type()){
-			case CONST:
+			case CONST: case FIELD:
 				if(!parameter.isEmpty())
 					throw new Sussy("Constant definitions cannot have parameter");
 				break;
 			case LIST: case OPERATION:
+			case LIST_FN: case OPERATION_FN:
 				if(!parameter.hasConsecutiveOptionalParams())
-					throw new Sussy("Optional parameters of "+(signature.type()==MacroType.LIST ? "list" : "operation")+
+					throw new Sussy("Optional parameters of "+signature.type().friendlyName()+
 							" macro should be consecutive, placed at end of the parameter list");
 		}
 		this.signature = signature;
@@ -124,56 +125,78 @@ public abstract class Macro implements ToPrettyString{
 	@Nullable private Among[] toArgs(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
 		switch(this.type()){
 			case CONST: return new Among[0];
-			case OBJECT:{
-				if(!argument.isObj()){
-					if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, "Expect object as argument");
-					return null;
-				}
-				AmongObject o = argument.asObj();
-				List<Among> args = new ArrayList<>();
-				for(int i = 0; i<this.parameter().size(); i++){
-					MacroParameter p = this.parameter().paramAt(i);
-					Among val = o.getProperty(p.name());
-					if(val==null){
-						if(p.defaultValue()!=null) val = p.defaultValue();
-						else{
-							if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, "Missing argument '"+p.name()+'\'');
-							else return null;
-							args = null;
-						}
+			case OBJECT: return objectMacro(argument, reportHandler, null);
+			case LIST: case OPERATION: return listMacro(argument, reportHandler, null);
+			case FIELD: case OBJECT_FN: case LIST_FN: case OPERATION_FN:
+				if(argument.isList()){
+					AmongList l = argument.asList();
+					int requiredSize = this.type()==MacroType.FIELD ? 1 : 2;
+					if(l.size()>=requiredSize){
+						if(l.size()>requiredSize&&reportHandler!=null)
+							reportHandler.accept(Report.ReportType.WARN, "Unused function parameters: "+l.size()+" provided");
+						Among self = l.get(0);
+						return this.type()==MacroType.FIELD ? new Among[]{self} :
+								this.type()==MacroType.OBJECT_FN ? objectMacro(l.get(1), reportHandler, self) :
+										listMacro(l.get(1), reportHandler, self);
 					}
-					if(args!=null) args.add(val);
 				}
-				if(reportHandler!=null)
-					for(String key : argument.asObj().properties().keySet())
-						if(this.parameter().indexOf(key)==-1)
-							reportHandler.accept(Report.ReportType.WARN, "Unused argument '"+key+'\'');
-				return args!=null ? args.toArray(new Among[0]) : null;
-			}
-			case LIST: case OPERATION:{
-				if(!argument.isList()){
-					if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, "Expected list as argument");
-					return null;
-				}
-				AmongList l = argument.asList();
-				if(l.size()<parameter().requiredParameters()){
-					if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR,
-							"Not enough parameters: minimum of "+parameter().requiredParameters()+" expected, "+l.size()+" provided");
-					return null;
-				}else{
-					if(l.size()>parameter().size()&&reportHandler!=null){
-						reportHandler.accept(Report.ReportType.WARN,
-								"Unused parameters: maximum of "+parameter().size()+" expected, "+l.size()+" provided");
-					}
-					List<Among> args = new ArrayList<>();
-					for(int i = 0; i<parameter().size(); i++)
-						args.add(i<l.size() ?
-								l.get(i) :
-								Objects.requireNonNull(parameter().paramAt(i).defaultValue()));
-					return args.toArray(new Among[0]);
-				}
-			}
+				if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, this.type()==MacroType.FIELD ?
+						"Expected 'self' as argument" :
+						"Expected pair of 'self' and 'args' as argument");
+				return null;
 			default: throw new IllegalStateException("Unreachable");
+		}
+	}
+
+	@Nullable private Among[] objectMacro(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler, @Nullable Among self){
+		if(!argument.isObj()){
+			if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, "Expected object as argument");
+			return null;
+		}
+		AmongObject o = argument.asObj();
+		List<Among> args = new ArrayList<>();
+		if(self!=null) args.add(self);
+		for(int i = 0; i<this.parameter().size(); i++){
+			MacroParameter p = this.parameter().paramAt(i);
+			Among val = o.getProperty(p.name());
+			if(val==null){
+				if(p.defaultValue()!=null) val = p.defaultValue();
+				else{
+					if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, "Missing argument '"+p.name()+'\'');
+					else return null;
+					args = null;
+				}
+			}
+			if(args!=null) args.add(val);
+		}
+		if(reportHandler!=null)
+			for(String key : argument.asObj().properties().keySet())
+				if(this.parameter().indexOf(key)==-1)
+					reportHandler.accept(Report.ReportType.WARN, "Unused argument '"+key+'\'');
+		return args!=null ? args.toArray(new Among[0]) : null;
+	}
+
+	@Nullable private Among[] listMacro(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler, @Nullable Among self){
+		if(!argument.isList()){
+			if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, "Expected list as argument");
+			return null;
+		}
+		AmongList l = argument.asList();
+		if(l.size()<parameter().requiredParameters()){
+			if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR,
+					"Not enough parameters: minimum of "+parameter().requiredParameters()+" expected, "+l.size()+" provided");
+			return null;
+		}else{
+			if(l.size()>parameter().size()&&reportHandler!=null){
+				reportHandler.accept(Report.ReportType.WARN,
+						"Unused parameters: maximum of "+parameter().size()+" expected, "+l.size()+" provided");
+			}
+			List<Among> args = new ArrayList<>();
+			for(int i = 0; i<parameter().size(); i++)
+				args.add(i<l.size() ?
+						l.get(i) :
+						Objects.requireNonNull(parameter().paramAt(i).defaultValue()));
+			return args.toArray(new Among[0]);
 		}
 	}
 

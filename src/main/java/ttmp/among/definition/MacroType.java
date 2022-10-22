@@ -25,5 +25,39 @@ public enum MacroType{
 	/**
 	 * Macro defined with operation ('()') as parameter blocks.
 	 */
-	OPERATION
+	OPERATION,
+	/**
+	 * Field access.
+	 */
+	FIELD,
+	/**
+	 * Object method invocation.
+	 */
+	OBJECT_FN,
+	/**
+	 * List method invocation.
+	 */
+	LIST_FN,
+	/**
+	 * Operation method invocation.
+	 */
+	OPERATION_FN;
+
+	public boolean isFunctionMacro(){
+		return this==FIELD||this==OBJECT_FN||this==LIST_FN||this==OPERATION_FN;
+	}
+
+	public String friendlyName(){
+		switch(this){
+			case CONST: return "constant";
+			case OBJECT: return "object";
+			case LIST: return "list";
+			case OPERATION: return "operation";
+			case FIELD: return "field";
+			case OBJECT_FN: return "object function";
+			case LIST_FN: return "list function";
+			case OPERATION_FN: return "operation function";
+			default: throw new IllegalStateException("Unreachable");
+		}
+	}
 }
