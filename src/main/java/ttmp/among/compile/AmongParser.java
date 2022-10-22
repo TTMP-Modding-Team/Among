@@ -97,7 +97,8 @@ public final class AmongParser{
 				case "keyword": operatorDefinition(next.start, true); continue;
 				case "undef":
 					switch(tokenizer.next(true, TokenizationMode.PLAIN_WORD).keywordOrEmpty()){
-						case "macro": undefMacro(); break;
+						case "macro": undefMacro(false); break;
+						case "fn": undefMacro(true); break;
 						case "operator": undefOperation(false); break;
 						case "keyword": undefOperation(true); break;
 						case "use": undefUse(); break;
@@ -363,17 +364,17 @@ public final class AmongParser{
 		return null;
 	}
 
-	private void undefMacro(){
+	private void undefMacro(boolean fn){
 		String name = definitionName(TokenizationMode.MACRO_NAME);
 		if(name==null) return;
 		tokenizer.discard();
 		AmongToken next = tokenizer.next(false, TokenizationMode.PLAIN_WORD);
 		MacroType type;
 		switch(next.type){
-			case BR: case EOF: case COMMA: tokenizer.reset(); type = MacroType.CONST; break;
-			case L_BRACE: expectNext(R_BRACE); type = MacroType.OBJECT; break;
-			case L_BRACKET: expectNext(R_BRACKET); type = MacroType.LIST; break;
-			case L_PAREN: expectNext(R_PAREN); type = MacroType.OPERATION; break;
+			case BR: case EOF: case COMMA: tokenizer.reset(); type = fn ? MacroType.FIELD : MacroType.CONST; break;
+			case L_BRACE: expectNext(R_BRACE); type = fn ? MacroType.OBJECT_FN : MacroType.OBJECT; break;
+			case L_BRACKET: expectNext(R_BRACKET); type = fn ? MacroType.LIST_FN : MacroType.LIST; break;
+			case L_PAREN: expectNext(R_PAREN); type = fn ? MacroType.OPERATION_FN : MacroType.OPERATION; break;
 			default:
 				reportError("Expected '{', '[', '(' or end of statement");
 				skipUntilLineBreak();
