@@ -92,8 +92,15 @@ public final class OperatorDefinition{
 	@Nullable public String alias(){
 		return name;
 	}
+	public byte properties(){
+		return properties;
+	}
 	public double priority(){
 		return priority;
+	}
+
+	public boolean hasProperty(byte flag){
+		return (properties&flag)==flag;
 	}
 
 	public String aliasOrName(){

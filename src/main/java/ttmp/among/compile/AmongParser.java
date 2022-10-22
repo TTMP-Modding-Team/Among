@@ -607,38 +607,8 @@ public final class AmongParser{
 		if(i<operators.size()){ // check for operators and keywords
 			OperatorRegistry.PriorityGroup group = operators.get(i);
 			switch(group.type()){
-				case BINARY:{
-					Among a = operationExpression(operators, i+1);
-					while(true){
-						tokenizer.discard();
-						AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
-						if(next.isOperatorOrKeyword()){
-							OperatorDefinition op = group.get(next.expectLiteral());
-							if(op!=null){
-								a = operationMacro(Among.namedList(op.aliasOrName(), a, operationExpression(operators, i+1)).operation(), next.start);
-								continue;
-							}
-						}
-						tokenizer.reset();
-						return a;
-					}
-				}
-				case POSTFIX:{
-					Among a = operationExpression(operators, i+1);
-					while(true){
-						tokenizer.discard();
-						AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
-						if(next.isOperatorOrKeyword()){
-							OperatorDefinition op = group.get(next.expectLiteral());
-							if(op!=null){
-								a = operationMacro(Among.namedList(op.aliasOrName(), a).operation(), next.start);
-								continue;
-							}
-						}
-						tokenizer.reset();
-						return a;
-					}
-				}
+				case BINARY: return binary(operators, i);
+				case POSTFIX: return postfix(operators, i);
 				case PREFIX: return prefix(operators, i);
 				default: throw new IllegalStateException("Unreachable");
 			}
@@ -656,6 +626,51 @@ public final class AmongParser{
 		}
 		AmongPrimitive p = Among.value(next.expectLiteral());
 		return next.is(QUOTED_PRIMITIVE)||resolveParamRef(p) ? p : primitiveMacro(p, next.start);
+	}
+
+	private Among binary(List<OperatorRegistry.PriorityGroup> operators, int i){
+		Among a = operationExpression(operators, i+1);
+		while(true){
+			tokenizer.discard();
+			AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
+			if(next.isOperatorOrKeyword()){
+				OperatorDefinition op = operators.get(i).get(next.expectLiteral());
+				if(op!=null){
+					if(op.hasProperty(OperatorProperty.RIGHT_ASSOCIATIVE)){
+						if(op.hasProperty(OperatorProperty.ACCESSOR)){
+							// TODO
+						}
+						return operationMacro(Among.namedList(op.aliasOrName(), a, binary(operators, i)).operation(), next.start);
+					}else{
+						if(op.hasProperty(OperatorProperty.ACCESSOR)){
+							// TODO
+						}
+						Among b = operationExpression(operators, i+1);
+						a = operationMacro(Among.namedList(op.aliasOrName(), a, b).operation(), next.start);
+					}
+					continue;
+				}
+			}
+			tokenizer.reset();
+			return a;
+		}
+	}
+
+	private Among postfix(List<OperatorRegistry.PriorityGroup> operators, int i){
+		Among a = operationExpression(operators, i+1);
+		while(true){
+			tokenizer.discard();
+			AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
+			if(next.isOperatorOrKeyword()){
+				OperatorDefinition op = operators.get(i).get(next.expectLiteral());
+				if(op!=null){
+					a = operationMacro(Among.namedList(op.aliasOrName(), a).operation(), next.start);
+					continue;
+				}
+			}
+			tokenizer.reset();
+			return a;
+		}
 	}
 
 	private Among prefix(List<OperatorRegistry.PriorityGroup> operators, int i){

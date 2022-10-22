@@ -62,6 +62,8 @@ public final class OperatorRegistry{
 	public RegistrationResult add(OperatorDefinition definition){
 		if(isPriorityOccupiedByWrongType(definition))
 			return RegistrationResult.PRIORITY_OCCUPIED_BY_DIFFERENT_TYPE;
+		if(hasDifferentAssociativity(definition))
+			return RegistrationResult.MIXED_ASSOCIATIVITY;
 		NameGroup o = operators.get(definition.name());
 		if(o==null){
 			operators.put(definition.name(), o = new NameGroup(definition));
@@ -114,6 +116,11 @@ public final class OperatorRegistry{
 	private boolean isPriorityOccupiedByWrongType(OperatorDefinition definition){
 		PriorityGroup g = this.priorityGroup.get(definition.priority());
 		return g!=null&&g.type()!=definition.type();
+	}
+	private boolean hasDifferentAssociativity(OperatorDefinition definition){
+		if(definition.type()!=BINARY) return false;
+		PriorityGroup g = this.priorityGroup.get(definition.priority());
+		return g!=null&&g.rightAssociative!=definition.hasProperty(OperatorProperty.RIGHT_ASSOCIATIVE);
 	}
 	private void addToPriorityGroup(OperatorDefinition definition){
 		PriorityGroup g = this.priorityGroup.get(definition.priority());
@@ -196,7 +203,11 @@ public final class OperatorRegistry{
 		/**
 		 * Defined with priority value that is already being in use with different type.
 		 */
-		PRIORITY_OCCUPIED_BY_DIFFERENT_TYPE;
+		PRIORITY_OCCUPIED_BY_DIFFERENT_TYPE,
+		/**
+		 * Both left-associative and right-associative operators are present in the same priority group.
+		 */
+		MIXED_ASSOCIATIVITY;
 
 		public boolean isSuccess(){
 			return this==OK;
@@ -208,6 +219,7 @@ public final class OperatorRegistry{
 				case DUPLICATE: return (def.isKeyword() ? "Keyword '" : "Operator '")+def.name()+"' is defined twice";
 				case BOTH_BINARY_AND_POSTFIX: return (def.isKeyword() ? "Keyword '" : "Operator '")+def.name()+"' is both defined as binary and postfix";
 				case PRIORITY_OCCUPIED_BY_DIFFERENT_TYPE: return "Priority "+def.priority()+" is already in use with different type";
+				case MIXED_ASSOCIATIVITY: return "Both left-associative and right-associative operators are present in the same priority group "+def.priority()+".";
 				default: return "";
 			}
 		}
@@ -281,11 +293,13 @@ public final class OperatorRegistry{
 	public static final class PriorityGroup implements Comparable<PriorityGroup>{
 		private final double priority;
 		private final OperatorType type;
+		private final boolean rightAssociative;
 		private final Map<String, OperatorDefinition> operators = new HashMap<>();
 
 		public PriorityGroup(OperatorDefinition initial){
 			this.priority = initial.priority();
 			this.type = initial.type();
+			this.rightAssociative = type==BINARY&&initial.hasProperty(OperatorProperty.RIGHT_ASSOCIATIVE);
 			add(initial);
 		}
 
@@ -294,6 +308,8 @@ public final class OperatorRegistry{
 				throw new IllegalStateException("Trying to register operator with wrong priority to group");
 			if(this.type!=def.type())
 				throw new IllegalStateException("Trying to register operator with wrong type to group");
+			if(this.type==BINARY&&this.rightAssociative!=def.hasProperty(OperatorProperty.RIGHT_ASSOCIATIVE))
+				throw new IllegalStateException("Trying to register binary operator with different associativity to group");
 			if(operators.putIfAbsent(def.name(), def)!=null)
 				throw new IllegalStateException("Duplicated registration of operator '"+def.name()+"'");
 		}
