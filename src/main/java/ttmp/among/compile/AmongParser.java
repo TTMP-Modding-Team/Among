@@ -7,7 +7,7 @@ import ttmp.among.definition.AmongDefinition;
 import ttmp.among.definition.Macro;
 import ttmp.among.definition.MacroDefinition;
 import ttmp.among.definition.MacroParameter;
-import ttmp.among.definition.MacroParameter.TypeInference;
+import ttmp.among.definition.TypeInference;
 import ttmp.among.definition.MacroParameterList;
 import ttmp.among.definition.MacroRegistry;
 import ttmp.among.definition.MacroReplacement;

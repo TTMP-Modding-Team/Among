@@ -1,7 +1,6 @@
 package ttmp.among.definition;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.definition.MacroParameter.TypeInference;
 import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
 
