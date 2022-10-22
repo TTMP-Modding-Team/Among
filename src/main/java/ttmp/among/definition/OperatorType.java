@@ -13,4 +13,13 @@ public enum OperatorType{
 			case PREFIX: default: return OperatorPriorities.PREFIX;
 		}
 	}
+
+	@Override public String toString(){
+		switch(this){
+			case BINARY: return "binary";
+			case POSTFIX: return "postfix";
+			case PREFIX: return "prefix";
+			default: throw new IllegalStateException("Unreachable");
+		}
+	}
 }

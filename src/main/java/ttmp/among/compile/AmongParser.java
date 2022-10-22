@@ -17,6 +17,7 @@ import ttmp.among.definition.MacroReplacement.MacroOp.NameReplacement;
 import ttmp.among.definition.MacroReplacement.MacroOp.ValueReplacement;
 import ttmp.among.definition.MacroType;
 import ttmp.among.definition.OperatorDefinition;
+import ttmp.among.definition.OperatorProperty;
 import ttmp.among.definition.OperatorRegistry;
 import ttmp.among.definition.OperatorType;
 import ttmp.among.obj.Among;
@@ -30,6 +31,7 @@ import ttmp.among.util.RootAndDefinition;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -100,7 +102,6 @@ public final class AmongParser{
 						default:
 							reportError("Expected 'macro', 'operator' or 'keyword'");
 							tryToRecover(TokenizationMode.UNEXPECTED, null, true, true);
-							skipUntilLineBreak();
 							continue;
 					}
 					expectStmtEnd("Expected ',' or newline after undef statement");
@@ -128,6 +129,7 @@ public final class AmongParser{
 
 	/**
 	 * Checks if there's appropriate statement end; if not, tokens are discarded until a statement end is found.
+	 *
 	 * @param errorMessage Error message to report if statement end is missing
 	 * @return Whether there is appropriate statement end
 	 */
@@ -140,6 +142,7 @@ public final class AmongParser{
 
 	/**
 	 * Checks if there's appropriate statement end.
+	 *
 	 * @return Whether there is appropriate statement end
 	 */
 	private boolean stmtEnd(){
@@ -242,38 +245,117 @@ public final class AmongParser{
 	}
 
 	private void operatorDefinition(int startIndex, boolean keyword){
-		String name = definitionName(TokenizationMode.PLAIN_WORD);
+		String name = definitionName(TokenizationMode.WORD);
 		if(name==null) return;
-		OperatorType type;
 		if(!tokenizer.next(true, TokenizationMode.PLAIN_WORD).is(PLAIN_WORD, "as")){
 			reportError("Expected 'as'");
-			skipUntilLineBreak();
+			tryToRecover(TokenizationMode.UNEXPECTED, null, true, true);
 			return;
 		}
-		switch(tokenizer.next(true, TokenizationMode.PLAIN_WORD).keywordOrEmpty()){
-			case "binary": type = OperatorType.BINARY; break;
-			case "prefix": type = OperatorType.PREFIX; break;
-			case "postfix": type = OperatorType.POSTFIX; break;
-			default:
-				reportError("Expected keyword; 'binary', 'prefix' or 'postfix'");
-				skipUntilLineBreak();
-				return;
+		List<TypeAndProperty> list = new ArrayList<>();
+		boolean invalid = false;
+		while(true){
+			TypeAndProperty p = operatorProperty();
+			if(p!=null) list.add(p);
+			else invalid = true;
+			tokenizer.discard();
+			AmongToken next = tokenizer.next(true, TokenizationMode.PLAIN_WORD);
+			if(next.is(PLAIN_WORD, "and")) continue;
+			String alias;
+			if(next.is(COLON)){
+				next = tokenizer.next(true, TokenizationMode.VALUE);
+				if(!next.isLiteral()){
+					reportError("Expected literal");
+					tryToRecover(TokenizationMode.UNEXPECTED, null, true, true);
+					return;
+				}else alias = next.expectLiteral();
+			}else{
+				alias = null;
+				tokenizer.reset(next.isLiteral());
+			}
+			if(!invalid){
+				for(TypeAndProperty e : list){
+					OperatorDefinition operator = new OperatorDefinition(name, keyword, e.type, alias, e.properties, e.priority);
+					OperatorRegistry.RegistrationResult result = importDefinition.operators().add(operator);
+					if(!result.isSuccess())
+						report(engine.allowInvalidOperatorRegistration ?
+										ReportType.WARN : ReportType.ERROR,
+								result.message(operator), startIndex);
+					definition.operators().add(operator);
+				}
+			}
+			return;
 		}
-		tokenizer.discard();
+	}
+
+	@Nullable private TypeAndProperty operatorProperty(){
+		OperatorType type = null;
+		EnumSet<OperatorPropertyEnum> properties = EnumSet.noneOf(OperatorPropertyEnum.class);
+		boolean invalid = false;
 		double priority = Double.NaN;
-		AmongToken next = tokenizer.next(false, TokenizationMode.UNEXPECTED);
-		if(next.is(COLON)){
-			priority = tokenizer.next(true, TokenizationMode.VALUE).asNumber();
-			if(Double.isNaN(priority)) reportError("Expected number");
-		}else tokenizer.reset(next.is(ERROR));
-		expectStmtEnd("Expected newline after "+(keyword ? "keyword" : "operator")+" statement");
-		OperatorDefinition operator = new OperatorDefinition(name, keyword, type, priority);
-		OperatorRegistry.RegistrationResult result = importDefinition.operators().add(operator);
-		if(!result.isSuccess())
-			report(engine.allowInvalidOperatorRegistration ?
-							ReportType.WARN : ReportType.ERROR,
-					result.message(operator), startIndex);
-		definition.operators().add(operator);
+		L:
+		while(true){
+			tokenizer.discard();
+			OperatorType t = null;
+			OperatorPropertyEnum e = null;
+			AmongToken next = tokenizer.next(false, TokenizationMode.PLAIN_WORD);
+			switch(next.keywordOrEmpty()){
+				case "binary": t = OperatorType.BINARY; break;
+				case "prefix": t = OperatorType.PREFIX; break;
+				case "postfix": t = OperatorType.POSTFIX; break;
+				case "left-associative": e = OperatorPropertyEnum.LEFT_ASSOCIATIVE; break;
+				case "right-associative": e = OperatorPropertyEnum.RIGHT_ASSOCIATIVE; break;
+				case "accessor": e = OperatorPropertyEnum.ACCESSOR; break;
+				case "and": tokenizer.reset(); break L;
+				case "":
+					switch(next.type){
+						case L_PAREN:
+							tokenizer.discard();
+							priority = tokenizer.next(true, TokenizationMode.VALUE).asNumber();
+							if(Double.isNaN(priority)){
+								reportError("Number expected");
+								tokenizer.reset();
+								tryToRecover(TokenizationMode.UNEXPECTED, R_PAREN, false, false);
+								invalid = true;
+							}else expectNext(R_PAREN);
+							break L;
+						case COLON: case BR: tokenizer.reset(); break L;
+						case EOF: break L;
+						default:
+							reportError("Expected keyword");
+
+							tryToRecover(TokenizationMode.UNEXPECTED, null, true, true);
+							break L;
+					}
+				default:
+					reportError("Unknown operator property; 'binary', 'prefix', 'postfix', 'left-associative', 'right-associative' or 'accessor' expected");
+					continue;
+			}
+			if(t!=null){
+				if(type!=null){
+					reportError("Operator type defined twice: '"+type+"' and '"+t+"'");
+					invalid = true;
+				}else type = t;
+			}else{
+				if(!properties.add(e)){
+					reportError("'"+e+"' defined twice");
+					invalid = true;
+				}
+			}
+		}
+		if(invalid) return null;
+		if(type==null) reportError("Missing operator type; needs either 'binary', 'prefix' or 'postfix'");
+		else if(!properties.isEmpty()&&type!=OperatorType.BINARY)
+			reportError("Prefix and postfix operators cannot have additional properties");
+		else if(properties.contains(OperatorPropertyEnum.LEFT_ASSOCIATIVE)&&properties.contains(OperatorPropertyEnum.RIGHT_ASSOCIATIVE))
+			reportError("'left-associative' and 'right-associative' at the same place");
+		else{
+			byte flags = 0;
+			if(properties.contains(OperatorPropertyEnum.RIGHT_ASSOCIATIVE)) flags |= OperatorProperty.RIGHT_ASSOCIATIVE;
+			if(properties.contains(OperatorPropertyEnum.ACCESSOR)) flags |= OperatorProperty.ACCESSOR;
+			return new TypeAndProperty(type, flags, priority);
+		}
+		return null;
 	}
 
 	private void undefMacro(){
@@ -307,7 +389,7 @@ public final class AmongParser{
 		AmongToken next = tokenizer.next(false, TokenizationMode.VALUE);
 		if(!next.isLiteral()){
 			reportError("Expected path");
-			skipUntilLineBreak();
+			tryToRecover(TokenizationMode.UNEXPECTED, null, true, true);
 			return;
 		}
 		String path = next.expectLiteral();
@@ -533,7 +615,7 @@ public final class AmongParser{
 						if(next.isOperatorOrKeyword()){
 							OperatorDefinition op = group.get(next.expectLiteral());
 							if(op!=null){
-								a = operationMacro(Among.namedList(op.name(), a, operationExpression(operators, i+1)).operation(), next.start);
+								a = operationMacro(Among.namedList(op.aliasOrName(), a, operationExpression(operators, i+1)).operation(), next.start);
 								continue;
 							}
 						}
@@ -549,7 +631,7 @@ public final class AmongParser{
 						if(next.isOperatorOrKeyword()){
 							OperatorDefinition op = group.get(next.expectLiteral());
 							if(op!=null){
-								a = operationMacro(Among.namedList(op.name(), a).operation(), next.start);
+								a = operationMacro(Among.namedList(op.aliasOrName(), a).operation(), next.start);
 								continue;
 							}
 						}
@@ -581,7 +663,7 @@ public final class AmongParser{
 		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
 		if(next.isOperatorOrKeyword()){
 			OperatorDefinition op = operators.get(i).get(next.expectLiteral());
-			if(op!=null) return operationMacro(Among.namedList(op.name(), prefix(operators, i)).operation(), next.start);
+			if(op!=null) return operationMacro(Among.namedList(op.aliasOrName(), prefix(operators, i)).operation(), next.start);
 		}
 		tokenizer.reset();
 		return operationExpression(operators, i+1);
@@ -832,6 +914,31 @@ public final class AmongParser{
 			MacroDefinition macro = new MacroDefinition(name, type, MacroParameterList.of(params), expr, replacements);
 			definition.macros().add(macro, (t, s) -> report(t, s, start));
 			importDefinition.macros().add(macro, (t, s) -> report(t, s, start));
+		}
+	}
+
+	private static class TypeAndProperty{
+		private final OperatorType type;
+		private final byte properties;
+		private final double priority;
+
+		private TypeAndProperty(OperatorType type, byte properties, double priority){
+			this.type = type;
+			this.properties = properties;
+			this.priority = priority;
+		}
+	}
+
+	private enum OperatorPropertyEnum{
+		LEFT_ASSOCIATIVE, RIGHT_ASSOCIATIVE, ACCESSOR;
+
+		@Override public String toString(){
+			switch(this){
+				case LEFT_ASSOCIATIVE: return "left-associative";
+				case RIGHT_ASSOCIATIVE: return "right-associative";
+				case ACCESSOR: return "accessor";
+				default: throw new IllegalStateException("Unreachable");
+			}
 		}
 	}
 }

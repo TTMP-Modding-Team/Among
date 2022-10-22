@@ -1,5 +1,6 @@
 package ttmp.among.definition;
 
+import org.jetbrains.annotations.Nullable;
 import ttmp.among.util.AmongUs;
 
 import java.text.DecimalFormat;
@@ -18,6 +19,8 @@ public final class OperatorDefinition{
 	private final String name;
 	private final boolean isKeyword;
 	private final OperatorType type;
+	private final String alias;
+	private final byte properties;
 	private final double priority;
 
 	/**
@@ -42,9 +45,38 @@ public final class OperatorDefinition{
 	 * @throws NullPointerException if {@code name == null} or {@code type == null}
 	 */
 	public OperatorDefinition(String name, boolean isKeyword, OperatorType type, double priority){
+		this(name, isKeyword, type, null, OperatorProperty.NONE, priority);
+	}
+
+	/**
+	 * Creates new operator definition.
+	 *
+	 * @param name      Name of the operator
+	 * @param isKeyword Whether this defines keyword or operator
+	 * @param alias
+	 * @param type      Type of the operator
+	 * @throws NullPointerException if {@code name == null} or {@code type == null}
+	 * @see OperatorDefinition#OperatorDefinition(String, boolean, OperatorType, double)
+	 */
+	public OperatorDefinition(String name, boolean isKeyword, @Nullable String alias, OperatorType type, byte properties){
+		this(name, isKeyword, type, alias, properties, Double.NaN);
+	}
+	/**
+	 * Creates new operator definition.
+	 *
+	 * @param name      Name of the operator
+	 * @param isKeyword Whether this defines keyword or operator
+	 * @param type      Type of the operator
+	 * @param alias
+	 * @param priority  Priority of the operator; if {@code NaN} is supplied, it will be replaced with default priority.
+	 * @throws NullPointerException if {@code name == null} or {@code type == null}
+	 */
+	public OperatorDefinition(String name, boolean isKeyword, OperatorType type, @Nullable String alias, byte properties, double priority){
 		this.name = Objects.requireNonNull(name);
 		this.isKeyword = isKeyword;
 		this.type = Objects.requireNonNull(type);
+		this.alias = alias;
+		this.properties = OperatorProperty.normalize(type, properties);
 		this.priority = Double.isNaN(priority) ? type.defaultPriority() : priority;
 	}
 
@@ -57,8 +89,15 @@ public final class OperatorDefinition{
 	public OperatorType type(){
 		return type;
 	}
+	@Nullable public String alias(){
+		return name;
+	}
 	public double priority(){
 		return priority;
+	}
+
+	public String aliasOrName(){
+		return alias!=null ? alias : name;
 	}
 
 	@Override public boolean equals(Object o){
@@ -77,10 +116,13 @@ public final class OperatorDefinition{
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder().append(isKeyword ? "keyword " : "operator ");
 		AmongUs.nameToString(stb, this.name, false);
-		stb.append(" as ")
-				.append(type==OperatorType.BINARY ? "binary" : type==OperatorType.POSTFIX ? "postfix" : "prefix");
+		stb.append(" as ").append(OperatorProperty.typeToString(type, properties));
 		if(Double.compare(priority, type.defaultPriority())!=0)
-			stb.append(" : ").append(FORMAT.format(priority));
+			stb.append("(").append(FORMAT.format(priority)).append(")");
+		if(alias!=null){
+			stb.append(" : ");
+			AmongUs.primitiveToString(stb, alias);
+		}
 		return stb.toString();
 	}
 }

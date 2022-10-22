@@ -17,11 +17,11 @@ macroDefinition: macroName BR*
 macroParam: paramName ( BR* "=" BR* expr )? ( BR* "," BR* macroParam? )?
 
 operatorDefinition: word BR*
-                    "as" BR* operatorProperties BR*
-                    ( "and" BR* operatorProperties BR* )*
+                    "as" operatorProperties BR*
+                    ( "and" operatorProperties BR* )*
                     ( ":" BR* value )?
 
-operatorProperties: ( operatorProperty BR* )+ ( "(" BR* value BR* ")"  # number expected
+operatorProperties: ( operatorProperty )+ ( "(" BR* value BR* ")"  # number expected
 operatorProperty: "binary"
                 | "prefix"
                 | "postfix"

@@ -3,7 +3,9 @@ package ttmp.among.util;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.AmongEngine;
 import ttmp.among.definition.AmongDefinition;
+import ttmp.among.definition.OperatorDefinition;
 import ttmp.among.definition.OperatorPriorities;
+import ttmp.among.definition.OperatorProperty;
 import ttmp.among.definition.OperatorRegistry;
 import ttmp.among.definition.OperatorType;
 
@@ -38,7 +40,7 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 	public static AmongDefinition defaultOperators(){
 		AmongDefinition definition = new AmongDefinition();
 		OperatorRegistry o = definition.operators();
-		o.addOperator("=", OperatorType.BINARY, OperatorPriorities.BINARY_ASSIGN);
+		o.add(new OperatorDefinition("=", false, OperatorType.BINARY, null, OperatorProperty.RIGHT_ASSOCIATIVE, OperatorPriorities.BINARY_ASSIGN));
 		o.addOperator("||", OperatorType.BINARY, OperatorPriorities.BINARY_LOGICAL_OR);
 		o.addOperator("&&", OperatorType.BINARY, OperatorPriorities.BINARY_LOGICAL_AND);
 		o.addOperator("==", OperatorType.BINARY, OperatorPriorities.BINARY_LOGICAL_EQUALITY);
@@ -60,7 +62,7 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 		o.addOperator("-", OperatorType.PREFIX, OperatorPriorities.PREFIX);
 		o.addOperator("+", OperatorType.PREFIX, OperatorPriorities.PREFIX);
 		o.addOperator("~", OperatorType.PREFIX, OperatorPriorities.PREFIX);
-		o.addOperator(".", OperatorType.BINARY, OperatorPriorities.BINARY_ACCESS);
+		o.add(new OperatorDefinition(".", false, OperatorType.BINARY, null, OperatorProperty.ACCESSOR, OperatorPriorities.BINARY_ACCESS));
 		return definition;
 	}
 }
