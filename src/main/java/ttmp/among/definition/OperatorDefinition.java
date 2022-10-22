@@ -53,21 +53,8 @@ public final class OperatorDefinition{
 	 *
 	 * @param name      Name of the operator
 	 * @param isKeyword Whether this defines keyword or operator
-	 * @param alias
 	 * @param type      Type of the operator
-	 * @throws NullPointerException if {@code name == null} or {@code type == null}
-	 * @see OperatorDefinition#OperatorDefinition(String, boolean, OperatorType, double)
-	 */
-	public OperatorDefinition(String name, boolean isKeyword, @Nullable String alias, OperatorType type, byte properties){
-		this(name, isKeyword, type, alias, properties, Double.NaN);
-	}
-	/**
-	 * Creates new operator definition.
-	 *
-	 * @param name      Name of the operator
-	 * @param isKeyword Whether this defines keyword or operator
-	 * @param type      Type of the operator
-	 * @param alias
+	 * @param alias     Optional alias for the operator; if the value is present, resulting operation tree will have the alias as the name.
 	 * @param priority  Priority of the operator; if {@code NaN} is supplied, it will be replaced with default priority.
 	 * @throws NullPointerException if {@code name == null} or {@code type == null}
 	 */

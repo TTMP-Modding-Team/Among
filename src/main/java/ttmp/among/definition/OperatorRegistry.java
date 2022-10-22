@@ -51,12 +51,48 @@ public final class OperatorRegistry{
 	public RegistrationResult addOperator(String name, OperatorType type, double priority){
 		return add(new OperatorDefinition(name, false, type, priority));
 	}
+	public RegistrationResult addOperator(String name, OperatorType type, @Nullable String alias){
+		return addOperator(name, type, alias, Double.NaN);
+	}
+	public RegistrationResult addOperator(String name, OperatorType type, @Nullable String alias, double priority){
+		return add(new OperatorDefinition(name, false, type, alias, OperatorProperty.NONE, priority));
+	}
+	public RegistrationResult addOperator(String name, OperatorType type, byte properties){
+		return addOperator(name, type, properties, Double.NaN);
+	}
+	public RegistrationResult addOperator(String name, OperatorType type, byte properties, double priority){
+		return add(new OperatorDefinition(name, false, type, null, properties, priority));
+	}
+	public RegistrationResult addOperator(String name, OperatorType type, @Nullable String alias, byte properties){
+		return addOperator(name, type, alias, properties, Double.NaN);
+	}
+	public RegistrationResult addOperator(String name, OperatorType type, @Nullable String alias, byte properties, double priority){
+		return add(new OperatorDefinition(name, false, type, alias, properties, priority));
+	}
 
 	public RegistrationResult addKeyword(String name, OperatorType type){
 		return addKeyword(name, type, Double.NaN);
 	}
 	public RegistrationResult addKeyword(String name, OperatorType type, double priority){
 		return add(new OperatorDefinition(name, false, type, priority));
+	}
+	public RegistrationResult addKeyword(String name, OperatorType type, @Nullable String alias){
+		return addKeyword(name, type, alias, Double.NaN);
+	}
+	public RegistrationResult addKeyword(String name, OperatorType type, @Nullable String alias, double priority){
+		return add(new OperatorDefinition(name, false, type, alias, OperatorProperty.NONE, priority));
+	}
+	public RegistrationResult addKeyword(String name, OperatorType type, byte properties){
+		return addKeyword(name, type, properties, Double.NaN);
+	}
+	public RegistrationResult addKeyword(String name, OperatorType type, byte properties, double priority){
+		return add(new OperatorDefinition(name, false, type, null, properties, priority));
+	}
+	public RegistrationResult addKeyword(String name, OperatorType type, @Nullable String alias, byte properties){
+		return addKeyword(name, type, alias, properties, Double.NaN);
+	}
+	public RegistrationResult addKeyword(String name, OperatorType type, @Nullable String alias, byte properties, double priority){
+		return add(new OperatorDefinition(name, false, type, alias, properties, priority));
 	}
 
 	public RegistrationResult add(OperatorDefinition definition){
