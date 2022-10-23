@@ -61,7 +61,7 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 		o.addOperator("-", OperatorType.PREFIX, OperatorPriorities.PREFIX);
 		o.addOperator("+", OperatorType.PREFIX, OperatorPriorities.PREFIX);
 		o.addOperator("~", OperatorType.PREFIX, OperatorPriorities.PREFIX);
-		o.addOperator(".", OperatorType.BINARY, OperatorProperty.ACCESSOR, OperatorPriorities.BINARY_ACCESS);
+		o.addOperator(".", OperatorType.BINARY, "", OperatorProperty.ACCESSOR, OperatorPriorities.BINARY_ACCESS);
 		return definition;
 	}
 }

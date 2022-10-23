@@ -143,20 +143,20 @@ public class EqualityTests{
 				namedList("+", "01234", "45678"),
 				list(namedList("+", "01234"), namedList("+", "01234.45678")),
 				list(namedList("-", "01234"), namedList("-", "01234.45678")),
-				namedList(".a5678", "01234"),
-				namedList(".45678", "0123a"),
-				namedList(".45678", "a1234"),
+				namedList("a5678", "01234"),
+				namedList("45678", "0123a"),
+				namedList("45678", "a1234"),
 				namedList("!", "1234.45678"),
 				namedList("-", "1234.45678"),
-				namedList(".45a78", "01234"),
-				namedList(".0", namedList(".0.0", "0.0")),
+				namedList("45a78", "01234"),
+				namedList("0", namedList("0.0", "0.0")),
 				namedList("==",
 						namedList("*", "3", namedList("-", "1")),
 						namedList("-", "3")),
 				namedList("==",
 						namedList("*", "3", namedList("-", "1")),
 						namedList("-", "3")),
-				namedList("-", namedList(".toString", "1", list())),
+				namedList("-", namedList("toString", "1", list())),
 				namedList("-", namedList("1.35234")));
 	}
 
@@ -316,8 +316,8 @@ public class EqualityTests{
 				object().prop("Method", "abc").prop("A", 1).prop("B", 3).prop("Type", "Oper").prop("Self", "i"),
 				object().prop("Method", "abc").prop("A", 1).prop("B", 4).prop("C", 16).prop("Type", "Oper").prop("Self", "j"),
 
-				namedList(".abc", 1),
-				namedList(".abc", 2)
+				namedList("abc", 1),
+				namedList("abc", 2)
 		);
 	}
 

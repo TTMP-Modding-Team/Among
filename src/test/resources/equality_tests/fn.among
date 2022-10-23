@@ -1,10 +1,10 @@
 use among/default_operators
 
-fn .abc: { Field: abc, Self: self }
-fn .abc{a, b = 2}: { Method: abc, A: a, B: b, Type: Obj , Self: self }
-fn .abc[a, b = 2]: { Method: abc, A: a, B: b, Type: List, Self: self }
-fn .abc(a, b = 2): { Method: abc, A: a, B: b, Type: Oper, Self: self }
-fn .abc(a, b, c): { Method: abc, A: a, B: b, C: c, Type: Oper, Self: self }
+fn abc: { Field: abc, Self: self }
+fn abc{a, b = 2}: { Method: abc, A: a, B: b, Type: Obj , Self: self }
+fn abc[a, b = 2]: { Method: abc, A: a, B: b, Type: List, Self: self }
+fn abc(a, b = 2): { Method: abc, A: a, B: b, Type: Oper, Self: self }
+fn abc(a, b, c): { Method: abc, A: a, B: b, C: c, Type: Oper, Self: self }
 
 ( 1.abc )
 ( 2. abc)
@@ -20,7 +20,7 @@ fn .abc(a, b, c): { Method: abc, A: a, B: b, C: c, Type: Oper, Self: self }
 ( i . abc (1, 3) )
 ( j . abc (1, 4, 16) )
 
-undef fn .abc
+undef fn abc
 
 ( 1.abc )
 ( 2. abc)
