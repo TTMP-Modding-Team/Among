@@ -1,8 +1,7 @@
-package ttmp.among.util;
+package ttmp.among.library;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.AmongEngine;
-import ttmp.among.compile.ReportType;
 import ttmp.among.definition.AmongDefinition;
 import ttmp.among.definition.Macro;
 import ttmp.among.definition.MacroType;
@@ -10,11 +9,7 @@ import ttmp.among.definition.OperatorPriorities;
 import ttmp.among.definition.OperatorProperty;
 import ttmp.among.definition.OperatorRegistry;
 import ttmp.among.definition.OperatorType;
-import ttmp.among.exception.Sussy;
-import ttmp.among.obj.Among;
-import ttmp.among.obj.AmongList;
-
-import java.util.function.BiConsumer;
+import ttmp.among.util.RootAndDefinition;
 
 /**
  * Provider for "native files" that can be imported from all among scripts. This object is automatically registered on

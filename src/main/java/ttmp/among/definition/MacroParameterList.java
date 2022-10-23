@@ -1,8 +1,8 @@
 package ttmp.among.definition;
 
 import ttmp.among.exception.Sussy;
-import ttmp.among.util.PrettyFormatOption;
-import ttmp.among.util.ToPrettyString;
+import ttmp.among.format.PrettifyOption;
+import ttmp.among.format.ToPrettyString;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -169,10 +169,10 @@ public final class MacroParameterList implements ToPrettyString{
 				.collect(Collectors.joining(","));
 	}
 
-	@Override public String toPrettyString(int indents, PrettyFormatOption option){
+	@Override public String toPrettyString(int indents, PrettifyOption option){
 		return toPrettyString(indents, option, false);
 	}
-	public String toPrettyString(int indents, PrettyFormatOption option, boolean replaceDefaultValueWithStubs){
+	public String toPrettyString(int indents, PrettifyOption option, boolean replaceDefaultValueWithStubs){
 		return params.stream()
 				.map(p -> p.toPrettyString(indents+1, option, replaceDefaultValueWithStubs))
 				.collect(Collectors.joining(", "));

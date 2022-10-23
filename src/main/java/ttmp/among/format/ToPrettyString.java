@@ -1,4 +1,4 @@
-package ttmp.among.util;
+package ttmp.among.format;
 
 import ttmp.among.AmongEngine;
 import ttmp.among.compile.Source;
@@ -13,10 +13,10 @@ public interface ToPrettyString{
 	 * used.
 	 *
 	 * @return String representation of this object
-	 * @see ToPrettyString#toPrettyString(int, PrettyFormatOption)
+	 * @see ToPrettyString#toPrettyString(int, PrettifyOption)
 	 */
 	default String toPrettyString(){
-		return toPrettyString(0, PrettyFormatOption.DEFAULT);
+		return toPrettyString(0, PrettifyOption.DEFAULT);
 	}
 
 	/**
@@ -25,10 +25,10 @@ public interface ToPrettyString{
 	 *
 	 * @param indents Number of indentations
 	 * @return String representation of this object
-	 * @see ToPrettyString#toPrettyString(int, PrettyFormatOption)
+	 * @see ToPrettyString#toPrettyString(int, PrettifyOption)
 	 */
 	default String toPrettyString(int indents){
-		return toPrettyString(indents, PrettyFormatOption.DEFAULT);
+		return toPrettyString(indents, PrettifyOption.DEFAULT);
 	}
 
 	/**
@@ -37,9 +37,9 @@ public interface ToPrettyString{
 	 *
 	 * @param option  Option to use
 	 * @return String representation of this object
-	 * @see ToPrettyString#toPrettyString(int, PrettyFormatOption)
+	 * @see ToPrettyString#toPrettyString(int, PrettifyOption)
 	 */
-	default String toPrettyString(PrettyFormatOption option){
+	default String toPrettyString(PrettifyOption option){
 		return toPrettyString(0, option);
 	}
 
@@ -50,5 +50,5 @@ public interface ToPrettyString{
 	 * @param option  Option to use
 	 * @return String representation of this object
 	 */
-	String toPrettyString(int indents, PrettyFormatOption option);
+	String toPrettyString(int indents, PrettifyOption option);
 }

@@ -26,7 +26,7 @@ import ttmp.among.obj.AmongNamed;
 import ttmp.among.obj.AmongObject;
 import ttmp.among.obj.AmongPrimitive;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.util.AmongWalker;
+import ttmp.among.obj.AmongWalker;
 import ttmp.among.util.NodePath;
 import ttmp.among.util.RootAndDefinition;
 

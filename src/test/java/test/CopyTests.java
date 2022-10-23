@@ -9,7 +9,7 @@ import ttmp.among.definition.MacroType;
 import ttmp.among.definition.OperatorType;
 import ttmp.among.exception.Sussy;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.util.DefaultInstanceProvider;
+import ttmp.among.library.DefaultInstanceProvider;
 import ttmp.among.util.NodePath;
 
 import static ttmp.among.obj.Among.*;

@@ -1,7 +1,7 @@
 package ttmp.among.definition;
 
-import ttmp.among.util.PrettyFormatOption;
-import ttmp.among.util.ToPrettyString;
+import ttmp.among.format.PrettifyOption;
+import ttmp.among.format.ToPrettyString;
 
 /**
  * Represents a definition side of the source, i.e. macro and operator definitions.
@@ -58,7 +58,7 @@ public final class AmongDefinition implements ToPrettyString{
 		});
 		return stb.toString();
 	}
-	@Override public String toPrettyString(int indents, PrettyFormatOption option){
+	@Override public String toPrettyString(int indents, PrettifyOption option){
 		StringBuilder stb = new StringBuilder();
 		macros.macros().forEach(macro -> {
 			if(stb.length()>0) stb.append('\n');

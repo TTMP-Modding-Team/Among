@@ -10,9 +10,9 @@ import ttmp.among.definition.OperatorDefinition;
 import ttmp.among.definition.OperatorRegistry;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongRoot;
-import ttmp.among.util.DefaultInstanceProvider;
+import ttmp.among.library.DefaultInstanceProvider;
 import ttmp.among.util.ErrorHandling;
-import ttmp.among.util.Provider;
+import ttmp.among.library.Provider;
 import ttmp.among.util.RootAndDefinition;
 
 import java.util.ArrayList;

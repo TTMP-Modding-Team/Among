@@ -1,10 +1,9 @@
 package ttmp.among.obj;
 
 import ttmp.among.exception.Sussy;
-import ttmp.among.util.AmongUs;
-import ttmp.among.util.AmongWalker;
+import ttmp.among.format.AmongUs;
 import ttmp.among.util.NodePath;
-import ttmp.among.util.PrettyFormatOption;
+import ttmp.among.format.PrettifyOption;
 
 import java.util.Objects;
 
@@ -157,7 +156,7 @@ public class AmongPrimitive extends Among{
 		return stb.toString();
 	}
 
-	@Override public String toPrettyString(int indents, PrettyFormatOption option){
+	@Override public String toPrettyString(int indents, PrettifyOption option){
 		StringBuilder stb = new StringBuilder();
 		AmongUs.valueToPrettyString(stb, this, indents, option);
 		return stb.toString();

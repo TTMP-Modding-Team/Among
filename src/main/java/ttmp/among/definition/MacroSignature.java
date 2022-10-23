@@ -2,7 +2,7 @@ package ttmp.among.definition;
 
 import org.jetbrains.annotations.NotNull;
 import ttmp.among.obj.Among;
-import ttmp.among.util.AmongUs;
+import ttmp.among.format.AmongUs;
 
 import java.util.Objects;
 

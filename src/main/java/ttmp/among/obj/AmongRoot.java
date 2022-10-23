@@ -1,9 +1,9 @@
 package ttmp.among.obj;
 
 import ttmp.among.exception.Sussy;
-import ttmp.among.util.AmongUs;
-import ttmp.among.util.PrettyFormatOption;
-import ttmp.among.util.ToPrettyString;
+import ttmp.among.format.AmongUs;
+import ttmp.among.format.PrettifyOption;
+import ttmp.among.format.ToPrettyString;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -95,7 +95,7 @@ public final class AmongRoot implements ToPrettyString{
 	 * @param option  Option to use
 	 * @return String representation of this root
 	 */
-	@Override public String toPrettyString(int indents, PrettyFormatOption option){
+	@Override public String toPrettyString(int indents, PrettifyOption option){
 		StringBuilder stb = new StringBuilder();
 		boolean first = true;
 		for(Among object : objects){

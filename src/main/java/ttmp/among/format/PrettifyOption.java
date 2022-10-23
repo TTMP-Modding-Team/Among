@@ -1,12 +1,12 @@
-package ttmp.among.util;
+package ttmp.among.format;
 
 import java.util.Objects;
 
 /**
  * Formatting option used in {@link ToPrettyString}.
  */
-public final class PrettyFormatOption{
-	public static final PrettyFormatOption DEFAULT = new PrettyFormatOption("  ", 2, 3);
+public final class PrettifyOption{
+	public static final PrettifyOption DEFAULT = new PrettifyOption("  ", 2, 3);
 
 	/**
 	 * Indentation to be used.
@@ -23,14 +23,14 @@ public final class PrettyFormatOption{
 	 */
 	public final int compactListSize;
 
-	public PrettyFormatOption(String indent, int compactObjectSize, int compactListSize){
+	public PrettifyOption(String indent, int compactObjectSize, int compactListSize){
 		this.indent = Objects.requireNonNull(indent);
 		this.compactObjectSize = compactObjectSize;
 		this.compactListSize = compactListSize;
 	}
 
 	@Override public String toString(){
-		return "PrettyFormatOption{"+
+		return "PrettifyOption{"+
 				"indent='"+indent+'\''+
 				", compactObjectSize="+compactObjectSize+
 				", compactArraySize="+compactListSize+

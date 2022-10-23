@@ -3,9 +3,9 @@ package ttmp.among.definition;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.obj.Among;
-import ttmp.among.util.AmongUs;
-import ttmp.among.util.PrettyFormatOption;
-import ttmp.among.util.ToPrettyString;
+import ttmp.among.format.AmongUs;
+import ttmp.among.format.PrettifyOption;
+import ttmp.among.format.ToPrettyString;
 
 import java.util.Objects;
 
@@ -65,11 +65,11 @@ public final class MacroParameter implements Comparable<MacroParameter>, ToPrett
 		return stb.toString();
 	}
 
-	@Override public String toPrettyString(int indents, PrettyFormatOption option){
+	@Override public String toPrettyString(int indents, PrettifyOption option){
 		return toPrettyString(indents, option, false);
 	}
 
-	public String toPrettyString(int indents, PrettyFormatOption option, boolean replaceDefaultValueWithStubs){
+	public String toPrettyString(int indents, PrettifyOption option, boolean replaceDefaultValueWithStubs){
 		StringBuilder stb = new StringBuilder();
 		AmongUs.paramToString(stb, name());
 		if(defaultValue()!=null)

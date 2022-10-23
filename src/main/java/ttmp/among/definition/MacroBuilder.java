@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.ReportType;
 import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
-import ttmp.among.util.PrettyFormatOption;
+import ttmp.among.format.PrettifyOption;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -140,7 +140,7 @@ public class MacroBuilder{
 			signatureToString(stb);
 			return stb.append(':').append("Stub").toString();
 		}
-		@Override public String toPrettyString(int indents, PrettyFormatOption option){
+		@Override public String toPrettyString(int indents, PrettifyOption option){
 			StringBuilder stb = new StringBuilder();
 			stb.append(type().isFunctionMacro() ? "fn " : "macro ");
 			signatureToPrettyString(stb, indents, option);

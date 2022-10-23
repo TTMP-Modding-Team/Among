@@ -1,6 +1,9 @@
 package ttmp.among.util;
 
 import ttmp.among.definition.AmongDefinition;
+import ttmp.among.format.AmongUs;
+import ttmp.among.format.PrettifyOption;
+import ttmp.among.format.ToPrettyString;
 import ttmp.among.obj.AmongRoot;
 
 /**
@@ -38,7 +41,7 @@ public final class RootAndDefinition implements ToPrettyString{
 						definition+","+root;
 	}
 
-	@Override public String toPrettyString(int indents, PrettyFormatOption option){
+	@Override public String toPrettyString(int indents, PrettifyOption option){
 		return definition.isEmpty() ?
 				root.isEmpty() ? "" : root.toPrettyString(indents, option) :
 				root.isEmpty() ? definition.toPrettyString(indents, option) :

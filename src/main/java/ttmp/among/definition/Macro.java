@@ -6,9 +6,9 @@ import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
 import ttmp.among.obj.AmongObject;
-import ttmp.among.util.AmongUs;
-import ttmp.among.util.PrettyFormatOption;
-import ttmp.among.util.ToPrettyString;
+import ttmp.among.format.AmongUs;
+import ttmp.among.format.PrettifyOption;
+import ttmp.among.format.ToPrettyString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -250,18 +250,18 @@ public abstract class Macro implements ToPrettyString{
 	}
 
 	public final void signatureToPrettyString(StringBuilder stb){
-		signatureToPrettyString(stb, 0, PrettyFormatOption.DEFAULT);
+		signatureToPrettyString(stb, 0, PrettifyOption.DEFAULT);
 	}
 	public final void signatureToPrettyString(StringBuilder stb, int indents){
-		signatureToPrettyString(stb, indents, PrettyFormatOption.DEFAULT);
+		signatureToPrettyString(stb, indents, PrettifyOption.DEFAULT);
 	}
-	public final void signatureToPrettyString(StringBuilder stb, PrettyFormatOption option){
+	public final void signatureToPrettyString(StringBuilder stb, PrettifyOption option){
 		signatureToPrettyString(stb, 0, option);
 	}
-	public final void signatureToPrettyString(StringBuilder stb, int indents, PrettyFormatOption option){
+	public final void signatureToPrettyString(StringBuilder stb, int indents, PrettifyOption option){
 		signatureToPrettyString(stb, indents, option, false);
 	}
-	public final void signatureToPrettyString(StringBuilder stb, int indents, PrettyFormatOption option, boolean replaceDefaultValueWithStubs){
+	public final void signatureToPrettyString(StringBuilder stb, int indents, PrettifyOption option, boolean replaceDefaultValueWithStubs){
 		AmongUs.nameToPrettyString(stb, name(), false, indents, option);
 		switch(this.type()){
 			case OBJECT: case OBJECT_FN: stb.append('{'); break;

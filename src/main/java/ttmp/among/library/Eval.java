@@ -1,4 +1,4 @@
-package ttmp.among.util;
+package ttmp.among.library;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.ReportType;

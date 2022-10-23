@@ -4,9 +4,8 @@ import org.jetbrains.annotations.Nullable;
 import ttmp.among.AmongEngine;
 import ttmp.among.compile.Source;
 import ttmp.among.exception.SussyCast;
-import ttmp.among.util.AmongWalker;
 import ttmp.among.util.NodePath;
-import ttmp.among.util.ToPrettyString;
+import ttmp.among.format.ToPrettyString;
 
 import java.util.Map;
 

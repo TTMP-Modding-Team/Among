@@ -1,9 +1,9 @@
 package ttmp.among.definition;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.util.AmongUs;
-import ttmp.among.util.PrettyFormatOption;
-import ttmp.among.util.ToPrettyString;
+import ttmp.among.format.AmongUs;
+import ttmp.among.format.PrettifyOption;
+import ttmp.among.format.ToPrettyString;
 
 import java.text.DecimalFormat;
 import java.util.Objects;
@@ -120,7 +120,7 @@ public final class OperatorDefinition implements ToPrettyString{
 		if(alias!=null) AmongUs.primitiveToString(stb.append(":"), alias);
 		return stb.toString();
 	}
-	@Override public String toPrettyString(int indents, PrettyFormatOption option){
+	@Override public String toPrettyString(int indents, PrettifyOption option){
 		StringBuilder stb = new StringBuilder().append(isKeyword ? "keyword " : "operator ");
 		AmongUs.nameToString(stb, this.name, false);
 		stb.append(" as ").append(OperatorProperty.typeToString(type, properties));

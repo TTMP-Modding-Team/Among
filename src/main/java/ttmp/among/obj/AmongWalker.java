@@ -1,9 +1,6 @@
-package ttmp.among.util;
+package ttmp.among.obj;
 
-import ttmp.among.obj.Among;
-import ttmp.among.obj.AmongList;
-import ttmp.among.obj.AmongObject;
-import ttmp.among.obj.AmongPrimitive;
+import ttmp.among.util.NodePath;
 
 /**
  * Visitor for {@link Among} objects.

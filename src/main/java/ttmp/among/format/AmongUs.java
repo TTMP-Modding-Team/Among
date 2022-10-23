@@ -1,4 +1,4 @@
-package ttmp.among.util;
+package ttmp.among.format;
 
 import ttmp.among.obj.Among;
 
@@ -42,7 +42,7 @@ public class AmongUs{
 		else primitiveToString(stb, key);
 	}
 
-	public static void keyToPrettyString(StringBuilder stb, String key, boolean paramRef, int indents, PrettyFormatOption option){
+	public static void keyToPrettyString(StringBuilder stb, String key, boolean paramRef, int indents, PrettifyOption option){
 		if(paramRef||isSimpleKey(key)) stb.append(standardReplace(KEY_SPECIALS, key, true));
 		else primitiveToPrettyString(stb, key, indents, option);
 	}
@@ -52,7 +52,7 @@ public class AmongUs{
 		else primitiveToString(stb, name);
 	}
 
-	public static void nameToPrettyString(StringBuilder stb, String name, boolean paramRef, int indents, PrettyFormatOption option){
+	public static void nameToPrettyString(StringBuilder stb, String name, boolean paramRef, int indents, PrettifyOption option){
 		if(paramRef||isSimpleName(name)) stb.append(standardReplace(NAME_SPECIALS, name, true));
 		else primitiveToPrettyString(stb, name, indents, option);
 	}
@@ -70,7 +70,7 @@ public class AmongUs{
 		}
 	}
 
-	public static void valueToPrettyString(StringBuilder stb, Among value, int indents, PrettyFormatOption option){
+	public static void valueToPrettyString(StringBuilder stb, Among value, int indents, PrettifyOption option){
 		if(!value.isPrimitive()) stb.append(value.toPrettyString(indents, option));
 		else{
 			String s = value.asPrimitive().getValue();
@@ -83,18 +83,18 @@ public class AmongUs{
 		stb.append('"').append(standardReplace(PRIMITIVE_SPECIALS, primitive, true)).append('"');
 	}
 
-	public static void primitiveToPrettyString(StringBuilder stb, String primitive, int indents, PrettyFormatOption option){
+	public static void primitiveToPrettyString(StringBuilder stb, String primitive, int indents, PrettifyOption option){
 		primitive = NEWLINE.matcher(standardReplace(PRIMITIVE_SPECIALS, primitive, false)).replaceAll(newlineAndIndent(indents+2, option)+'|');
 		stb.append('"').append(primitive).append('"');
 	}
 
-	public static String newlineAndIndent(int indents, PrettyFormatOption option){
+	public static String newlineAndIndent(int indents, PrettifyOption option){
 		StringBuilder stb = new StringBuilder();
 		newlineAndIndent(stb, indents, option);
 		return stb.toString();
 	}
 
-	public static void newlineAndIndent(StringBuilder stb, int indents, PrettyFormatOption option){
+	public static void newlineAndIndent(StringBuilder stb, int indents, PrettifyOption option){
 		stb.append('\n');
 		for(int i = 0; i<indents; i++) stb.append(option.indent);
 	}

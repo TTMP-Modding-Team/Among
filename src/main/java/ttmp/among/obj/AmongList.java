@@ -1,10 +1,9 @@
 package ttmp.among.obj;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.util.AmongUs;
-import ttmp.among.util.AmongWalker;
+import ttmp.among.format.AmongUs;
 import ttmp.among.util.NodePath;
-import ttmp.among.util.PrettyFormatOption;
+import ttmp.among.format.PrettifyOption;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -172,7 +171,7 @@ public class AmongList extends AmongNamed implements Iterable<Among>{
 		return stb.toString();
 	}
 
-	@Override public String toPrettyString(int indents, PrettyFormatOption option){
+	@Override public String toPrettyString(int indents, PrettifyOption option){
 		StringBuilder stb = new StringBuilder();
 		if(hasName()){
 			AmongUs.nameToPrettyString(stb, getName(), false, indents+1, option);

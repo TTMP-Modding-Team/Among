@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.ReportType;
 import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
-import ttmp.among.util.PrettyFormatOption;
+import ttmp.among.format.PrettifyOption;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.function.BiConsumer;
  * </pre>
  *
  * Note that, due to the nature of replacement operations, the results of {@link MacroDefinition#toString()}
- * and {@link MacroDefinition#toPrettyString(int, PrettyFormatOption)} might not produce re-compilable macro script.
+ * and {@link MacroDefinition#toPrettyString(int, PrettifyOption)} might not produce re-compilable macro script.
  */
 public final class MacroDefinition extends Macro{
 	private final Among template;
@@ -90,7 +90,7 @@ public final class MacroDefinition extends Macro{
 		signatureToString(stb);
 		return stb.append(':').append(template).toString();
 	}
-	@Override public String toPrettyString(int indents, PrettyFormatOption option){
+	@Override public String toPrettyString(int indents, PrettifyOption option){
 		StringBuilder stb = new StringBuilder();
 		stb.append(type().isFunctionMacro() ? "fn " : "macro ");
 		signatureToPrettyString(stb, indents, option);
