@@ -9,10 +9,13 @@ import ttmp.among.util.PrettyFormatOption;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -31,6 +34,15 @@ public final class MacroRegistry{
 		groups.clear();
 	}
 
+	/**
+	 * Adds the macro to this registry. This method always succeeds; it always adds the macro by one way
+	 * or another. If there is another macro with same signature and it is considered 'identical' parameter,
+	 * the preexisting one is overwritten.
+	 *
+	 * @param macro Macro to be registered
+	 * @throws NullPointerException If {@code macro == null}
+	 * @see MacroRegistry#add(Macro, BiConsumer)
+	 */
 	public void add(Macro macro){
 		add(macro, null);
 	}
@@ -95,7 +107,8 @@ public final class MacroRegistry{
 			return macro;
 		}
 		@Override protected void add(Macro macro, @Nullable BiConsumer<ReportType, String> reportHandler){
-			this.macro = macro; // TODO report override
+			if(this.macro!=null) reportOverwrite(reportHandler, macro, Collections.singletonList(this.macro));
+			this.macro = macro;
 		}
 		@Override protected Stream<Macro> macros(){
 			return Stream.of(macro);
@@ -145,7 +158,23 @@ public final class MacroRegistry{
 			return matched;
 		}
 		@Override protected void add(Macro macro, @Nullable BiConsumer<ReportType, String> reportHandler){
-			macros.add(macro); // TODO report obvious conflicts?
+			List<Macro> overwritten = null, overlapping = null;
+			for(int i = 0; i<macros.size(); ){
+				Macro m = macros.get(i);
+				if(overwrites(macro, m)){
+					if(overwritten==null) overwritten = new ArrayList<>();
+					overwritten.add(m);
+					macros.remove(i);
+					continue;
+				}else if(isParameterOverlaps(macro, m)){
+					if(overlapping==null) overlapping = new ArrayList<>();
+					overlapping.add(m);
+				}
+				i++;
+			}
+			if(overwritten!=null) reportOverwrite(reportHandler, macro, overwritten);
+			if(overlapping!=null) reportOverlap(reportHandler, macro, overlapping);
+			macros.add(macro);
 		}
 		@Override protected Stream<Macro> macros(){
 			return macros.stream();
@@ -155,6 +184,18 @@ public final class MacroRegistry{
 		 * @return {@code -1} if doesn't match, {@code 0} if matches perfectly, positive number {@code n} if {@code n} arguments are oversupplied
 		 */
 		protected abstract int match(Macro macro, T args);
+		/**
+		 * @param newMacro      Newly defined macro
+		 * @param existingMacro Preexisting macro
+		 * @return Whether {@code newMacro} should overwrite {@code existingMacro}
+		 */
+		protected abstract boolean overwrites(Macro newMacro, Macro existingMacro);
+		/**
+		 * @param newMacro      Newly defined macro
+		 * @param existingMacro Preexisting macro
+		 * @return Whether either macro's parameter overlaps, either partially or completely
+		 */
+		protected abstract boolean isParameterOverlaps(Macro newMacro, Macro existingMacro);
 
 		@Override public boolean equals(Object o){
 			if(this==o) return true;
@@ -175,6 +216,15 @@ public final class MacroRegistry{
 			if(args.size()<macro.parameter().requiredParameters()) return -1;
 			return Math.max(0, args.size()-macro.parameter().size());
 		}
+		@Override protected boolean overwrites(Macro newMacro, Macro existingMacro){
+			return newMacro.parameter().size()==existingMacro.parameter().size()&&
+					newMacro.parameter().requiredParameters()==existingMacro.parameter().requiredParameters();
+		}
+		@Override protected boolean isParameterOverlaps(Macro newMacro, Macro existingMacro){
+			int aMin = newMacro.parameter().requiredParameters(), aMax = newMacro.parameter().size();
+			int bMin = existingMacro.parameter().requiredParameters(), bMax = existingMacro.parameter().size();
+			return aMax>=bMin&&bMax>=aMin;
+		}
 	}
 
 	public static class ObjectGroup extends MatchBasedGroup<AmongObject>{
@@ -191,6 +241,14 @@ public final class MacroRegistry{
 				}else if(args.hasProperty(p.name())) defaultArgsProvided++;
 			}
 			return Math.max(0, args.size()-macro.parameter().requiredParameters()-defaultArgsProvided);
+		}
+		@Override protected boolean overwrites(Macro newMacro, Macro existingMacro){
+			return newMacro.parameter().parameters().equals(existingMacro.parameter().parameters());
+		}
+		@Override protected boolean isParameterOverlaps(Macro newMacro, Macro existingMacro){
+			Set<String> names = new HashSet<>(newMacro.parameter().parameters().keySet());
+			names.retainAll(existingMacro.parameter().parameters().keySet());
+			return !names.isEmpty();
 		}
 	}
 
@@ -210,10 +268,8 @@ public final class MacroRegistry{
 	                                         MacroSignature signature, Iterable<Macro> ambiguousMacros){
 		if(reportHandler==null) return;
 		StringBuilder stb = new StringBuilder("Ambiguous usage of macro ").append(signature).append(':');
-		for(Macro m : ambiguousMacros){
-			stb.append("\n  ");
-			m.signatureToPrettyString(stb, 0, PrettyFormatOption.DEFAULT, true);
-		}
+		for(Macro m : ambiguousMacros)
+			m.signatureToPrettyString(stb.append("\n  "), 1, PrettyFormatOption.DEFAULT, true);
 		reportHandler.accept(ReportType.ERROR, stb.toString());
 	}
 
@@ -224,11 +280,33 @@ public final class MacroRegistry{
 			reportHandler.accept(ReportType.ERROR, "No macro defined, this shouldn't happen");
 		}else{
 			StringBuilder stb = new StringBuilder("Wrong usage, expected:");
-			for(Macro m : macros){
-				stb.append("\n  ");
-				m.signatureToPrettyString(stb, 0, PrettyFormatOption.DEFAULT, true);
-			}
+			for(Macro m : macros)
+				m.signatureToPrettyString(stb.append("\n  "), 1, PrettyFormatOption.DEFAULT, true);
 			reportHandler.accept(ReportType.ERROR, stb.toString());
 		}
+	}
+
+	private static void reportOverwrite(@Nullable BiConsumer<ReportType, String> reportHandler,
+	                                    Macro newMacro, Collection<Macro> overwrittenMacros){
+		if(reportHandler==null) return;
+		StringBuilder stb = new StringBuilder("New macro ").append(newMacro.signature()).append(" overwrites ")
+				.append(overwrittenMacros.size()).append(" preexisting macro(s).")
+				.append("\n  Preexisting macro(s):");
+		for(Macro m : overwrittenMacros)
+			m.signatureToPrettyString(stb.append("\n    "), 2, PrettyFormatOption.DEFAULT, true);
+		newMacro.signatureToPrettyString(stb.append("\n  New macro:\n    "), 2, PrettyFormatOption.DEFAULT, true);
+		reportHandler.accept(ReportType.WARN, stb.toString());
+	}
+
+	private static void reportOverlap(@Nullable BiConsumer<ReportType, String> reportHandler,
+	                                  Macro newMacro, Collection<Macro> overlappingMacros){
+		if(reportHandler==null) return;
+		StringBuilder stb = new StringBuilder("New macro ").append(newMacro.signature()).append(" possibly overlaps with ")
+				.append(overlappingMacros.size()).append(" preexisting macro(s).")
+				.append("\n  Preexisting macro(s):");
+		for(Macro m : overlappingMacros)
+			m.signatureToPrettyString(stb.append("\n    "), 2, PrettyFormatOption.DEFAULT, true);
+		newMacro.signatureToPrettyString(stb.append("\n  New macro:\n    "), 2, PrettyFormatOption.DEFAULT, true);
+		reportHandler.accept(ReportType.INFO, stb.toString());
 	}
 }

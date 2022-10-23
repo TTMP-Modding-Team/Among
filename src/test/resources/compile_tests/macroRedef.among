@@ -1,0 +1,19 @@
+macro m : 1
+( m )
+macro m : 2
+( m )
+
+macro m[a]: Macro 1
+macro m[a, b]: Macro 2
+macro m[a, b, c]: Macro 3
+macro m[a, d]: Macro 4
+
+m[1]
+m[1, 2]
+m[1, 2, 3]
+
+
+macro m[a, b, c = default]: Macro 5
+
+macro m{a, b = default}: Macro 1
+macro m{a, d = default}: Macro 2

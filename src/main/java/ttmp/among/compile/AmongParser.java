@@ -285,7 +285,7 @@ public final class AmongParser{
 						report(engine.allowInvalidOperatorRegistration ?
 										ReportType.WARN : ReportType.ERROR,
 								result.message(operator), startIndex);
-					definition.operators().add(operator);
+					else definition.operators().add(operator);
 				}
 			}
 			return;
@@ -431,17 +431,17 @@ public final class AmongParser{
 		if(imported==null){
 			reportError("Invalid use statement: Cannot resolve definitions from path '"+path+"'", startIndex);
 		}else{
-			copyDefinitions(imported.definition(), importDefinition, startIndex);
-			if(pub) copyDefinitions(imported.definition(), definition, startIndex);
+			copyDefinitions(imported.definition(), importDefinition, true, startIndex);
+			if(pub) copyDefinitions(imported.definition(), definition, false, startIndex);
 		}
 		expectStmtEnd("Expected ',' or newline after use statement");
 	}
 
-	private void copyDefinitions(AmongDefinition from, AmongDefinition to, int startIndex){
-		from.macros().macros().forEach(m -> to.macros().add(m, (t, s) -> report(t, s, startIndex)));
+	private void copyDefinitions(AmongDefinition from, AmongDefinition to, boolean report, int startIndex){
+		from.macros().macros().forEach(m -> to.macros().add(m, report ? (t, s) -> report(t, s, startIndex) : null));
 		from.operators().allOperators().forEach(o -> {
 			OperatorRegistry.RegistrationResult r = to.operators().add(o);
-			if(!r.isSuccess()&&r!=OperatorRegistry.RegistrationResult.IDENTICAL_DUPLICATE)
+			if(report&&!r.isSuccess()&&r!=OperatorRegistry.RegistrationResult.IDENTICAL_DUPLICATE)
 				reportWarning("Cannot import operator definition '"+o+"':\n  "+r.message(o), startIndex);
 		});
 	}
@@ -992,8 +992,8 @@ public final class AmongParser{
 							MacroParameterList.of(params.subList(1, params.size())) :
 							MacroParameterList.of(params),
 					expr, replacements, typeInferences);
-			definition.macros().add(macro, (t, s) -> report(t, s, start));
 			importDefinition.macros().add(macro, (t, s) -> report(t, s, start));
+			definition.macros().add(macro);
 		}
 	}
 
