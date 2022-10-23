@@ -6,7 +6,7 @@ import java.util.Objects;
  * Formatting option used in {@link ToPrettyString}.
  */
 public final class PrettyFormatOption{
-	public static PrettyFormatOption DEFAULT = new PrettyFormatOption("  ", 2, 3);
+	public static final PrettyFormatOption DEFAULT = new PrettyFormatOption("  ", 2, 3);
 
 	/**
 	 * Indentation to be used.

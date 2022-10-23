@@ -10,6 +10,9 @@ public final class RootAndDefinition implements ToPrettyString{
 	private final AmongRoot root;
 	private final AmongDefinition definition;
 
+	public RootAndDefinition(){
+		this(new AmongRoot(), new AmongDefinition());
+	}
 	public RootAndDefinition(AmongRoot root){
 		this(root, new AmongDefinition());
 	}

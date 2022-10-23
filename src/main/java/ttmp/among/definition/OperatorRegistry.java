@@ -27,11 +27,6 @@ public final class OperatorRegistry{
 	private final Map<Double, PriorityGroup> priorityGroup = new HashMap<>();
 	@Nullable private List<PriorityGroup> priorityGroupList;
 
-	public OperatorRegistry(){}
-	public OperatorRegistry(OperatorRegistry copyFrom){
-		copyFrom.allOperators().forEach(this::add);
-	}
-
 	/**
 	 * Starting codepoint to set of name groups, sorted by name length in descending order (for maximal munch rule)
 	 */
@@ -40,6 +35,12 @@ public final class OperatorRegistry{
 	 * Starting codepoint to set of name groups, sorted by name length in descending order (for maximal munch rule)
 	 */
 	private final Map<Integer, Set<NameGroup>> keywordByStartingCodepoint = new HashMap<>();
+
+	public OperatorRegistry(){}
+	public OperatorRegistry(OperatorRegistry copyFrom){
+		copyFrom.allOperators().forEach(this::add);
+		this.priorityGroupList = null;
+	}
 
 	public Collection<NameGroup> getAllNameGroups(){
 		return Collections.unmodifiableCollection(operators.values());
