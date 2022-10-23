@@ -2,6 +2,8 @@ package ttmp.among.definition;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.util.AmongUs;
+import ttmp.among.util.PrettyFormatOption;
+import ttmp.among.util.ToPrettyString;
 
 import java.text.DecimalFormat;
 import java.util.Objects;
@@ -13,7 +15,7 @@ import java.util.Objects;
  * keyword is as binary
  * </pre>
  */
-public final class OperatorDefinition{
+public final class OperatorDefinition implements ToPrettyString{
 	private static final DecimalFormat FORMAT = new DecimalFormat("0.#####");
 
 	private final String name;
@@ -115,10 +117,16 @@ public final class OperatorDefinition{
 		stb.append(" as ").append(OperatorProperty.typeToString(type, properties));
 		if(Double.compare(priority, type.defaultPriority(properties))!=0)
 			stb.append("(").append(FORMAT.format(priority)).append(")");
-		if(alias!=null){
-			stb.append(" : ");
-			AmongUs.primitiveToString(stb, alias);
-		}
+		if(alias!=null) AmongUs.primitiveToString(stb.append(":"), alias);
+		return stb.toString();
+	}
+	@Override public String toPrettyString(int indents, PrettyFormatOption option){
+		StringBuilder stb = new StringBuilder().append(isKeyword ? "keyword " : "operator ");
+		AmongUs.nameToString(stb, this.name, false);
+		stb.append(" as ").append(OperatorProperty.typeToString(type, properties));
+		if(Double.compare(priority, type.defaultPriority(properties))!=0)
+			stb.append("(").append(FORMAT.format(priority)).append(")");
+		if(alias!=null) AmongUs.primitiveToPrettyString(stb.append(" : "), alias, indents, option);
 		return stb.toString();
 	}
 }

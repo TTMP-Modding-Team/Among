@@ -288,6 +288,7 @@ public final class AmongParser{
 					else definition.operators().add(operator);
 				}
 			}
+			expectStmtEnd("Expected ',' or newline after undef statement");
 			return;
 		}
 	}
@@ -323,7 +324,7 @@ public final class AmongParser{
 								invalid = true;
 							}else expectNext(R_PAREN);
 							break L;
-						case COLON: case BR: tokenizer.reset(); break L;
+						case COLON: case BR: case COMMA: tokenizer.reset(); break L;
 						case EOF: break L;
 						default:
 							reportError("Expected keyword");

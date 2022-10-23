@@ -49,11 +49,11 @@ public final class AmongDefinition implements ToPrettyString{
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
 		macros.macros().forEach(macro -> {
-			if(stb.length()>0) stb.append('\n');
+			if(stb.length()>0) stb.append(',');
 			stb.append(macro.toString());
 		});
 		operators.allOperators().forEach(def -> {
-			if(stb.length()>0) stb.append('\n');
+			if(stb.length()>0) stb.append(',');
 			stb.append(def.toString());
 		});
 		return stb.toString();
@@ -66,7 +66,7 @@ public final class AmongDefinition implements ToPrettyString{
 		});
 		operators.allOperators().forEach(def -> {
 			if(stb.length()>0) stb.append('\n');
-			stb.append(def.toString());
+			stb.append(def.toPrettyString(indents, option));
 		});
 		return stb.toString();
 	}

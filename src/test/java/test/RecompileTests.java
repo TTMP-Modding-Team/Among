@@ -12,6 +12,7 @@ import ttmp.among.definition.OperatorType;
 import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongRoot;
+import ttmp.among.util.DefaultInstanceProvider;
 import ttmp.among.util.NodePath;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -135,50 +136,57 @@ public class RecompileTests{
 		);
 	}
 
+	@Test
+	@DisplayName("Default Operators")
+	public void defOp(){
+		recompileTest(DefaultInstanceProvider.defaultOperators().operators()
+				.allOperators().toArray(OperatorDefinition[]::new));
+	}
+
 	private static void recompileTest(Among... original){
-			AmongRoot root = new AmongRoot();
-			for(Among v : original) root.addObject(v);
-			System.out.println("========== Original ==========");
-			System.out.println(root.toPrettyString());
-			System.out.println();
-			System.out.println("Re-compiling toString() result");
-			assertArrayEquals(original, TestUtil.make(root.toString()).root().objects().toArray(new Among[0]));
-			System.out.println();
-			System.out.println("Re-compiling toPrettyString() result");
-			assertArrayEquals(original, TestUtil.make(root.toPrettyString()).root().objects().toArray(new Among[0]));
+		AmongRoot root = new AmongRoot();
+		for(Among v : original) root.addObject(v);
+		System.out.println("========== Original ==========");
+		System.out.println(root.toPrettyString());
+		System.out.println();
+		System.out.println("Re-compiling toString() result");
+		assertArrayEquals(original, TestUtil.make(root.toString()).root().objects().toArray(new Among[0]));
+		System.out.println();
+		System.out.println("Re-compiling toPrettyString() result");
+		assertArrayEquals(original, TestUtil.make(root.toPrettyString()).root().objects().toArray(new Among[0]));
 	}
 
 	private static void recompileTest(Macro... original){
-			AmongDefinition root = new AmongDefinition();
-			for(Macro v : original){
-				root.macros().add(v, (reportType, s) -> {
-					throw new Sussy(s);
-				});
-			}
-			System.out.println("========== Original ==========");
-			System.out.println(root.toPrettyString());
-			System.out.println();
-			System.out.println("Re-compiling toString() result");
-			assertEquals(root.macros(), TestUtil.make(root.toString()).definition().macros());
-			System.out.println();
-			System.out.println("Re-compiling toPrettyString() result");
-			assertEquals(root.macros(), TestUtil.make(root.toPrettyString()).definition().macros());
+		AmongDefinition root = new AmongDefinition();
+		for(Macro v : original){
+			root.macros().add(v, (reportType, s) -> {
+				throw new Sussy(s);
+			});
+		}
+		System.out.println("========== Original ==========");
+		System.out.println(root.toPrettyString());
+		System.out.println();
+		System.out.println("Re-compiling toString() result");
+		assertEquals(root.macros(), TestUtil.make(root.toString()).definition().macros());
+		System.out.println();
+		System.out.println("Re-compiling toPrettyString() result");
+		assertEquals(root.macros(), TestUtil.make(root.toPrettyString()).definition().macros());
 	}
 
 	private static void recompileTest(OperatorDefinition... original){
-			AmongDefinition root = new AmongDefinition();
-			for(OperatorDefinition v : original){
-				OperatorRegistry.RegistrationResult r = root.operators().add(v);
-				if(!r.isSuccess())
-					throw new RuntimeException("Cannot register operator '"+v+"': "+r.message(v));
-			}
-			System.out.println("========== Original ==========");
-			System.out.println(root.toPrettyString());
-			System.out.println();
-			System.out.println("Re-compiling toString() result");
-			assertEquals(root.operators(), TestUtil.make(root.toString()).definition().operators());
-			System.out.println();
-			System.out.println("Re-compiling toPrettyString() result");
-			assertEquals(root.operators(), TestUtil.make(root.toPrettyString()).definition().operators());
+		AmongDefinition root = new AmongDefinition();
+		for(OperatorDefinition v : original){
+			OperatorRegistry.RegistrationResult r = root.operators().add(v);
+			if(!r.isSuccess())
+				throw new RuntimeException("Cannot register operator '"+v+"': "+r.message(v));
+		}
+		System.out.println("========== Original ==========");
+		System.out.println(root.toPrettyString());
+		System.out.println();
+		System.out.println("Re-compiling toString() result");
+		assertEquals(root.operators(), TestUtil.make(root.toString()).definition().operators());
+		System.out.println();
+		System.out.println("Re-compiling toPrettyString() result");
+		assertEquals(root.operators(), TestUtil.make(root.toPrettyString()).definition().operators());
 	}
 }
