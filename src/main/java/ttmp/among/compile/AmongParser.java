@@ -110,7 +110,7 @@ public final class AmongParser{
 					}
 					expectStmtEnd("Expected ',' or newline after undef statement");
 					continue;
-				case "use": use(); continue;
+				case "use": use(next.start); continue;
 				default:
 					tokenizer.reset(next.isSimpleLiteral());
 					Among a = nameable(false);
@@ -415,7 +415,7 @@ public final class AmongParser{
 		}
 	}
 
-	private void use(){
+	private void use(int startIndex){
 		tokenizer.discard();
 		AmongToken next = tokenizer.next(false, TokenizationMode.PLAIN_WORD);
 		boolean pub = next.keywordOrEmpty().equals("public");
@@ -429,19 +429,21 @@ public final class AmongParser{
 		String path = next.expectLiteral();
 		RootAndDefinition imported = engine.getOrReadFrom(path);
 		if(imported==null){
-			reportError("Invalid use statement: Cannot resolve definitions from path '"+path+"'");
+			reportError("Invalid use statement: Cannot resolve definitions from path '"+path+"'", startIndex);
 		}else{
-			copyDefinitions(imported.definition(), importDefinition);
-			if(pub) copyDefinitions(imported.definition(), definition);
+			copyDefinitions(imported.definition(), importDefinition, startIndex);
+			if(pub) copyDefinitions(imported.definition(), definition, startIndex);
 		}
 		expectStmtEnd("Expected ',' or newline after use statement");
 	}
 
-	private void copyDefinitions(AmongDefinition from, AmongDefinition to){
-		// TODO log failure :p
-		from.macros().macros().forEach(to.macros()::add);
-		// TODO log failure
-		from.operators().allOperators().forEach(to.operators()::add);
+	private void copyDefinitions(AmongDefinition from, AmongDefinition to, int startIndex){
+		from.macros().macros().forEach(m -> to.macros().add(m, (t, s) -> report(t, s, startIndex)));
+		from.operators().allOperators().forEach(o -> {
+			OperatorRegistry.RegistrationResult r = to.operators().add(o);
+			if(!r.isSuccess()&&r!=OperatorRegistry.RegistrationResult.IDENTICAL_DUPLICATE)
+				reportWarning("Cannot import operator definition '"+o+"':\n  "+r.message(o), startIndex);
+		});
 	}
 
 	private void expectNext(AmongToken.TokenType type){
@@ -917,12 +919,10 @@ public final class AmongParser{
 			byte newInference = (byte)(typeInference&i.type);
 			if(i.type!=typeInference){
 				if(newInference==0){
-					reportError("Parameter '"+p.name()+"' has no valid input: needs to satisfy both "+
+					reportWarning("Parameter '"+p.name()+"' has no valid input: needs to satisfy both "+
 							TypeFlags.toString(i.type)+" AND "+TypeFlags.toString(typeInference));
-					invalid = true;
 				}else if(p.defaultValue()!=null&&!TypeFlags.matches(newInference, p.defaultValue())){
-					reportError("Default value of the parameter '"+p.name()+"' is invalid");
-					invalid = true;
+					reportWarning("Default value of the parameter '"+p.name()+"' is invalid");
 				}
 				i.type = newInference;
 			}

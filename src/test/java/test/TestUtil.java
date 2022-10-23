@@ -40,6 +40,18 @@ public class TestUtil{
 		log(result.rootAndDefinition(), t);
 	}
 
+	public enum ExpectWarning{WARNING, NO_WARNING}
+	public static void expectNoError(Source src, @Nullable ExpectWarning expectWarning){
+		long t = System.currentTimeMillis();
+		CompileResult result = engine.read(src, null, null);
+		t = System.currentTimeMillis()-t;
+		result.printReports();
+		result.expectSuccess();
+		if(expectWarning!=null) Assertions.assertEquals(result.hasWarning(), expectWarning==ExpectWarning.WARNING,
+				expectWarning==ExpectWarning.WARNING ? "Expected warning" : "Unexpected warning");
+		log(result.rootAndDefinition(), t);
+	}
+
 	public static Source expectSourceFrom(String folder, String fileName) throws IOException{
 		String url = folder+"/"+fileName+".among";
 		InputStream file = Thread.currentThread().getContextClassLoader().getResourceAsStream(url);

@@ -98,13 +98,15 @@ public final class OperatorDefinition{
 		if(this==o) return true;
 		if(o==null||getClass()!=o.getClass()) return false;
 		OperatorDefinition that = (OperatorDefinition)o;
-		return isKeyword()==that.isKeyword()&&
+		return isKeyword==that.isKeyword&&
+				properties==that.properties&&
 				Double.compare(that.priority, priority)==0&&
 				name.equals(that.name)&&
-				type==that.type;
+				type==that.type&&
+				Objects.equals(alias, that.alias);
 	}
 	@Override public int hashCode(){
-		return Objects.hash(name, isKeyword(), type, priority);
+		return Objects.hash(name, isKeyword, type, alias, properties, priority);
 	}
 
 	@Override public String toString(){

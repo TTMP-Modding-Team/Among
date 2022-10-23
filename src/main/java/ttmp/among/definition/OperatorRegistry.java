@@ -232,6 +232,10 @@ public final class OperatorRegistry{
 		 */
 		DUPLICATE,
 		/**
+		 * Defined twice as same type. Both are identical.
+		 */
+		IDENTICAL_DUPLICATE,
+		/**
 		 * Defined as both binary and postfix, which is incompatible.<br>
 		 * Being them together should not produce weird crashes or anything, it just does not behave in the way average
 		 * user would expect. This restriction is in place to prevent such scenario from get-go.
@@ -253,7 +257,7 @@ public final class OperatorRegistry{
 		public String message(OperatorDefinition def){
 			switch(this){
 				case BOTH_OPERATOR_AND_KEYWORD: return "Word '"+def.name()+"' is defined as both operator and keyword";
-				case DUPLICATE: return (def.isKeyword() ? "Keyword '" : "Operator '")+def.name()+"' is defined twice";
+				case DUPLICATE: case IDENTICAL_DUPLICATE: return (def.isKeyword() ? "Keyword '" : "Operator '")+def.name()+"' is defined twice";
 				case BOTH_BINARY_AND_POSTFIX: return (def.isKeyword() ? "Keyword '" : "Operator '")+def.name()+"' is both defined as binary and postfix";
 				case PRIORITY_OCCUPIED_BY_DIFFERENT_TYPE: return "Priority "+def.priority()+" is already in use with different type";
 				case MIXED_ASSOCIATIVITY: return "Both left-associative and right-associative operators are present in the same priority group "+def.priority()+".";
@@ -299,8 +303,9 @@ public final class OperatorRegistry{
 		private RegistrationResult add(OperatorDefinition def){
 			if(this.isKeyword!=def.isKeyword())
 				return RegistrationResult.BOTH_OPERATOR_AND_KEYWORD;
-			if(defByType.containsKey(def.type()))
-				return RegistrationResult.DUPLICATE;
+			OperatorDefinition another = defByType.get(def.type());
+			if(another!=null)
+				return def.equals(another) ? RegistrationResult.IDENTICAL_DUPLICATE : RegistrationResult.DUPLICATE;
 			if(def.type()==BINARY||def.type()==POSTFIX){
 				if(defByType.containsKey(def.type()==BINARY ? POSTFIX : BINARY))
 					return RegistrationResult.BOTH_BINARY_AND_POSTFIX;
