@@ -100,7 +100,7 @@ public final class CompileResult{
 	 */
 	public boolean hasError(){
 		for(Report r : reports)
-			if(r.type()==Report.ReportType.ERROR) return true;
+			if(r.type()==ReportType.ERROR) return true;
 		return false;
 	}
 
@@ -111,7 +111,7 @@ public final class CompileResult{
 	 */
 	public boolean hasWarning(){
 		for(Report r : reports)
-			if(r.type()==Report.ReportType.WARN) return true;
+			if(r.type()==ReportType.WARN) return true;
 		return false;
 	}
 

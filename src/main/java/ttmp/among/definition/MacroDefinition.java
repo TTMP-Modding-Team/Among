@@ -1,7 +1,7 @@
 package ttmp.among.definition;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.compile.Report;
+import ttmp.among.compile.ReportType;
 import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
 import ttmp.among.util.PrettyFormatOption;
@@ -66,7 +66,7 @@ public final class MacroDefinition extends Macro{
 		return replacements.isEmpty();
 	}
 
-	@Override protected Among applyMacro(Among[] args, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+	@Override protected Among applyMacro(Among[] args, boolean copyConstant, @Nullable BiConsumer<ReportType, String> reportHandler){
 		if(isConstant()) return copyConstant ? template.copy() : template;
 		Among o = template.copy();
 		for(MacroReplacement r : replacements)

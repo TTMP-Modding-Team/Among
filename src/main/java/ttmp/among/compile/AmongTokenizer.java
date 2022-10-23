@@ -2,7 +2,6 @@ package ttmp.among.compile;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.AmongToken.TokenType;
-import ttmp.among.compile.Report.ReportType;
 import ttmp.among.definition.OperatorRegistry.NameGroup;
 import ttmp.among.util.ErrorHandling;
 

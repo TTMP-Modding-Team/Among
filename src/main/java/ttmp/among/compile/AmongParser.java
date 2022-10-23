@@ -2,7 +2,6 @@ package ttmp.among.compile;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.AmongEngine;
-import ttmp.among.compile.Report.ReportType;
 import ttmp.among.definition.AmongDefinition;
 import ttmp.among.definition.Macro;
 import ttmp.among.definition.MacroDefinition;

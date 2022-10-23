@@ -1,7 +1,7 @@
 package ttmp.among.definition;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.compile.Report;
+import ttmp.among.compile.ReportType;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
 import ttmp.among.obj.AmongObject;
@@ -34,7 +34,7 @@ public final class MacroRegistry{
 	public void add(Macro macro){
 		add(macro, null);
 	}
-	public void add(Macro macro, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+	public void add(Macro macro, @Nullable BiConsumer<ReportType, String> reportHandler){
 		Group g = groups.computeIfAbsent(macro.signature(), s -> {
 			switch(s.type()){
 				case CONST: case ACCESS: return new ConstGroup();
@@ -83,18 +83,18 @@ public final class MacroRegistry{
 	}
 
 	public static abstract class Group{
-		@Nullable public abstract Macro search(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler);
-		protected abstract void add(Macro macro, @Nullable BiConsumer<Report.ReportType, String> reportHandler);
+		@Nullable public abstract Macro search(Among argument, @Nullable BiConsumer<ReportType, String> reportHandler);
+		protected abstract void add(Macro macro, @Nullable BiConsumer<ReportType, String> reportHandler);
 		protected abstract Stream<Macro> macros();
 	}
 
 	public static final class ConstGroup extends Group{
 		@Nullable private Macro macro;
 
-		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<ReportType, String> reportHandler){
 			return macro;
 		}
-		@Override protected void add(Macro macro, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+		@Override protected void add(Macro macro, @Nullable BiConsumer<ReportType, String> reportHandler){
 			this.macro = macro; // TODO report override
 		}
 		@Override protected Stream<Macro> macros(){
@@ -115,7 +115,7 @@ public final class MacroRegistry{
 	public static abstract class MatchBasedGroup<T extends Among> extends Group{
 		private final List<Macro> macros = new ArrayList<>();
 
-		@Nullable protected Macro searchInternal(T argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+		@Nullable protected Macro searchInternal(T argument, @Nullable BiConsumer<ReportType, String> reportHandler){
 			@Nullable Macro matched = null;
 			int overmatched = 0;
 			@Nullable List<Macro> ambiguousMacros = null;
@@ -144,7 +144,7 @@ public final class MacroRegistry{
 			if(matched==null) reportNoMatch(reportHandler, macros);
 			return matched;
 		}
-		@Override protected void add(Macro macro, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+		@Override protected void add(Macro macro, @Nullable BiConsumer<ReportType, String> reportHandler){
 			macros.add(macro); // TODO report obvious conflicts?
 		}
 		@Override protected Stream<Macro> macros(){
@@ -168,7 +168,7 @@ public final class MacroRegistry{
 	}
 
 	public static class ListGroup extends MatchBasedGroup<AmongList>{
-		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<ReportType, String> reportHandler){
 			return searchInternal(argument.asList(), reportHandler);
 		}
 		@Override protected int match(Macro macro, AmongList args){
@@ -178,7 +178,7 @@ public final class MacroRegistry{
 	}
 
 	public static class ObjectGroup extends MatchBasedGroup<AmongObject>{
-		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<ReportType, String> reportHandler){
 			return searchInternal(argument.asObj(), reportHandler);
 		}
 		@Override protected int match(Macro macro, AmongObject args){
@@ -195,18 +195,18 @@ public final class MacroRegistry{
 	}
 
 	public static class ListFunctionGroup extends ListGroup{
-		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<ReportType, String> reportHandler){
 			return searchInternal(argument.asList().get(1).asList(), reportHandler);
 		}
 	}
 
 	public static class ObjectFunctionGroup extends ObjectGroup{
-		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+		@Override @Nullable public Macro search(Among argument, @Nullable BiConsumer<ReportType, String> reportHandler){
 			return searchInternal(argument.asList().get(1).asObj(), reportHandler);
 		}
 	}
 
-	private static void reportAmbiguousUsage(@Nullable BiConsumer<Report.ReportType, String> reportHandler,
+	private static void reportAmbiguousUsage(@Nullable BiConsumer<ReportType, String> reportHandler,
 	                                         MacroSignature signature, Iterable<Macro> ambiguousMacros){
 		if(reportHandler==null) return;
 		StringBuilder stb = new StringBuilder("Ambiguous usage of macro ").append(signature).append(':');
@@ -214,21 +214,21 @@ public final class MacroRegistry{
 			stb.append("\n  ");
 			m.signatureToPrettyString(stb, 0, PrettyFormatOption.DEFAULT, true);
 		}
-		reportHandler.accept(Report.ReportType.ERROR, stb.toString());
+		reportHandler.accept(ReportType.ERROR, stb.toString());
 	}
 
-	private static void reportNoMatch(@Nullable BiConsumer<Report.ReportType, String> reportHandler,
+	private static void reportNoMatch(@Nullable BiConsumer<ReportType, String> reportHandler,
 	                                  Collection<Macro> macros){
 		if(reportHandler==null) return;
 		if(macros.isEmpty()){
-			reportHandler.accept(Report.ReportType.ERROR, "No macro defined, this shouldn't happen");
+			reportHandler.accept(ReportType.ERROR, "No macro defined, this shouldn't happen");
 		}else{
 			StringBuilder stb = new StringBuilder("Wrong usage, expected:");
 			for(Macro m : macros){
 				stb.append("\n  ");
 				m.signatureToPrettyString(stb, 0, PrettyFormatOption.DEFAULT, true);
 			}
-			reportHandler.accept(Report.ReportType.ERROR, stb.toString());
+			reportHandler.accept(ReportType.ERROR, stb.toString());
 		}
 	}
 }

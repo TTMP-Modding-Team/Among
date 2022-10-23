@@ -1,7 +1,7 @@
 package ttmp.among.definition;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.compile.Report;
+import ttmp.among.compile.ReportType;
 import ttmp.among.exception.Sussy;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
@@ -129,7 +129,7 @@ public abstract class Macro implements ToPrettyString{
 	 *                              not throw an exception
 	 * @throws RuntimeException     If an unexpected error occurs. The exception should be reported back as error.
 	 */
-	@Nullable public final Among apply(Among argument, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+	@Nullable public final Among apply(Among argument, boolean copyConstant, @Nullable BiConsumer<ReportType, String> reportHandler){
 		Among[] args = toArgs(argument, reportHandler);
 		if(args==null) return null;
 		if(typeInferences!=null){
@@ -140,7 +140,7 @@ public abstract class Macro implements ToPrettyString{
 						int actualParamIndex = type().isFunctionMacro() ? i-1 : i;
 						String paramName = actualParamIndex>=0&&actualParamIndex<this.parameter.size() ?
 								this.parameter.paramAt(actualParamIndex).name() : "self";
-						reportHandler.accept(Report.ReportType.ERROR,
+						reportHandler.accept(ReportType.ERROR,
 								"Type of argument '"+paramName+"' does not match its inferred type.\n" +
 										"  Expected type: "+TypeFlags.toString(this.typeInferences[i])+"\n" +
 										"  Supplied argument: "+TypeFlags.toString(TypeFlags.from(args[i])));
@@ -152,9 +152,9 @@ public abstract class Macro implements ToPrettyString{
 		}
 		return applyMacro(args, copyConstant, reportHandler);
 	}
-	protected abstract Among applyMacro(Among[] args, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler);
+	@Nullable protected abstract Among applyMacro(Among[] args, boolean copyConstant, @Nullable BiConsumer<ReportType, String> reportHandler);
 
-	@Nullable private Among[] toArgs(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
+	@Nullable private Among[] toArgs(Among argument, @Nullable BiConsumer<ReportType, String> reportHandler){
 		switch(this.type()){
 			case CONST: return new Among[0];
 			case OBJECT: return objectMacro(argument, reportHandler, null);
@@ -165,14 +165,14 @@ public abstract class Macro implements ToPrettyString{
 					int requiredSize = this.type()==MacroType.ACCESS ? 1 : 2;
 					if(l.size()>=requiredSize){
 						if(l.size()>requiredSize&&reportHandler!=null)
-							reportHandler.accept(Report.ReportType.WARN, "Unused function parameters: "+l.size()+" provided");
+							reportHandler.accept(ReportType.WARN, "Unused function parameters: "+l.size()+" provided");
 						Among self = l.get(0);
 						return this.type()==MacroType.ACCESS ? new Among[]{self} :
 								this.type()==MacroType.OBJECT_FN ? objectMacro(l.get(1), reportHandler, self) :
 										listMacro(l.get(1), reportHandler, self);
 					}
 				}
-				if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, this.type()==MacroType.ACCESS ?
+				if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, this.type()==MacroType.ACCESS ?
 						"Expected 'self' as argument" :
 						"Expected pair of 'self' and 'args' as argument");
 				return null;
@@ -180,9 +180,9 @@ public abstract class Macro implements ToPrettyString{
 		}
 	}
 
-	@Nullable private Among[] objectMacro(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler, @Nullable Among self){
+	@Nullable private Among[] objectMacro(Among argument, @Nullable BiConsumer<ReportType, String> reportHandler, @Nullable Among self){
 		if(!argument.isObj()){
-			if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, "Expected object as argument");
+			if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Expected object as argument");
 			return null;
 		}
 		AmongObject o = argument.asObj();
@@ -194,7 +194,7 @@ public abstract class Macro implements ToPrettyString{
 			if(val==null){
 				if(p.defaultValue()!=null) val = p.defaultValue();
 				else{
-					if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, "Missing argument '"+p.name()+'\'');
+					if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Missing argument '"+p.name()+'\'');
 					else return null;
 					args = null;
 				}
@@ -204,23 +204,23 @@ public abstract class Macro implements ToPrettyString{
 		if(reportHandler!=null)
 			for(String key : argument.asObj().properties().keySet())
 				if(this.parameter().indexOf(key)==-1)
-					reportHandler.accept(Report.ReportType.WARN, "Unused argument '"+key+'\'');
+					reportHandler.accept(ReportType.WARN, "Unused argument '"+key+'\'');
 		return args!=null ? args.toArray(new Among[0]) : null;
 	}
 
-	@Nullable private Among[] listMacro(Among argument, @Nullable BiConsumer<Report.ReportType, String> reportHandler, @Nullable Among self){
+	@Nullable private Among[] listMacro(Among argument, @Nullable BiConsumer<ReportType, String> reportHandler, @Nullable Among self){
 		if(!argument.isList()){
-			if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR, "Expected list as argument");
+			if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Expected list as argument");
 			return null;
 		}
 		AmongList l = argument.asList();
 		if(l.size()<parameter().requiredParameters()){
-			if(reportHandler!=null) reportHandler.accept(Report.ReportType.ERROR,
+			if(reportHandler!=null) reportHandler.accept(ReportType.ERROR,
 					"Not enough parameters: minimum of "+parameter().requiredParameters()+" expected, "+l.size()+" provided");
 			return null;
 		}else{
 			if(l.size()>parameter().size()&&reportHandler!=null){
-				reportHandler.accept(Report.ReportType.WARN,
+				reportHandler.accept(ReportType.WARN,
 						"Unused parameters: maximum of "+parameter().size()+" expected, "+l.size()+" provided");
 			}
 			List<Among> args = new ArrayList<>();
