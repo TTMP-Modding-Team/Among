@@ -1,0 +1,13 @@
+use among/eval
+
+eval( 1 + 2 + 3 )
+
+eval( 1 + 2 = 3 )
+
+macro plusOne(a): ( a + 1 )
+
+eval ( plusOne(3) )
+
+eval ( [] == () )
+
+eval ( 10-5 == 1+1+1+1+1 )

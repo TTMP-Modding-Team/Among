@@ -321,6 +321,15 @@ public class EqualityTests{
 		);
 	}
 
+	@Test public void eval(){
+		simpleEqualityTest("eval",
+				value("6.0"),
+				value("true"),
+				value("4.0"),
+				value("true"),
+				value("true"));
+	}
+
 	private static void simpleEqualityTest(String name, Among... expected){
 		try{
 			assertArrayEquals(expected,
