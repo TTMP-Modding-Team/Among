@@ -11,7 +11,7 @@ import ttmp.among.util.RootAndDefinition;
 import static org.junit.jupiter.api.Assertions.*;
 import static ttmp.among.obj.Among.*;
 
-public class ImportTest{
+public class ImportTests{
 	AmongEngine engine = new AmongEngine();
 
 	{

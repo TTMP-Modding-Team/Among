@@ -31,9 +31,6 @@ public class TestUtil{
 		return result.rootAndDefinition();
 	}
 
-	public static void expectError(String src){
-		make(Source.of(src));
-	}
 	public static void expectError(Source src){
 		long t = System.currentTimeMillis();
 		CompileResult result = engine.read(src, null, null);

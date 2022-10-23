@@ -14,7 +14,7 @@ import ttmp.among.util.NodePath;
 
 import static ttmp.among.obj.Among.*;
 
-public class CopyTest{
+public class CopyTests{
 	@Test public void copyRoot(){
 		AmongRoot r1 = new AmongRoot();
 		r1.addObject(value("asdfadvbvkcl'''n\";safa;f"));
