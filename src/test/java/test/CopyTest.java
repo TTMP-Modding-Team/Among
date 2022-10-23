@@ -32,15 +32,13 @@ public class CopyTest{
 	@Test
 	public void copyDefinition(){
 		AmongDefinition def = new AmongDefinition();
-		def.macros().add(Macro.builder()
-				.signature("This is macro", MacroType.CONST)
+		def.macros().add(Macro.builder("This is macro", MacroType.CONST)
 				.build(object()
 						.prop("P1", "1")
 						.prop("P2", "2")), (t, s) -> {
 			throw new Sussy(s);
 		});
-		def.macros().add(Macro.builder()
-				.signature("Macro2", MacroType.OBJECT)
+		def.macros().add(Macro.builder("Macro2", MacroType.OBJECT)
 				.param("p1")
 				.param("p2", value("default"))
 				.param("p3")

@@ -20,15 +20,13 @@ public class ImportTest{
 			switch(path){
 				case "provided_instance/1":{
 					AmongDefinition definition = new AmongDefinition();
-					definition.macros().add(Macro.builder()
-							.signature("filename", MacroType.OPERATION)
+					definition.macros().add(Macro.builder("filename", MacroType.OPERATION)
 							.build(value("Provided Instance #1")));
 					return new RootAndDefinition(definition);
 				}
 				case "provided_instance/2":{
 					AmongDefinition definition = new AmongDefinition();
-					definition.macros().add(Macro.builder()
-							.signature("filename", MacroType.OPERATION)
+					definition.macros().add(Macro.builder("filename", MacroType.OPERATION)
 							.build(value("Provided Instance #2")));
 					return new RootAndDefinition(definition);
 				}

@@ -18,7 +18,6 @@ import java.util.Objects;
 public final class MacroParameter implements Comparable<MacroParameter>, ToPrettyString{
 	private final String name;
 	@Nullable private final Among defaultValue;
-	private final byte typeInference;
 
 	/**
 	 * Creates a new instance of macro parameter.
@@ -26,24 +25,10 @@ public final class MacroParameter implements Comparable<MacroParameter>, ToPrett
 	 * @param name         Name of the parameter
 	 * @param defaultValue Default value of the parameter. Value of {@code null} indicates the parameter is not
 	 *                     optional.
-	 * @see MacroParameter#MacroParameter(String, Among, byte)
 	 */
 	public MacroParameter(String name, @Nullable Among defaultValue){
-		this(name, defaultValue, TypeInference.ANY);
-	}
-	/**
-	 * Creates a new instance of macro parameter.
-	 *
-	 * @param name          Name of the parameter
-	 * @param defaultValue  Default value of the parameter. Value of {@code null} indicates the parameter is not
-	 *                      optional.
-	 * @param typeInference Inferred type of the parameter
-	 * @see TypeInference
-	 */
-	public MacroParameter(String name, @Nullable Among defaultValue, byte typeInference){
 		this.name = name;
 		this.defaultValue = defaultValue;
-		this.typeInference = (byte)(typeInference&TypeInference.ANY);
 	}
 
 	/**
@@ -57,17 +42,6 @@ public final class MacroParameter implements Comparable<MacroParameter>, ToPrett
 	 */
 	@Nullable public Among defaultValue(){
 		return defaultValue;
-	}
-	/**
-	 * @return The type either inferred from usage or specified from code.
-	 * @see TypeInference
-	 */
-	public byte typeInference(){
-		return typeInference;
-	}
-
-	public boolean matchesInference(Among value){
-		return TypeInference.matches(this.typeInference, value);
 	}
 
 	@Override public int compareTo(@NotNull MacroParameter o){

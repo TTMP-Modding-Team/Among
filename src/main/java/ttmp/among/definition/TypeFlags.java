@@ -1,7 +1,6 @@
 package ttmp.among.definition;
 
 import ttmp.among.obj.Among;
-import ttmp.among.obj.AmongNamed;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +8,7 @@ import java.util.List;
 /**
  * Flags indicating type of the object.
  */
-public interface TypeInference{
+public interface TypeFlags{
 	byte PRIMITIVE = 1;
 	byte UNNAMED_OBJECT = 2;
 	byte UNNAMED_LIST = 4;
@@ -29,17 +28,27 @@ public interface TypeInference{
 
 	byte ANY = PRIMITIVE|COLLECTION;
 
+	static byte normalize(byte typeInference){
+		return (byte)(typeInference&ANY);
+	}
+
 	static boolean matches(byte typeInference, Among value){
-		if(typeInference==ANY) return true;
-		byte flag;
-		if(value.isPrimitive()) flag = PRIMITIVE;
-		else{
-			AmongNamed named = value.asNamed();
-			if(named.isObj()) flag = named.hasName() ? NAMED_OBJECT : UNNAMED_OBJECT;
-			else if(named.asList().isOperation()) flag = named.hasName() ? NAMED_OPERATION : UNNAMED_OPERATION;
-			else flag = named.hasName() ? NAMED_LIST : UNNAMED_LIST;
-		}
-		return (typeInference&flag)!=0;
+		return matches(typeInference, value, false);
+	}
+	static boolean matches(byte typeInference, Among value, boolean strictOperationCheck){
+		return typeInference==ANY||(typeInference&from(value, strictOperationCheck))!=0;
+	}
+
+	static byte from(Among among){
+		return from(among, false);
+	}
+
+	private static byte from(Among among, boolean fuzzyOperation){
+		if(among.isPrimitive()) return PRIMITIVE;
+		else if(among.isObj()) return among.isNamed() ? NAMED_OBJECT : UNNAMED_OBJECT;
+		else if(fuzzyOperation) return (byte)(among.isNamed() ? NAMED_OPERATION|NAMED_LIST : UNNAMED_OPERATION|UNNAMED_LIST);
+		else if(among.asList().isOperation()) return among.isNamed() ? NAMED_OPERATION : UNNAMED_OPERATION;
+		else return among.isNamed() ? NAMED_LIST : UNNAMED_LIST;
 	}
 
 	static String toString(byte flag){

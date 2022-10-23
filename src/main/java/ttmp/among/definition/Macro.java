@@ -19,14 +19,16 @@ import java.util.function.BiConsumer;
  * Base class for both user-defined macro and code-defined macro.
  */
 public abstract class Macro implements ToPrettyString{
-	public static MacroBuilder builder(){
-		return new MacroBuilder();
+	public static MacroBuilder builder(String name, MacroType type){
+		return new MacroBuilder(name, type);
 	}
 
 	private final MacroSignature signature;
 	private final MacroParameterList parameter;
 
-	protected Macro(MacroSignature signature, MacroParameterList parameter){
+	private final byte @Nullable [] typeInferences;
+
+	protected Macro(MacroSignature signature, MacroParameterList parameter, byte @Nullable [] typeInferences){
 		switch(signature.type()){
 			case CONST: case ACCESS:
 				if(!parameter.isEmpty())
@@ -40,6 +42,7 @@ public abstract class Macro implements ToPrettyString{
 		}
 		this.signature = signature;
 		this.parameter = parameter;
+		this.typeInferences = typeInferences;
 	}
 
 	public final MacroSignature signature(){
@@ -76,6 +79,11 @@ public abstract class Macro implements ToPrettyString{
 	/**
 	 * Applies this macro to given object. The argument object will not be modified; either new object or fixed
 	 * 'constant' object will be given, based on context.<br>
+	 * The macro can fail by two ways: Either by returning {@code null} (expected failure), and throwing an exception
+	 * (unexpected failure). If {@code null} is returned, relevant information is passed to {@code reportHandler}. As
+	 * such, providing report handler is highly recommended.<br>
+	 * If an exception is thrown, it will be not reported with {@code reportHandler}. Handling these error cases are
+	 * recommended.<br>
 	 * If {@code copyConstant} is {@code false}, and this macro is argument-independent, the returned instance may be
 	 * shared between other places. As the instance is shared among macro itself and possibly many other places where
 	 * macro is used, modifying the result will bring consequences. This is intentional design choice to enable users
@@ -99,6 +107,11 @@ public abstract class Macro implements ToPrettyString{
 	/**
 	 * Applies this macro to given object. The argument object will not be modified; either new object or fixed
 	 * 'constant' object will be given, based on context.<br>
+	 * The macro can fail by two ways: Either by returning {@code null} (expected failure), and throwing an exception
+	 * (unexpected failure). If {@code null} is returned, relevant information is passed to {@code reportHandler}. As
+	 * such, providing report handler is highly recommended.<br>
+	 * If an exception is thrown, it will be not reported with {@code reportHandler}. Handling these error cases are
+	 * recommended.<br>
 	 * If {@code copyConstant} is {@code false}, and this macro is argument-independent, the returned instance may be
 	 * shared between other places. As the instance is shared among macro itself and possibly many other places where
 	 * macro is used, modifying the result will bring consequences. This is intentional design choice to enable users
@@ -110,15 +123,34 @@ public abstract class Macro implements ToPrettyString{
 	 * @param copyConstant  If {@code true}, constant macro will return deep copy of template.
 	 * @param reportHandler Optional report handler for analyzing any compilation issues. Presence of the report handler
 	 *                      does not change process.
-	 * @return Among object with macro applied, or {@code null} if any error occurs. If the macro is argument-independent,
-	 * the returned instance may be shared between other places, including the macro itself.
+	 * @return Among object with macro applied, or {@code null} if any 'expected' error occurs. If the macro is
+	 * argument-independent, the returned instance may be shared between other places, including the macro itself.
 	 * @throws NullPointerException If {@code argument == null}. Note that if the macro is argument-independent, it might
 	 *                              not throw an exception
 	 * @throws RuntimeException     If an unexpected error occurs. The exception should be reported back as error.
 	 */
 	@Nullable public final Among apply(Among argument, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler){
 		Among[] args = toArgs(argument, reportHandler);
-		return args!=null ? applyMacro(args, copyConstant, reportHandler) : null;
+		if(args==null) return null;
+		if(typeInferences!=null){
+			boolean invalid = false;
+			for(int i = 0, j = Math.min(args.length, this.typeInferences.length); i<j; i++){
+				if(!TypeFlags.matches(this.typeInferences[i], args[i])){
+					if(reportHandler!=null){
+						int actualParamIndex = type().isFunctionMacro() ? i-1 : i;
+						String paramName = actualParamIndex>=0&&actualParamIndex<this.parameter.size() ?
+								this.parameter.paramAt(actualParamIndex).name() : "self";
+						reportHandler.accept(Report.ReportType.ERROR,
+								"Type of argument '"+paramName+"' does not match its inferred type.\n" +
+										"  Expected type: "+TypeFlags.toString(this.typeInferences[i])+"\n" +
+										"  Supplied argument: "+TypeFlags.toString(TypeFlags.from(args[i])));
+					}
+					invalid = true;
+				}
+			}
+			if(invalid) return null;
+		}
+		return applyMacro(args, copyConstant, reportHandler);
 	}
 	protected abstract Among applyMacro(Among[] args, boolean copyConstant, @Nullable BiConsumer<Report.ReportType, String> reportHandler);
 

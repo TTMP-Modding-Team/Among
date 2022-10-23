@@ -82,7 +82,7 @@ public class RecompileTests{
 	@DisplayName("Macro 1")
 	public void macro1(){
 		recompileTest(
-				Macro.builder().signature("macro", MacroType.CONST)
+				Macro.builder("macro", MacroType.CONST)
 						.build(object().prop("Hello", "Macro!")));
 	}
 
@@ -90,14 +90,14 @@ public class RecompileTests{
 	@DisplayName("Macro 2")
 	public void macro2(){
 		recompileTest(
-				Macro.builder().signature("macro1", MacroType.LIST)
+				Macro.builder("macro1", MacroType.LIST)
 						.build(value("Macro with zero parameters")),
-				Macro.builder().signature("macro2", MacroType.LIST)
+				Macro.builder("macro2", MacroType.LIST)
 						.param("1")
 						.build(list(value("Macro with 1 parameter"), object()
 								.prop("param 1", value("1"))
 						), valueReplacement(NodePath.index(1).prop("param 1").of(), 0)),
-				Macro.builder().signature("macro3", MacroType.LIST)
+				Macro.builder("macro3", MacroType.LIST)
 						.param("1")
 						.param("2", value("default"))
 						.build(list(value("Macro with 2 parameters"), object()
@@ -105,7 +105,7 @@ public class RecompileTests{
 										.prop("param 2", value("2"))
 								), valueReplacement(NodePath.index(1).prop("param 1").of(), 0),
 								valueReplacement(NodePath.index(1).prop("param 2").of(), 1)),
-				Macro.builder().signature("macro4", MacroType.LIST)
+				Macro.builder("macro4", MacroType.LIST)
 						.param("1")
 						.param("2", value("default"))
 						.param("3", namedList("default 2", 1, 2, 3))

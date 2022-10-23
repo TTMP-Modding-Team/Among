@@ -7,7 +7,6 @@ import ttmp.among.definition.AmongDefinition;
 import ttmp.among.definition.Macro;
 import ttmp.among.definition.MacroDefinition;
 import ttmp.among.definition.MacroParameter;
-import ttmp.among.definition.TypeInference;
 import ttmp.among.definition.MacroParameterList;
 import ttmp.among.definition.MacroRegistry;
 import ttmp.among.definition.MacroReplacement;
@@ -15,11 +14,13 @@ import ttmp.among.definition.MacroReplacement.MacroOp;
 import ttmp.among.definition.MacroReplacement.MacroOp.MacroCall;
 import ttmp.among.definition.MacroReplacement.MacroOp.NameReplacement;
 import ttmp.among.definition.MacroReplacement.MacroOp.ValueReplacement;
+import ttmp.among.definition.MacroSignature;
 import ttmp.among.definition.MacroType;
 import ttmp.among.definition.OperatorDefinition;
 import ttmp.among.definition.OperatorProperty;
 import ttmp.among.definition.OperatorRegistry;
 import ttmp.among.definition.OperatorType;
+import ttmp.among.definition.TypeFlags;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
 import ttmp.among.obj.AmongNamed;
@@ -32,6 +33,7 @@ import ttmp.among.util.RootAndDefinition;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
@@ -851,6 +853,8 @@ public final class AmongParser{
 		private final List<MacroParameter> params = new ArrayList<>();
 		private final List<Map.Entry<MacroOp, Among>> operationToTarget = new ArrayList<>();
 
+		@Nullable private List<Inference> typeInferences = null;
+
 		private boolean optionalParamSeen;
 		private boolean invalid;
 
@@ -895,20 +899,33 @@ public final class AmongParser{
 			return -1;
 		}
 
+		private Inference getTypeInference(int paramIndex){
+			if(typeInferences==null)
+				typeInferences = new ArrayList<>();
+			else for(Inference i : typeInferences){
+				if(i.index==paramIndex) return i;
+			}
+			Inference i = new Inference(paramIndex);
+			typeInferences.add(i);
+			return i;
+		}
+
 		public void inferTypeAs(int paramIndex, byte typeInference){
+			Inference i = getTypeInference(paramIndex);
+			if(i.type==0) return; // already reported
 			MacroParameter p = params.get(paramIndex);
-			if(p.typeInference()==0) return; // already reported
-			byte newTi = (byte)(typeInference&p.typeInference());
-			if(p.typeInference()!=typeInference){
-				if(newTi==0){
+
+			byte newInference = (byte)(typeInference&i.type);
+			if(i.type!=typeInference){
+				if(newInference==0){
 					reportError("Parameter '"+p.name()+"' has no valid input: needs to satisfy both "+
-							TypeInference.toString(p.typeInference())+" AND "+TypeInference.toString(typeInference));
+							TypeFlags.toString(i.type)+" AND "+TypeFlags.toString(typeInference));
 					invalid = true;
-				}else if(p.defaultValue()!=null&&!TypeInference.matches(newTi, p.defaultValue())){
+				}else if(p.defaultValue()!=null&&!TypeFlags.matches(newInference, p.defaultValue())){
 					reportError("Default value of the parameter '"+p.name()+"' is invalid");
 					invalid = true;
 				}
-				params.set(paramIndex, new MacroParameter(p.name(), p.defaultValue(), newTi));
+				i.type = newInference;
 			}
 		}
 
@@ -919,7 +936,7 @@ public final class AmongParser{
 			else return false;
 			int i = paramIndex(name);
 			if(i<0) return false;
-			if(target.isNamed()) inferTypeAs(i, TypeInference.PRIMITIVE);
+			if(target.isNamed()) inferTypeAs(i, TypeFlags.PRIMITIVE);
 			if(!invalid)
 				operationToTarget.add(new SimpleEntry<>(
 						target.isPrimitive() ?
@@ -963,15 +980,34 @@ public final class AmongParser{
 						operationToTarget.stream().map(e -> e.getKey().toString()).collect(Collectors.joining(", ")), start);
 				return;
 			}
-			MacroDefinition macro = new MacroDefinition(name, type, type.isFunctionMacro() ?
-					MacroParameterList.of(params.subList(1, params.size())) :
-					MacroParameterList.of(params), expr, replacements);
+			byte[] typeInferences;
+			if(this.typeInferences!=null){
+				typeInferences = new byte[params.size()];
+				Arrays.fill(typeInferences, TypeFlags.ANY);
+				for(Inference i : this.typeInferences){
+					typeInferences[i.index] = i.type;
+				}
+			}else typeInferences = null;
+			MacroDefinition macro = new MacroDefinition(new MacroSignature(name, type),
+					type.isFunctionMacro() ?
+							MacroParameterList.of(params.subList(1, params.size())) :
+							MacroParameterList.of(params),
+					expr, replacements, typeInferences);
 			definition.macros().add(macro, (t, s) -> report(t, s, start));
 			importDefinition.macros().add(macro, (t, s) -> report(t, s, start));
 		}
 	}
 
-	private static class TypeAndProperty{
+	private static final class Inference{
+		private final int index;
+		private byte type = TypeFlags.ANY;
+
+		private Inference(int index){
+			this.index = index;
+		}
+	}
+
+	private static final class TypeAndProperty{
 		private final OperatorType type;
 		private final byte properties;
 		private final double priority;

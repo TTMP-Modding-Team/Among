@@ -24,23 +24,9 @@ import java.util.function.BiConsumer;
  * and {@link MacroDefinition#toPrettyString(int, PrettyFormatOption)} might not produce re-compilable macro script.
  */
 public final class MacroDefinition extends Macro{
-
 	private final Among template;
 	private final List<MacroReplacement> replacements;
 
-	/**
-	 * Creates new macro definition.
-	 *
-	 * @param name     Name of the macro
-	 * @param type     Type of the macro
-	 * @param params   Parameters of the macro
-	 * @param template Result object of the macro; valid parameter references will be marked for replacements
-	 * @throws NullPointerException If either of the parameters are {@code null}
-	 * @throws Sussy                If one of the arguments are invalid
-	 */
-	public MacroDefinition(String name, MacroType type, MacroParameterList params, Among template, List<MacroReplacement> replacements){
-		this(new MacroSignature(name, type), params, template, replacements);
-	}
 	/**
 	 * Creates new macro definition.
 	 *
@@ -50,8 +36,8 @@ public final class MacroDefinition extends Macro{
 	 * @throws NullPointerException If either of the parameters are {@code null}
 	 * @throws Sussy                If one of the arguments are invalid
 	 */
-	public MacroDefinition(MacroSignature sig, MacroParameterList params, Among template, List<MacroReplacement> replacements){
-		super(sig, params);
+	public MacroDefinition(MacroSignature sig, MacroParameterList params, Among template, List<MacroReplacement> replacements, byte[] typeInferences){
+		super(sig, params, typeInferences);
 		this.template = Objects.requireNonNull(template);
 		this.replacements = new ArrayList<>(replacements);
 		for(MacroReplacement r : this.replacements) Objects.requireNonNull(r);
