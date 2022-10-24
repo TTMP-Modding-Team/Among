@@ -2,8 +2,9 @@ package ttmp.among.obj;
 
 import ttmp.among.exception.Sussy;
 import ttmp.among.format.AmongUs;
-import ttmp.among.util.NodePath;
+import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
+import ttmp.among.util.NodePath;
 
 import java.util.Objects;
 
@@ -150,15 +151,15 @@ public class AmongPrimitive extends Among{
 		return Objects.hash(value);
 	}
 
-	@Override public String toString(){
-		StringBuilder stb = new StringBuilder();
-		AmongUs.valueToString(stb, this);
-		return stb.toString();
+	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+		boolean useQuote = context!=PrettifyContext.NONE||!AmongUs.isSimpleValue(getValue())||option.jsonCompatibility;
+		if(useQuote) AmongUs.primitiveToString(stb, getValue());
+		else AmongUs.simpleValueToString(stb, getValue());
 	}
 
-	@Override public String toPrettyString(int indents, PrettifyOption option){
-		StringBuilder stb = new StringBuilder();
-		AmongUs.valueToPrettyString(stb, this, indents, option);
-		return stb.toString();
+	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+		boolean useQuote = context!=PrettifyContext.NONE||!AmongUs.isSimpleValue(getValue())||option.jsonCompatibility;
+		if(useQuote) AmongUs.primitiveToPrettyString(stb, getValue(), indents, option);
+		else AmongUs.simpleValueToString(stb, getValue());
 	}
 }

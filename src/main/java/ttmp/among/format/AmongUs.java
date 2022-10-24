@@ -1,7 +1,5 @@
 package ttmp.among.format;
 
-import ttmp.among.obj.Among;
-
 import java.util.regex.Pattern;
 
 /**
@@ -12,80 +10,62 @@ public class AmongUs{
 	private static final Pattern BACKSPACE = Pattern.compile("\b");
 	private static final Pattern FORMAT = Pattern.compile("\f");
 
-	private static final Pattern SIMPLE_NAME = Pattern.compile("[^\\s:,{}\\[\\]()]+");
-	private static final Pattern SIMPLE_KEY = Pattern.compile("^(?!\\s)[^:{}]+(?<!\\s)$");
-	private static final Pattern SIMPLE_PARAM = Pattern.compile("[^\\s:,{}\\[\\]()=]+");
+	private static final Pattern SIMPLE_WORD = Pattern.compile("[^\\s:,{}\\[\\]()]+");
+	private static final Pattern SIMPLE_MACRO_NAME = Pattern.compile("^(?!\\s)[^:{}\r\n]+(?<!\\s)$");
+	private static final Pattern SIMPLE_KEY = Pattern.compile("^(?!\\s)[^:{}\r\n]+(?<!\\s)$");
 	private static final Pattern SIMPLE_VALUE = Pattern.compile("^(?!\\s)[^:{}\r\n]+(?<!\\s)$");
 
 	private static final Pattern PRIMITIVE_SPECIALS = Pattern.compile("[\\\\{}\\[\\]()\"]|/[*/]");
 
-	private static final Pattern KEY_SPECIALS = Pattern.compile("[\\\\{}\"']|/[*/]");
-	private static final Pattern NAME_SPECIALS = Pattern.compile("[\\\\{}\\[\\]()\"']|/[*/]");
-	private static final Pattern PARAM_SPECIALS = Pattern.compile("[\\s\\\\{}\\[\\]()\"'=]|/[*/]");
-	private static final Pattern VALUE_SPECIALS = Pattern.compile("[\\\\{}\\[\\]()\",]|/[*/]");
+	private static final Pattern WORD_SPECIALS = Pattern.compile("[\\s\\\\{}\\[\\]()\"',:]|/[*/]");
+	private static final Pattern KEY_SPECIALS = Pattern.compile("[\\\\{}\\[\\]()\"',]|/[*/]");
+	private static final Pattern MACRO_NAME_SPECIALS = Pattern.compile("[\\\\{}\\[\\]()\"',:]|/[*/]");
+	private static final Pattern PARAM_SPECIALS = Pattern.compile("[\\s\\\\{}\\[\\]()\"',:=]|/[*/]");
+	private static final Pattern VALUE_SPECIALS = Pattern.compile("[\\\\{}\\[\\]()\"',]|/[*/]");
 
-	public static boolean isSimpleName(String name){
-		return SIMPLE_NAME.matcher(name).matches();
+	public static boolean isSimpleWord(String name){
+		return SIMPLE_WORD.matcher(name).matches();
+	}
+	public static boolean isSimpleMacroName(String name){
+		return SIMPLE_MACRO_NAME.matcher(name).matches();
 	}
 	public static boolean isSimpleKey(String key){
 		return SIMPLE_KEY.matcher(key).matches();
-	}
-	public static boolean isSimpleParam(String param){
-		return SIMPLE_PARAM.matcher(param).matches();
 	}
 	public static boolean isSimpleValue(String value){
 		return SIMPLE_VALUE.matcher(value).matches();
 	}
 
-	public static void keyToString(StringBuilder stb, String key, boolean paramRef){
-		if(paramRef||isSimpleKey(key)) stb.append(standardReplace(KEY_SPECIALS, key, true));
-		else primitiveToString(stb, key);
+	public static void simpleWordToString(StringBuilder stb, String name){
+		stb.append(standardReplace(WORD_SPECIALS, name, true));
 	}
-
-	public static void keyToPrettyString(StringBuilder stb, String key, boolean paramRef, int indents, PrettifyOption option){
-		if(paramRef||isSimpleKey(key)) stb.append(standardReplace(KEY_SPECIALS, key, true));
-		else primitiveToPrettyString(stb, key, indents, option);
+	public static void simpleKeyToString(StringBuilder stb, String key, boolean paramRef){
+		stb.append(standardReplace(KEY_SPECIALS, key, true));
 	}
-
-	public static void nameToString(StringBuilder stb, String name, boolean paramRef){
-		if(paramRef||isSimpleName(name)) stb.append(standardReplace(NAME_SPECIALS, name, true));
-		else primitiveToString(stb, name);
-	}
-
-	public static void nameToPrettyString(StringBuilder stb, String name, boolean paramRef, int indents, PrettifyOption option){
-		if(paramRef||isSimpleName(name)) stb.append(standardReplace(NAME_SPECIALS, name, true));
-		else primitiveToPrettyString(stb, name, indents, option);
+	public static void simpleMacroNameToString(StringBuilder stb, String name){
+		stb.append(standardReplace(MACRO_NAME_SPECIALS, name, true));
 	}
 
 	public static void paramToString(StringBuilder stb, String param){
 		stb.append(standardReplace(PARAM_SPECIALS, param, true));
 	}
 
-	public static void valueToString(StringBuilder stb, Among value){
-		if(!value.isPrimitive()) stb.append(value);
-		else{
-			String s = value.asPrimitive().getValue();
-			if(isSimpleValue(s)) stb.append(standardReplace(VALUE_SPECIALS, s, true));
-			else primitiveToString(stb, s);
-		}
+	public static void simpleValueToString(StringBuilder stb, String primitive){
+		stb.append(standardReplace(VALUE_SPECIALS, primitive, true));
 	}
-
-	public static void valueToPrettyString(StringBuilder stb, Among value, int indents, PrettifyOption option){
-		if(!value.isPrimitive()) stb.append(value.toPrettyString(indents, option));
-		else{
-			String s = value.asPrimitive().getValue();
-			if(isSimpleValue(s)) stb.append(standardReplace(VALUE_SPECIALS, s, true));
-			else primitiveToPrettyString(stb, s, indents, option);
-		}
-	}
-
 	public static void primitiveToString(StringBuilder stb, String primitive){
 		stb.append('"').append(standardReplace(PRIMITIVE_SPECIALS, primitive, true)).append('"');
 	}
 
 	public static void primitiveToPrettyString(StringBuilder stb, String primitive, int indents, PrettifyOption option){
-		primitive = NEWLINE.matcher(standardReplace(PRIMITIVE_SPECIALS, primitive, false)).replaceAll(newlineAndIndent(indents+2, option)+'|');
-		stb.append('"').append(primitive).append('"');
+		stb.append('"');
+		if(option.jsonCompatibility){
+			stb.append(standardReplace(PRIMITIVE_SPECIALS, primitive, true));
+		}else{
+			stb.append(NEWLINE.matcher(standardReplace(PRIMITIVE_SPECIALS, primitive, false))
+					.replaceAll(newlineAndIndent(indents+2, option)+'|'));
+		}
+		stb.append('"');
 	}
 
 	public static String newlineAndIndent(int indents, PrettifyOption option){

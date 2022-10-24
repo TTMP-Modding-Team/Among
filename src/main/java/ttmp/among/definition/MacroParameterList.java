@@ -1,6 +1,7 @@
 package ttmp.among.definition;
 
 import ttmp.among.exception.Sussy;
+import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.format.ToPrettyString;
 
@@ -12,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Immutable list of {@link MacroParameter}s. Provides both search-by-index and search-by-name functionality.
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * @see MacroDefinition
  * @see MacroParameter
  */
-public final class MacroParameterList implements ToPrettyString{
+public final class MacroParameterList extends ToPrettyString.Base{
 	private static final MacroParameterList EMPTY = new MacroParameterList();
 
 	/**
@@ -163,18 +163,24 @@ public final class MacroParameterList implements ToPrettyString{
 		return Objects.hash(params);
 	}
 
-	@Override public String toString(){
-		return params.stream()
-				.map(MacroParameter::toString)
-				.collect(Collectors.joining(","));
+	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+		boolean first = true;
+		for(MacroParameter p : params){
+			if(first) first = false;
+			else stb.append(',');
+			p.toString(stb, option, PrettifyContext.NONE);
+		}
 	}
 
-	@Override public String toPrettyString(int indents, PrettifyOption option){
-		return toPrettyString(indents, option, false);
+	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+		toPrettyString(stb, indents, option, false);
 	}
-	public String toPrettyString(int indents, PrettifyOption option, boolean replaceDefaultValueWithStubs){
-		return params.stream()
-				.map(p -> p.toPrettyString(indents+1, option, replaceDefaultValueWithStubs))
-				.collect(Collectors.joining(", "));
+	public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, boolean replaceDefaultValueWithStubs){
+		boolean first = true;
+		for(MacroParameter p : params){
+			if(first) first = false;
+			else stb.append(", ");
+			p.toPrettyString(stb, indents+1, option, replaceDefaultValueWithStubs);
+		}
 	}
 }

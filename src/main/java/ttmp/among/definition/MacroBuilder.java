@@ -3,8 +3,9 @@ package ttmp.among.definition;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.ReportType;
 import ttmp.among.exception.Sussy;
-import ttmp.among.obj.Among;
+import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
+import ttmp.among.obj.Among;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -134,17 +135,11 @@ public class MacroBuilder{
 		@Override @Nullable protected Among applyMacro(Among[] args, boolean copyConstant, @Nullable BiConsumer<ReportType, String> reportHandler){
 			return function.applyMacro(args, copyConstant, reportHandler);
 		}
-		@Override public String toString(){
-			StringBuilder stb = new StringBuilder();
-			stb.append(type().isFunctionMacro() ? "fn " : "macro ");
-			signatureToString(stb);
-			return stb.append(':').append("Stub").toString();
+		@Override protected void macroBodyToString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+			stb.append("Stub");
 		}
-		@Override public String toPrettyString(int indents, PrettifyOption option){
-			StringBuilder stb = new StringBuilder();
-			stb.append(type().isFunctionMacro() ? "fn " : "macro ");
-			signatureToPrettyString(stb, indents, option);
-			return stb.append(" : ").append("Stub /*code-defined macro*/").toString();
+		@Override protected void macroBodyToPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+			stb.append("Stub /*code-defined macro*/");
 		}
 	}
 }

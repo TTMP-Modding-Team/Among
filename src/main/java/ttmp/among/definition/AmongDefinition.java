@@ -1,12 +1,16 @@
 package ttmp.among.definition;
 
+import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.format.ToPrettyString;
+
+import java.util.Iterator;
+import java.util.stream.Stream;
 
 /**
  * Represents a definition side of the source, i.e. macro and operator definitions.
  */
-public final class AmongDefinition implements ToPrettyString{
+public final class AmongDefinition extends ToPrettyString.Base{
 	private final MacroRegistry macros;
 	private final OperatorRegistry operators;
 
@@ -46,28 +50,22 @@ public final class AmongDefinition implements ToPrettyString{
 		return new AmongDefinition(this);
 	}
 
-	@Override public String toString(){
-		StringBuilder stb = new StringBuilder();
-		macros.macros().forEach(macro -> {
-			if(stb.length()>0) stb.append(',');
-			stb.append(macro.toString());
-		});
-		operators.allOperators().forEach(def -> {
-			if(stb.length()>0) stb.append(',');
-			stb.append(def.toString());
-		});
-		return stb.toString();
+	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+		Iterator<ToPrettyString.Base> it = Stream.concat(macros.macros(), operators.allOperators()).iterator();
+		boolean first = true;
+		while(it.hasNext()){
+			if(first) first = false;
+			else stb.append(',');
+			it.next().toString(stb, option, context);
+		}
 	}
-	@Override public String toPrettyString(int indents, PrettifyOption option){
-		StringBuilder stb = new StringBuilder();
-		macros.macros().forEach(macro -> {
-			if(stb.length()>0) stb.append('\n');
-			stb.append(macro.toPrettyString(indents, option));
-		});
-		operators.allOperators().forEach(def -> {
-			if(stb.length()>0) stb.append('\n');
-			stb.append(def.toPrettyString(indents, option));
-		});
-		return stb.toString();
+	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+		Iterator<ToPrettyString.Base> it = Stream.concat(macros.macros(), operators.allOperators()).iterator();
+		boolean first = true;
+		while(it.hasNext()){
+			if(first) first = false;
+			else stb.append('\n');
+			it.next().toPrettyString(stb, indents, option, context);
+		}
 	}
 }

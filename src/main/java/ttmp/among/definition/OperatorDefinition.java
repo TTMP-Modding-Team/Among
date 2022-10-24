@@ -2,6 +2,7 @@ package ttmp.among.definition;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.format.AmongUs;
+import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.format.ToPrettyString;
 
@@ -15,7 +16,7 @@ import java.util.Objects;
  * keyword is as binary
  * </pre>
  */
-public final class OperatorDefinition implements ToPrettyString{
+public final class OperatorDefinition extends ToPrettyString.Base{
 	private static final DecimalFormat FORMAT = new DecimalFormat("0.#####");
 
 	private final String name;
@@ -111,22 +112,30 @@ public final class OperatorDefinition implements ToPrettyString{
 		return Objects.hash(name, isKeyword, type, alias, properties, priority);
 	}
 
-	@Override public String toString(){
-		StringBuilder stb = new StringBuilder().append(isKeyword ? "keyword " : "operator ");
-		AmongUs.nameToString(stb, this.name, false);
+	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+		stb.append(isKeyword ? "keyword " : "operator ");
+		if(AmongUs.isSimpleWord(name())) AmongUs.simpleWordToString(stb, name());
+		else AmongUs.primitiveToString(stb, name());
 		stb.append(" as ").append(OperatorProperty.typeToString(type, properties));
 		if(Double.compare(priority, type.defaultPriority(properties))!=0)
 			stb.append("(").append(FORMAT.format(priority)).append(")");
-		if(alias!=null) AmongUs.primitiveToString(stb.append(":"), alias);
-		return stb.toString();
+		if(alias!=null){
+			stb.append(":");
+			if(AmongUs.isSimpleValue(alias)) AmongUs.simpleValueToString(stb, alias);
+			else AmongUs.primitiveToString(stb, alias);
+		}
 	}
-	@Override public String toPrettyString(int indents, PrettifyOption option){
-		StringBuilder stb = new StringBuilder().append(isKeyword ? "keyword " : "operator ");
-		AmongUs.nameToString(stb, this.name, false);
+	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+		stb.append(isKeyword ? "keyword " : "operator ");
+		if(AmongUs.isSimpleWord(name())) AmongUs.simpleWordToString(stb, name());
+		else AmongUs.primitiveToPrettyString(stb, name(), indents, option);
 		stb.append(" as ").append(OperatorProperty.typeToString(type, properties));
 		if(Double.compare(priority, type.defaultPriority(properties))!=0)
 			stb.append("(").append(FORMAT.format(priority)).append(")");
-		if(alias!=null) AmongUs.primitiveToPrettyString(stb.append(" : "), alias, indents, option);
-		return stb.toString();
+		if(alias!=null){
+			stb.append(" : ");
+			if(AmongUs.isSimpleValue(alias)) AmongUs.simpleValueToString(stb, alias);
+			else AmongUs.primitiveToPrettyString(stb, alias, indents, option);
+		}
 	}
 }

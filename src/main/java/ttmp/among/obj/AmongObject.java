@@ -2,8 +2,9 @@ package ttmp.among.obj;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.format.AmongUs;
-import ttmp.among.util.NodePath;
+import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
+import ttmp.among.util.NodePath;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -177,9 +178,8 @@ public class AmongObject extends AmongNamed{
 		return Objects.hash(getName(), properties);
 	}
 
-	@Override public String toString(){
-		StringBuilder stb = new StringBuilder();
-		if(hasName()) AmongUs.nameToString(stb, getName(), false);
+	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+		nameToString(stb, option, context);
 		if(isEmpty()) stb.append("{}");
 		else{
 			stb.append('{');
@@ -187,40 +187,43 @@ public class AmongObject extends AmongNamed{
 			for(Map.Entry<String, Among> e : properties.entrySet()){
 				if(first) first = false;
 				else stb.append(',');
-				AmongUs.keyToString(stb, e.getKey(), false);
+				if(!option.jsonCompatibility&&AmongUs.isSimpleKey(e.getKey()))
+					AmongUs.simpleKeyToString(stb, e.getKey(), false);
+				else AmongUs.primitiveToString(stb, e.getKey());
 				stb.append(':');
-				AmongUs.valueToString(stb, e.getValue());
+				e.getValue().toString(stb, option, PrettifyContext.NONE);
 			}
 			stb.append('}');
 		}
-		return stb.toString();
 	}
 
-	@Override public String toPrettyString(int indents, PrettifyOption option){
-		StringBuilder stb = new StringBuilder();
-		if(hasName()){
-			AmongUs.nameToPrettyString(stb, getName(), false, indents+1, option);
-			stb.append(' ');
-		}
+	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+		nameToPrettyString(stb, indents, option, context);
+		if(hasName()) stb.append(' ');
 		if(isEmpty()) stb.append("{}");
 		else{
 			stb.append('{');
 			boolean isCompact = properties.size()<=option.compactObjectSize;
 			boolean first = true;
 			for(Map.Entry<String, Among> e : properties.entrySet()){
-				if(!isCompact) AmongUs.newlineAndIndent(stb, indents+1, option);
-				else if(first){
+				if(!isCompact){
+					if(option.jsonCompatibility){
+						if(first) first = false;
+						else stb.append(',');
+					}
+					AmongUs.newlineAndIndent(stb, indents+1, option);
+				}else if(first){
 					first = false;
 					stb.append(' ');
 				}else stb.append(", ");
-				AmongUs.keyToPrettyString(stb, e.getKey(), false, isCompact ? indents : indents+1, option);
-				stb.append(": ");
-				AmongUs.valueToPrettyString(stb, e.getValue(), isCompact ? indents : indents+1, option);
+				if(!option.jsonCompatibility&&AmongUs.isSimpleKey(e.getKey()))
+					AmongUs.simpleKeyToString(stb, e.getKey(), false);
+				else AmongUs.primitiveToPrettyString(stb, e.getKey(), isCompact ? indents : indents+1, option);
+				e.getValue().toPrettyString(stb.append(": "), isCompact ? indents : indents+1, option, PrettifyContext.NONE);
 			}
 			if(!isCompact) AmongUs.newlineAndIndent(stb, indents, option);
 			else stb.append(' ');
 			stb.append('}');
 		}
-		return stb.toString();
 	}
 }

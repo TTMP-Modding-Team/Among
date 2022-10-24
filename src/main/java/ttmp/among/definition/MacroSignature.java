@@ -1,8 +1,8 @@
 package ttmp.among.definition;
 
 import org.jetbrains.annotations.NotNull;
-import ttmp.among.obj.Among;
 import ttmp.among.format.AmongUs;
+import ttmp.among.obj.Among;
 
 import java.util.Objects;
 
@@ -59,7 +59,8 @@ public final class MacroSignature implements Comparable<MacroSignature>{
 
 	@Override public String toString(){
 		StringBuilder stb = new StringBuilder();
-		AmongUs.nameToString(stb, name, false);
+		if(AmongUs.isSimpleMacroName(name())) AmongUs.simpleMacroNameToString(stb, name());
+		else AmongUs.primitiveToString(stb, name());
 		switch(type){
 			case OBJECT: case OBJECT_FN:
 				stb.append("{}");

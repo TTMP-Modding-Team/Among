@@ -3,8 +3,10 @@ package ttmp.among.definition;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.ReportType;
 import ttmp.among.exception.Sussy;
-import ttmp.among.obj.Among;
+import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
+import ttmp.among.format.ToPrettyString;
+import ttmp.among.obj.Among;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,9 +21,9 @@ import java.util.function.BiConsumer;
  * macro macro[] : "Hello!"
  * macro macro() : "Hello!"
  * </pre>
- *
+ * <p>
  * Note that, due to the nature of replacement operations, the results of {@link MacroDefinition#toString()}
- * and {@link MacroDefinition#toPrettyString(int, PrettifyOption)} might not produce re-compilable macro script.
+ * and {@link ToPrettyString#toPrettyString(int, PrettifyOption, PrettifyContext)} might not produce re-compilable macro script.
  */
 public final class MacroDefinition extends Macro{
 	private final Among template;
@@ -84,16 +86,10 @@ public final class MacroDefinition extends Macro{
 		return Objects.hash(signature(), parameter(), template);
 	}
 
-	@Override public String toString(){
-		StringBuilder stb = new StringBuilder();
-		stb.append(type().isFunctionMacro() ? "fn " : "macro ");
-		signatureToString(stb);
-		return stb.append(':').append(template).toString();
+	@Override protected void macroBodyToString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+		template.toString(stb, option, PrettifyContext.NONE);
 	}
-	@Override public String toPrettyString(int indents, PrettifyOption option){
-		StringBuilder stb = new StringBuilder();
-		stb.append(type().isFunctionMacro() ? "fn " : "macro ");
-		signatureToPrettyString(stb, indents, option);
-		return stb.append(" : ").append(template.toPrettyString(indents, option)).toString();
+	@Override protected void macroBodyToPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+		template.toPrettyString(stb, indents, option, PrettifyContext.NONE);
 	}
 }

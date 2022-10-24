@@ -1,6 +1,9 @@
 package ttmp.among.obj;
 
 import org.jetbrains.annotations.Nullable;
+import ttmp.among.format.AmongUs;
+import ttmp.among.format.PrettifyContext;
+import ttmp.among.format.PrettifyOption;
 
 /**
  * Base class for all 'nameable' objects; i.e.
@@ -58,4 +61,19 @@ public abstract class AmongNamed extends Among{
 	}
 
 	@Override public abstract AmongNamed copy();
+
+	protected void nameToString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+		if(hasName()){
+			if(context!=PrettifyContext.OPERATION&&AmongUs.isSimpleValue(getName()))
+				AmongUs.simpleValueToString(stb, getName());
+			else AmongUs.primitiveToString(stb, getName());
+		}
+	}
+	protected void nameToPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+		if(hasName()){
+			if(context!=PrettifyContext.OPERATION&&AmongUs.isSimpleValue(getName()))
+				AmongUs.simpleValueToString(stb, getName());
+			else AmongUs.primitiveToPrettyString(stb, getName(), indents+1, option);
+		}
+	}
 }

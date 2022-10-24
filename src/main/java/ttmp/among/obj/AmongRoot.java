@@ -2,6 +2,7 @@ package ttmp.among.obj;
 
 import ttmp.among.exception.Sussy;
 import ttmp.among.format.AmongUs;
+import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.format.ToPrettyString;
 
@@ -13,7 +14,7 @@ import java.util.Objects;
 /**
  * Represents all objects defined in single source.
  */
-public final class AmongRoot implements ToPrettyString{
+public final class AmongRoot extends ToPrettyString.Base{
 	private final List<Among> objects;
 
 	/**
@@ -71,40 +72,19 @@ public final class AmongRoot implements ToPrettyString{
 		return new AmongRoot(this);
 	}
 
-	/**
-	 * Returns a string representation of each object in this root, formatted in compact style. Re-parsing the result
-	 * will produce identical object to this.
-	 *
-	 * @return String representation of this root
-	 */
-	@Override public String toString(){
-		if(objects.isEmpty()) return "";
-		StringBuilder stb = new StringBuilder();
+	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+		if(objects.isEmpty()) return;
 		for(Among object : objects){
-			if(object.isPrimitive()) AmongUs.primitiveToString(stb, object.asPrimitive().getValue());
-			else stb.append(object);
+			object.toString(stb, option, PrettifyContext.ROOT);
 		}
-		return stb.toString();
 	}
 
-	/**
-	 * Returns a string representation of each object in this root, formatted in human-readable form. Re-parsing the
-	 * result will produce identical object to this.
-	 *
-	 * @param indents Number of indentations
-	 * @param option  Option to use
-	 * @return String representation of this root
-	 */
-	@Override public String toPrettyString(int indents, PrettifyOption option){
-		StringBuilder stb = new StringBuilder();
+	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
 		boolean first = true;
 		for(Among object : objects){
 			if(first) first = false;
 			else stb.append('\n');
-			if(object.isPrimitive())
-				AmongUs.primitiveToPrettyString(stb, object.asPrimitive().getValue(), indents, option);
-			else stb.append(object.toPrettyString(indents, option));
+			object.toPrettyString(stb, indents, option, PrettifyContext.ROOT);
 		}
-		return stb.toString();
 	}
 }

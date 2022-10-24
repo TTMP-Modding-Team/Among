@@ -2,10 +2,11 @@ package ttmp.among.definition;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.obj.Among;
 import ttmp.among.format.AmongUs;
+import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.format.ToPrettyString;
+import ttmp.among.obj.Among;
 
 import java.util.Objects;
 
@@ -15,7 +16,7 @@ import java.util.Objects;
  * @see MacroDefinition
  * @see MacroParameterList
  */
-public final class MacroParameter implements Comparable<MacroParameter>, ToPrettyString{
+public final class MacroParameter extends ToPrettyString.Base implements Comparable<MacroParameter>{
 	private final String name;
 	@Nullable private final Among defaultValue;
 
@@ -57,24 +58,24 @@ public final class MacroParameter implements Comparable<MacroParameter>, ToPrett
 		return Objects.hash(name(), defaultValue());
 	}
 
-	@Override public String toString(){
-		StringBuilder stb = new StringBuilder();
+	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
 		AmongUs.paramToString(stb, name());
 		if(defaultValue()!=null)
-			stb.append('=').append(defaultValue());
-		return stb.toString();
+			defaultValue().toString(stb.append('='), option, PrettifyContext.NONE);
 	}
 
-	@Override public String toPrettyString(int indents, PrettifyOption option){
-		return toPrettyString(indents, option, false);
+	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+		toPrettyString(stb, indents, option, false);
 	}
 
-	public String toPrettyString(int indents, PrettifyOption option, boolean replaceDefaultValueWithStubs){
-		StringBuilder stb = new StringBuilder();
+	public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, boolean replaceDefaultValueWithStubs){
 		AmongUs.paramToString(stb, name());
-		if(defaultValue()!=null)
-			stb.append(" = ").append(replaceDefaultValueWithStubs ? "/* default */" :
-					defaultValue().toPrettyString(indents+1, option));
-		return stb.toString();
+		if(defaultValue()!=null){
+			if(replaceDefaultValueWithStubs){
+				stb.append(" = /* default */");
+			}else{
+				defaultValue().toPrettyString(stb.append(" = "), indents+1, option, PrettifyContext.NONE);
+			}
+		}
 	}
 }

@@ -2,6 +2,7 @@ package ttmp.among.util;
 
 import ttmp.among.definition.AmongDefinition;
 import ttmp.among.format.AmongUs;
+import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.format.ToPrettyString;
 import ttmp.among.obj.AmongRoot;
@@ -9,7 +10,7 @@ import ttmp.among.obj.AmongRoot;
 /**
  * A pair of {@link AmongRoot} and {@link AmongDefinition}.
  */
-public final class RootAndDefinition implements ToPrettyString{
+public final class RootAndDefinition extends ToPrettyString.Base{
 	private final AmongRoot root;
 	private final AmongDefinition definition;
 
@@ -34,19 +35,24 @@ public final class RootAndDefinition implements ToPrettyString{
 		return definition;
 	}
 
-	@Override public String toString(){
-		return definition.isEmpty() ?
-				root.isEmpty() ? "" : root.toString() :
-				root.isEmpty() ? definition.toString() :
-						definition+","+root;
+	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+		if(definition.isEmpty()){
+			if(!root.isEmpty()) root.toString(stb, option, context);
+		}else{
+			definition.toString(stb, option, context);
+			if(!root.isEmpty()) root.toString(stb.append(','), option, context);
+		}
 	}
 
-	@Override public String toPrettyString(int indents, PrettifyOption option){
-		return definition.isEmpty() ?
-				root.isEmpty() ? "" : root.toPrettyString(indents, option) :
-				root.isEmpty() ? definition.toPrettyString(indents, option) :
-						definition.toPrettyString(indents, option)+
-								AmongUs.newlineAndIndent(indents, option)+
-								root.toPrettyString(indents, option);
+	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+		if(definition.isEmpty()){
+			if(!root.isEmpty()) root.toPrettyString(stb, indents, option, context);
+		}else{
+			definition.toPrettyString(stb, indents, option, context);
+			if(!root.isEmpty()){
+				AmongUs.newlineAndIndent(stb, indents, option);
+				root.toPrettyString(stb, indents, option, context);
+			}
+		}
 	}
 }

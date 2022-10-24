@@ -3,6 +3,7 @@ package ttmp.among.definition;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.ReportType;
 import ttmp.among.exception.Sussy;
+import ttmp.among.format.PrettifyContext;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
 import ttmp.among.obj.AmongObject;
@@ -18,7 +19,7 @@ import java.util.function.BiConsumer;
 /**
  * Base class for both user-defined macro and code-defined macro.
  */
-public abstract class Macro implements ToPrettyString{
+public abstract class Macro extends ToPrettyString.Base{
 	public static MacroBuilder builder(String name, MacroType type){
 		return new MacroBuilder(name, type);
 	}
@@ -233,47 +234,59 @@ public abstract class Macro implements ToPrettyString{
 		}
 	}
 
-	public final void signatureToString(StringBuilder stb){
-		AmongUs.nameToString(stb, name(), false);
-		switch(this.type()){
-			case OBJECT: case OBJECT_FN: stb.append('{'); break;
-			case LIST: case LIST_FN: stb.append('['); break;
-			case OPERATION: case OPERATION_FN: stb.append('('); break;
-			default: return;
-		}
-		stb.append(parameter);
-		switch(this.type()){
-			case OBJECT: case OBJECT_FN: stb.append('}'); break;
-			case LIST: case LIST_FN: stb.append(']'); break;
-			case OPERATION: case OPERATION_FN: stb.append(')'); break;
-		}
+	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+		stb.append(type().isFunctionMacro() ? "fn " : "macro ");
+		signatureAndParameter().toString(stb, option, context);
+		macroBodyToString(stb.append(':'), option, context);
 	}
+	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+		stb.append(type().isFunctionMacro() ? "fn " : "macro ");
+		signatureAndParameter().toPrettyString(stb, indents, option, context);
+		macroBodyToPrettyString(stb.append(" : "), indents, option, context);
+	}
+	protected abstract void macroBodyToString(StringBuilder stb, PrettifyOption option, PrettifyContext context);
+	protected abstract void macroBodyToPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context);
 
-	public final void signatureToPrettyString(StringBuilder stb){
-		signatureToPrettyString(stb, 0, PrettifyOption.DEFAULT);
+	public ToPrettyString signatureAndParameter(){
+		return signatureAndParameter(false);
 	}
-	public final void signatureToPrettyString(StringBuilder stb, int indents){
-		signatureToPrettyString(stb, indents, PrettifyOption.DEFAULT);
-	}
-	public final void signatureToPrettyString(StringBuilder stb, PrettifyOption option){
-		signatureToPrettyString(stb, 0, option);
-	}
-	public final void signatureToPrettyString(StringBuilder stb, int indents, PrettifyOption option){
-		signatureToPrettyString(stb, indents, option, false);
-	}
-	public final void signatureToPrettyString(StringBuilder stb, int indents, PrettifyOption option, boolean replaceDefaultValueWithStubs){
-		AmongUs.nameToPrettyString(stb, name(), false, indents, option);
-		switch(this.type()){
-			case OBJECT: case OBJECT_FN: stb.append('{'); break;
-			case LIST: case LIST_FN: stb.append('['); break;
-			case OPERATION: case OPERATION_FN: stb.append('('); break;
-			default: return;
-		}
-		stb.append(parameter.toPrettyString(indents, option, replaceDefaultValueWithStubs));
-		switch(this.type()){
-			case OBJECT: case OBJECT_FN: stb.append('}'); break;
-			case LIST: case LIST_FN: stb.append(']'); break;
-			case OPERATION: case OPERATION_FN: stb.append(')'); break;
-		}
+	public ToPrettyString signatureAndParameter(boolean replaceDefaultValueWithStubs){
+		return new ToPrettyString(){
+			@Override public String toString(){
+				return toString(PrettifyOption.DEFAULT);
+			}
+			@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+				if(AmongUs.isSimpleMacroName(name())) AmongUs.simpleMacroNameToString(stb, name());
+				else AmongUs.primitiveToString(stb, name());
+				switch(type()){
+					case OBJECT: case OBJECT_FN: stb.append('{'); break;
+					case LIST: case LIST_FN: stb.append('['); break;
+					case OPERATION: case OPERATION_FN: stb.append('('); break;
+					default: return;
+				}
+				parameter.toString(stb, option, PrettifyContext.NONE);
+				switch(type()){
+					case OBJECT: case OBJECT_FN: stb.append('}'); break;
+					case LIST: case LIST_FN: stb.append(']'); break;
+					case OPERATION: case OPERATION_FN: stb.append(')'); break;
+				}
+			}
+			@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+				if(AmongUs.isSimpleMacroName(name())) AmongUs.simpleMacroNameToString(stb, name());
+				else AmongUs.primitiveToPrettyString(stb, name(), indents, option);
+				switch(type()){
+					case OBJECT: case OBJECT_FN: stb.append('{'); break;
+					case LIST: case LIST_FN: stb.append('['); break;
+					case OPERATION: case OPERATION_FN: stb.append('('); break;
+					default: return;
+				}
+				parameter.toPrettyString(stb, indents, option, replaceDefaultValueWithStubs);
+				switch(type()){
+					case OBJECT: case OBJECT_FN: stb.append('}'); break;
+					case LIST: case LIST_FN: stb.append(']'); break;
+					case OPERATION: case OPERATION_FN: stb.append(')'); break;
+				}
+			}
+		};
 	}
 }

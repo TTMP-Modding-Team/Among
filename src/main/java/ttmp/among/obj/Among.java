@@ -1,11 +1,9 @@
 package ttmp.among.obj;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.AmongEngine;
-import ttmp.among.compile.Source;
 import ttmp.among.exception.SussyCast;
-import ttmp.among.util.NodePath;
 import ttmp.among.format.ToPrettyString;
+import ttmp.among.util.NodePath;
 
 import java.util.Map;
 
@@ -17,7 +15,7 @@ import java.util.Map;
  * @see AmongList
  * @see AmongNamed
  */
-public abstract class Among implements ToPrettyString{
+public abstract class Among extends ToPrettyString.Base{
 	/**
 	 * Return this object as {@link AmongObject} instance.
 	 *
@@ -93,14 +91,6 @@ public abstract class Among implements ToPrettyString{
 	public boolean isNamed(){
 		return false;
 	}
-
-	/**
-	 * Returns a string representation of this object. Parsing the string with {@link AmongEngine#read(Source)} will
-	 * create identical copy of this object.
-	 *
-	 * @return String representation of this object
-	 */
-	@Override public abstract String toString();
 
 	/**
 	 * Create a deep copy of the object; all child nodes will be copied over new object.
