@@ -32,8 +32,14 @@ public class MacroBuilder{
 	public MacroBuilder param(String paramName, @Nullable Among defaultValue){
 		return param(paramName, defaultValue, TypeFlags.ANY);
 	}
+	public MacroBuilder param(String paramName, int typeInference){
+		return param(paramName, null, (byte)typeInference);
+	}
 	public MacroBuilder param(String paramName, byte typeInference){
 		return param(paramName, null, typeInference);
+	}
+	public MacroBuilder param(String paramName, @Nullable Among defaultValue, int typeInference){
+		return param(paramName, defaultValue, (byte)typeInference);
 	}
 	public MacroBuilder param(String paramName, @Nullable Among defaultValue, byte typeInference){
 		typeInference = TypeFlags.normalize(typeInference);
@@ -44,6 +50,9 @@ public class MacroBuilder{
 		return this;
 	}
 
+	public MacroBuilder inferSelfType(int typeInference){
+		return inferSelfType((byte)typeInference);
+	}
 	public MacroBuilder inferSelfType(byte typeInference){
 		if(!type.isFunctionMacro()) throw new Sussy("Cannot infer self type of non-function macros");
 		typeInference = TypeFlags.normalize(typeInference);

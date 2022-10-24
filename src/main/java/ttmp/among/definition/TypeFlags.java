@@ -43,7 +43,7 @@ public interface TypeFlags{
 		return from(among, false);
 	}
 
-	private static byte from(Among among, boolean fuzzyOperation){
+	static byte from(Among among, boolean fuzzyOperation){
 		if(among.isPrimitive()) return PRIMITIVE;
 		else if(among.isObj()) return among.isNamed() ? NAMED_OBJECT : UNNAMED_OBJECT;
 		else if(fuzzyOperation) return (byte)(among.isNamed() ? NAMED_OPERATION|NAMED_LIST : UNNAMED_OPERATION|UNNAMED_LIST);

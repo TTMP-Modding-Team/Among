@@ -9,7 +9,14 @@ import ttmp.among.definition.OperatorPriorities;
 import ttmp.among.definition.OperatorProperty;
 import ttmp.among.definition.OperatorRegistry;
 import ttmp.among.definition.OperatorType;
+import ttmp.among.definition.TypeFlags;
+import ttmp.among.obj.Among;
+import ttmp.among.obj.AmongList;
+import ttmp.among.obj.AmongNamed;
+import ttmp.among.obj.AmongObject;
 import ttmp.among.util.RootAndDefinition;
+
+import java.util.Map;
 
 /**
  * Provider for "native files" that can be imported from all among scripts. This object is automatically registered on
@@ -19,6 +26,8 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 	public static final String DEFAULT_OPERATOR = "among/default_operator";
 	public static final String DEFAULT_OPERATORS = "among/default_operators";
 	public static final String EVAL = "among/eval";
+	public static final String COLLECTION = "among/collection";
+	public static final String COLLECTIONS = "among/collections";
 
 	private DefaultInstanceProvider(){}
 	private static final DefaultInstanceProvider INSTANCE = new DefaultInstanceProvider();
@@ -27,11 +36,15 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 	}
 
 	@Nullable @Override public RootAndDefinition resolve(String path){
-		if(DEFAULT_OPERATOR.equals(path)||DEFAULT_OPERATORS.equals(path))
-			return new RootAndDefinition(defaultOperators());
-		if(EVAL.equals(path))
-			return new RootAndDefinition(eval());
-		return null;
+		switch(path){
+			case DEFAULT_OPERATOR: case DEFAULT_OPERATORS:
+				return new RootAndDefinition(defaultOperators());
+			case EVAL:
+				return new RootAndDefinition(eval());
+			case COLLECTION: case COLLECTIONS:
+				return new RootAndDefinition(collection());
+			default: return null;
+		}
 	}
 
 	/**
@@ -79,6 +92,40 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 		definition.macros().add(Macro.builder("eval", MacroType.OPERATION)
 				.param("expr")
 				.build((args, copyConstant, reportHandler) -> Eval.eval(args[0], reportHandler)));
+		return definition;
+	}
+
+	public static AmongDefinition collection(){
+		AmongDefinition definition = defaultOperators();
+		definition.macros().add(Macro.builder("named", MacroType.OPERATION_FN)
+				.param("name", TypeFlags.PRIMITIVE)
+				.inferSelfType(TypeFlags.COLLECTION)
+				.build((args, copyConstant, reportHandler) -> {
+					AmongNamed copy = args[0].asNamed().copy();
+					copy.setName(args[1].asPrimitive().getValue());
+					return copy;
+				}));
+		definition.macros().add(Macro.builder("name", MacroType.ACCESS)
+				.inferSelfType(TypeFlags.COLLECTION)
+				.build((args, copyConstant, reportHandler) -> Among.value(args[0].asNamed().getName())));
+		definition.macros().add(Macro.builder("concat", MacroType.OPERATION_FN)
+				.param("other", TypeFlags.LIST|TypeFlags.OPERATION)
+				.inferSelfType(TypeFlags.LIST|TypeFlags.OPERATION)
+				.build((args, copyConstant, reportHandler) -> {
+					AmongList copy = args[0].asList().copy();
+					for(Among a : args[1].asList()) copy.add(a);
+					return copy;
+				}));
+		definition.macros().add(Macro.builder("merge", MacroType.OPERATION_FN)
+				.param("other", TypeFlags.OBJECT)
+				.inferSelfType(TypeFlags.OBJECT)
+				.build((args, copyConstant, reportHandler) -> {
+					AmongObject copy = args[0].asObj().copy();
+					for(Map.Entry<String, Among> e : args[1].asObj().properties().entrySet()){
+						if(!copy.hasProperty(e.getKey())) copy.setProperty(e.getKey(), e.getValue());
+					}
+					return copy;
+				}));
 		return definition;
 	}
 }
