@@ -18,13 +18,13 @@ import ttmp.among.format.PrettifyOption;
  * @see AmongObject
  * @see AmongList
  */
-public abstract class AmongNamed extends Among{
+public abstract class AmongNameable extends Among{
 	private String name;
 
-	AmongNamed(){
+	AmongNameable(){
 		this(null);
 	}
-	AmongNamed(@Nullable String name){
+	AmongNameable(@Nullable String name){
 		this.name = name==null ? "" : name;
 	}
 
@@ -45,7 +45,7 @@ public abstract class AmongNamed extends Among{
 		this.name = name==null ? "" : name;
 	}
 	/**
-	 * Return whether this object has a name (that is, result of {@link AmongNamed#getName()} being not empty)
+	 * Return whether this object has a name (that is, result of {@link AmongNameable#getName()} being not empty)
 	 *
 	 * @return Whether this object has a name
 	 */
@@ -53,14 +53,14 @@ public abstract class AmongNamed extends Among{
 		return !name.isEmpty();
 	}
 
-	@Override public AmongNamed asNamed(){
+	@Override public AmongNameable asNameable(){
 		return this;
 	}
-	@Override public boolean isNamed(){
+	@Override public boolean isNameable(){
 		return true;
 	}
 
-	@Override public abstract AmongNamed copy();
+	@Override public abstract AmongNameable copy();
 
 	protected void nameToString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
 		if(hasName()){

@@ -22,7 +22,7 @@ import ttmp.among.definition.OperatorType;
 import ttmp.among.definition.TypeFlags;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
-import ttmp.among.obj.AmongNamed;
+import ttmp.among.obj.AmongNameable;
 import ttmp.among.obj.AmongObject;
 import ttmp.among.obj.AmongPrimitive;
 import ttmp.among.obj.AmongRoot;
@@ -651,9 +651,9 @@ public final class AmongParser{
 						if(b.isPrimitive()){
 							a = accessMacro(Among.namedList(op.aliasOrName()+b.asPrimitive().getValue(), a), next.start);
 						}else{
-							AmongNamed b2 = b.asNamed().copy();
+							AmongNameable b2 = b.asNameable().copy();
 							b2.setName("");
-							AmongList call = Among.namedList(op.aliasOrName()+b.asNamed().getName(), a, b2);
+							AmongList call = Among.namedList(op.aliasOrName()+b.asNameable().getName(), a, b2);
 							a = b.isObj() ? objectFnMacro(call, next.start) :
 									b.asList().isOperation() ? operationFnMacro(call, next.start) :
 											listFnMacro(call, next.start);
@@ -932,11 +932,11 @@ public final class AmongParser{
 		public boolean resolveParamRef(Among target){
 			String name;
 			if(target.isPrimitive()) name = target.asPrimitive().getValue();
-			else if(target.isNamed()) name = target.asNamed().getName();
+			else if(target.isNameable()) name = target.asNameable().getName();
 			else return false;
 			int i = paramIndex(name);
 			if(i<0) return false;
-			if(target.isNamed()) inferTypeAs(i, TypeFlags.PRIMITIVE);
+			if(target.isNameable()) inferTypeAs(i, TypeFlags.PRIMITIVE);
 			if(!invalid)
 				operationToTarget.add(new SimpleEntry<>(
 						target.isPrimitive() ?

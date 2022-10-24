@@ -12,7 +12,7 @@ import ttmp.among.definition.OperatorType;
 import ttmp.among.definition.TypeFlags;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
-import ttmp.among.obj.AmongNamed;
+import ttmp.among.obj.AmongNameable;
 import ttmp.among.obj.AmongObject;
 import ttmp.among.util.RootAndDefinition;
 
@@ -102,15 +102,15 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 		AmongDefinition definition = defaultOperators();
 		definition.macros().add(Macro.builder("named", MacroType.OPERATION_FN)
 				.param("name", TypeFlags.PRIMITIVE)
-				.inferSelfType(TypeFlags.COLLECTION)
+				.inferSelfType(TypeFlags.NAMEABLE)
 				.build((args, copyConstant, reportHandler) -> {
-					AmongNamed copy = args[0].asNamed().copy();
+					AmongNameable copy = args[0].asNameable().copy();
 					copy.setName(args[1].asPrimitive().getValue());
 					return copy;
 				}));
 		definition.macros().add(Macro.builder("name", MacroType.ACCESS)
-				.inferSelfType(TypeFlags.COLLECTION)
-				.build((args, copyConstant, reportHandler) -> Among.value(args[0].asNamed().getName())));
+				.inferSelfType(TypeFlags.NAMEABLE)
+				.build((args, copyConstant, reportHandler) -> Among.value(args[0].asNameable().getName())));
 		definition.macros().add(Macro.builder("concat", MacroType.OPERATION_FN)
 				.param("other", TypeFlags.LIST|TypeFlags.OPERATION)
 				.inferSelfType(TypeFlags.LIST|TypeFlags.OPERATION)

@@ -25,7 +25,7 @@ import java.util.Objects;
  * }
  * </pre>
  */
-public class AmongObject extends AmongNamed{
+public class AmongObject extends AmongNameable{
 	private final Map<String, Among> properties = new LinkedHashMap<>(); // Use linkedhashmap to preserve insertion order
 
 	AmongObject(){}

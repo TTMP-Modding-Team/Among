@@ -13,7 +13,7 @@ import java.util.Map;
  * @see AmongPrimitive
  * @see AmongObject
  * @see AmongList
- * @see AmongNamed
+ * @see AmongNameable
  */
 public abstract class Among extends ToPrettyString.Base{
 	/**
@@ -74,21 +74,21 @@ public abstract class Among extends ToPrettyString.Base{
 	}
 
 	/**
-	 * Return this object as {@link AmongNamed} instance.
+	 * Return this object as {@link AmongNameable} instance.
 	 *
-	 * @return This object as {@link AmongNamed} instance.
-	 * @throws SussyCast If this object is not {@link AmongNamed}
+	 * @return This object as {@link AmongNameable} instance.
+	 * @throws SussyCast If this object is not {@link AmongNameable}
 	 */
-	public AmongNamed asNamed(){
-		throw new SussyCast(AmongNamed.class, this.getClass());
+	public AmongNameable asNameable(){
+		throw new SussyCast(AmongNameable.class, this.getClass());
 	}
 
 	/**
-	 * Returns whether this object is {@link AmongNamed} instance.
+	 * Returns whether this object is {@link AmongNameable} instance.
 	 *
-	 * @return Whether this object is {@link AmongNamed} instance.
+	 * @return Whether this object is {@link AmongNameable} instance.
 	 */
-	public boolean isNamed(){
+	public boolean isNameable(){
 		return false;
 	}
 

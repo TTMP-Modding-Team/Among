@@ -111,7 +111,7 @@ public final class MacroReplacement{
 			@Override public Among applyTo(NodePath path, Among[] args, Among target, boolean copyConstant, @Nullable BiConsumer<ReportType, String> reportHandler){
 				Among resolved = path.resolveAndGet(target);
 				if(resolved==null) throw new Sussy("No replacement target");
-				resolved.asNamed().setName(args[this.param].asPrimitive().getValue());
+				resolved.asNameable().setName(args[this.param].asPrimitive().getValue());
 				return target;
 			}
 

@@ -28,7 +28,7 @@ import java.util.Objects;
  * Note that <a href="https://youtu.be/doEqUhFiQS4">operations</a> get compiled into list; operations do not
  * have type representation.
  */
-public class AmongList extends AmongNamed implements Iterable<Among>{
+public class AmongList extends AmongNameable implements Iterable<Among>{
 	private final List<Among> values = new ArrayList<>();
 	private boolean operation;
 

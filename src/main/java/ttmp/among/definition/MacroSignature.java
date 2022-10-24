@@ -20,7 +20,7 @@ public final class MacroSignature implements Comparable<MacroSignature>{
 	 */
 	public static MacroSignature of(Among among){
 		if(among.isPrimitive()) return new MacroSignature(among.asPrimitive().getValue(), MacroType.CONST);
-		return new MacroSignature(among.asNamed().getName(),
+		return new MacroSignature(among.asNameable().getName(),
 				among.isObj() ? MacroType.OBJECT :
 						among.asList().isOperation() ? MacroType.OPERATION :
 								MacroType.LIST);

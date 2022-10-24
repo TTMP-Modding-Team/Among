@@ -24,9 +24,9 @@ public interface TypeFlags{
 	byte UNNAMED = UNNAMED_OBJECT|UNNAMED_LIST|UNNAMED_OPERATION;
 	byte NAMED = NAMED_OBJECT|NAMED_LIST|NAMED_OPERATION;
 
-	byte COLLECTION = UNNAMED|NAMED;
+	byte NAMEABLE = UNNAMED|NAMED;
 
-	byte ANY = PRIMITIVE|COLLECTION;
+	byte ANY = PRIMITIVE|NAMEABLE;
 
 	static byte normalize(byte typeInference){
 		return (byte)(typeInference&ANY);
@@ -45,10 +45,10 @@ public interface TypeFlags{
 
 	static byte from(Among among, boolean fuzzyOperation){
 		if(among.isPrimitive()) return PRIMITIVE;
-		else if(among.isObj()) return among.isNamed() ? NAMED_OBJECT : UNNAMED_OBJECT;
-		else if(fuzzyOperation) return (byte)(among.isNamed() ? NAMED_OPERATION|NAMED_LIST : UNNAMED_OPERATION|UNNAMED_LIST);
-		else if(among.asList().isOperation()) return among.isNamed() ? NAMED_OPERATION : UNNAMED_OPERATION;
-		else return among.isNamed() ? NAMED_LIST : UNNAMED_LIST;
+		else if(among.isObj()) return among.isNameable() ? NAMED_OBJECT : UNNAMED_OBJECT;
+		else if(fuzzyOperation) return (byte)(among.isNameable() ? NAMED_OPERATION|NAMED_LIST : UNNAMED_OPERATION|UNNAMED_LIST);
+		else if(among.asList().isOperation()) return among.isNameable() ? NAMED_OPERATION : UNNAMED_OPERATION;
+		else return among.isNameable() ? NAMED_LIST : UNNAMED_LIST;
 	}
 
 	static String toString(byte flag){
@@ -66,12 +66,12 @@ public interface TypeFlags{
 			case OPERATION: return "Operation";
 			case UNNAMED: return "Unnamed Collection";
 			case NAMED: return "Named Collection";
-			case COLLECTION: return "Collection";
+			case NAMEABLE: return "Collection";
 			default:{
 				List<String> l = new ArrayList<>();
 				if(has(flag, PRIMITIVE)) l.add("Primitive");
 
-				if(has(flag, COLLECTION)) l.add("Collection");
+				if(has(flag, NAMEABLE)) l.add("Collection");
 				else{
 					if(has(flag, NAMED)){
 						l.add("Named Collection");
