@@ -1,0 +1,12 @@
+use among/collections
+
+( [].named("amog") )
+( {}.named("amog") )
+
+( [a, m, o, g].named(us) )
+
+( among [us] . name )
+
+( [a, m, o].concat((g, u, s)) )
+
+( {among: us}.merge({red: sus}) )

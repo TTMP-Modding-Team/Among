@@ -330,6 +330,16 @@ public class EqualityTests{
 				value("true"));
 	}
 
+	@Test public void collections(){
+		simpleEqualityTest("collections",
+				namedList("amog"),
+				namedObject("amog"),
+				namedList("us", "a", "m", "o", "g"),
+				value("among"),
+				list("a", "m", "o", "g", "u", "s"),
+				object().prop("among", "us").prop("red", "sus"));
+	}
+
 	private static void simpleEqualityTest(String name, Among... expected){
 		try{
 			assertArrayEquals(expected,
