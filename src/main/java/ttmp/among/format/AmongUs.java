@@ -15,7 +15,8 @@ public class AmongUs{
 	private static final Pattern SIMPLE_KEY = Pattern.compile("^(?!\\s)[^:{}\r\n]+(?<!\\s)$");
 	private static final Pattern SIMPLE_VALUE = Pattern.compile("^(?!\\s)[^:{}\r\n]+(?<!\\s)$");
 
-	private static final Pattern PRIMITIVE_SPECIALS = Pattern.compile("[\\\\{}\\[\\]()\"]|/[*/]");
+	private static final Pattern PRIMITIVE_SPECIALS = Pattern.compile("[\\\\\"]|/[*/]");
+	private static final Pattern PRIMITIVE_SPECIALS_JSON = Pattern.compile("[\\\\\"]");
 
 	private static final Pattern WORD_SPECIALS = Pattern.compile("[\\s\\\\{}\\[\\]()\"',:]|/[*/]");
 	private static final Pattern KEY_SPECIALS = Pattern.compile("[\\\\{}\\[\\]()\"',]|/[*/]");
@@ -60,7 +61,7 @@ public class AmongUs{
 	public static void primitiveToPrettyString(StringBuilder stb, String primitive, int indents, PrettifyOption option){
 		stb.append('"');
 		if(option.jsonCompatibility){
-			stb.append(standardReplace(PRIMITIVE_SPECIALS, primitive, true));
+			stb.append(standardReplace(PRIMITIVE_SPECIALS_JSON, primitive, true));
 		}else{
 			stb.append(NEWLINE.matcher(standardReplace(PRIMITIVE_SPECIALS, primitive, false))
 					.replaceAll(newlineAndIndent(indents+2, option)+'|'));
