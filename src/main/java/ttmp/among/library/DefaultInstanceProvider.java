@@ -76,7 +76,7 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 		o.addOperator("-", OperatorType.BINARY, OperatorPriorities.BINARY_ARITHMETIC_ADDITION);
 		o.addOperator("*", OperatorType.BINARY, OperatorPriorities.BINARY_ARITHMETIC_PRODUCT);
 		o.addOperator("/", OperatorType.BINARY, OperatorPriorities.BINARY_ARITHMETIC_PRODUCT);
-		o.addOperator("^", OperatorType.BINARY, OperatorPriorities.BINARY_ARITHMETIC_PRODUCT);
+		o.addOperator("^", OperatorType.BINARY, OperatorPriorities.BINARY_ARITHMETIC_POWER);
 		o.addOperator("**", OperatorType.BINARY, OperatorPriorities.BINARY_ARITHMETIC_POWER);
 		o.addOperator("!", OperatorType.PREFIX, OperatorPriorities.PREFIX);
 		o.addOperator("-", OperatorType.PREFIX, OperatorPriorities.PREFIX);
