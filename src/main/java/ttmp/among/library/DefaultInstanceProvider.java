@@ -23,12 +23,12 @@ import java.util.Map;
  * all instance of {@link AmongEngine}s.
  */
 public final class DefaultInstanceProvider implements Provider<RootAndDefinition>{
-	public static final String DEFAULT_OPERATOR = "among/default_operator";
-	public static final String DEFAULT_OPERATORS = "among/default_operators";
-	public static final String EVAL = "among/eval";
-	public static final String COLLECTION = "among/collection";
-	public static final String COLLECTIONS = "among/collections";
-	public static final String FORMAT = "among/format";
+	public static final String DEFAULT_OPERATOR = "default_operator";
+	public static final String DEFAULT_OPERATORS = "default_operators";
+	public static final String EVAL = "eval";
+	public static final String COLLECTION = "collection";
+	public static final String COLLECTIONS = "collections";
+	public static final String FORMAT = "format";
 
 	private DefaultInstanceProvider(){}
 	private static final DefaultInstanceProvider INSTANCE = new DefaultInstanceProvider();

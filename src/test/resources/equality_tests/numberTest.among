@@ -7,7 +7,7 @@
 ( -1.toString() )  // "-1.toString" []
 ( -1.35234() )      // "-1.35234" []
 
-use among/default_operators
+use default_operators
 
 ( 01234 )  // 01234
 ( 01234.45678 )  // 01234.45678
