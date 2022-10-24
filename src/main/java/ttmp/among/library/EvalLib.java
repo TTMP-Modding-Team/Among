@@ -8,8 +8,8 @@ import ttmp.among.obj.AmongList;
 
 import java.util.function.BiConsumer;
 
-public final class Eval{
-	private Eval (){}
+public final class EvalLib{
+	private EvalLib(){}
 
 	@Nullable public static Among eval(Among among, @Nullable BiConsumer<ReportType, String> reportHandler){
 		if(among.isList()){

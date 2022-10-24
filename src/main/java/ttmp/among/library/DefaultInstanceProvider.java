@@ -94,7 +94,7 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 		AmongDefinition definition = defaultOperators();
 		definition.macros().add(Macro.builder("eval", MacroType.OPERATION)
 				.param("expr")
-				.build((args, copyConstant, reportHandler) -> Eval.eval(args[0], reportHandler)));
+				.build((args, copyConstant, reportHandler) -> EvalLib.eval(args[0], reportHandler)));
 		return definition;
 	}
 
