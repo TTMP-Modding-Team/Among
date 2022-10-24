@@ -1,7 +1,7 @@
 package ttmp.among.obj;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.format.AmongUs;
+import ttmp.among.format.AmongLiteralFormatting;
 import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 
@@ -64,16 +64,16 @@ public abstract class AmongNameable extends Among{
 
 	protected void nameToString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
 		if(hasName()){
-			if(context!=PrettifyContext.OPERATION&&AmongUs.isSimpleValue(getName()))
-				AmongUs.simpleValueToString(stb, getName());
-			else AmongUs.primitiveToString(stb, getName());
+			if(context!=PrettifyContext.OPERATION&&AmongLiteralFormatting.isSimpleValue(getName()))
+				AmongLiteralFormatting.simpleValueToString(stb, getName());
+			else AmongLiteralFormatting.primitiveToString(stb, getName());
 		}
 	}
 	protected void nameToPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
 		if(hasName()){
-			if(context!=PrettifyContext.OPERATION&&AmongUs.isSimpleValue(getName()))
-				AmongUs.simpleValueToString(stb, getName());
-			else AmongUs.primitiveToPrettyString(stb, getName(), indents+1, option);
+			if(context!=PrettifyContext.OPERATION&&AmongLiteralFormatting.isSimpleValue(getName()))
+				AmongLiteralFormatting.simpleValueToString(stb, getName());
+			else AmongLiteralFormatting.primitiveToPrettyString(stb, getName(), indents+1, option);
 		}
 	}
 }

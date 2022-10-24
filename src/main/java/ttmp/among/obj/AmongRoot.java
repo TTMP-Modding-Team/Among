@@ -1,7 +1,6 @@
 package ttmp.among.obj;
 
 import ttmp.among.exception.Sussy;
-import ttmp.among.format.AmongUs;
 import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.format.ToPrettyString;

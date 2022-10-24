@@ -7,7 +7,7 @@ import ttmp.among.format.PrettifyContext;
 import ttmp.among.obj.Among;
 import ttmp.among.obj.AmongList;
 import ttmp.among.obj.AmongObject;
-import ttmp.among.format.AmongUs;
+import ttmp.among.format.AmongLiteralFormatting;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.format.ToPrettyString;
 
@@ -256,8 +256,8 @@ public abstract class Macro extends ToPrettyString.Base{
 				return toString(PrettifyOption.DEFAULT);
 			}
 			@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
-				if(AmongUs.isSimpleMacroName(name())) AmongUs.simpleMacroNameToString(stb, name());
-				else AmongUs.primitiveToString(stb, name());
+				if(AmongLiteralFormatting.isSimpleMacroName(name())) AmongLiteralFormatting.simpleMacroNameToString(stb, name());
+				else AmongLiteralFormatting.primitiveToString(stb, name());
 				switch(type()){
 					case OBJECT: case OBJECT_FN: stb.append('{'); break;
 					case LIST: case LIST_FN: stb.append('['); break;
@@ -272,8 +272,8 @@ public abstract class Macro extends ToPrettyString.Base{
 				}
 			}
 			@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
-				if(AmongUs.isSimpleMacroName(name())) AmongUs.simpleMacroNameToString(stb, name());
-				else AmongUs.primitiveToPrettyString(stb, name(), indents, option);
+				if(AmongLiteralFormatting.isSimpleMacroName(name())) AmongLiteralFormatting.simpleMacroNameToString(stb, name());
+				else AmongLiteralFormatting.primitiveToPrettyString(stb, name(), indents, option);
 				switch(type()){
 					case OBJECT: case OBJECT_FN: stb.append('{'); break;
 					case LIST: case LIST_FN: stb.append('['); break;

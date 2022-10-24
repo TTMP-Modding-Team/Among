@@ -1,7 +1,7 @@
 package ttmp.among.util;
 
 import ttmp.among.definition.AmongDefinition;
-import ttmp.among.format.AmongUs;
+import ttmp.among.format.AmongLiteralFormatting;
 import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.format.ToPrettyString;
@@ -50,7 +50,7 @@ public final class RootAndDefinition extends ToPrettyString.Base{
 		}else{
 			definition.toPrettyString(stb, indents, option, PrettifyContext.NONE);
 			if(!root.isEmpty()){
-				AmongUs.newlineAndIndent(stb, indents, option);
+				AmongLiteralFormatting.newlineAndIndent(stb, indents, option);
 				root.toPrettyString(stb, indents, option, PrettifyContext.NONE);
 			}
 		}

@@ -1,7 +1,7 @@
 package ttmp.among.definition;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.format.AmongUs;
+import ttmp.among.format.AmongLiteralFormatting;
 import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.format.ToPrettyString;
@@ -114,28 +114,28 @@ public final class OperatorDefinition extends ToPrettyString.Base{
 
 	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
 		stb.append(isKeyword ? "keyword " : "operator ");
-		if(AmongUs.isSimpleWord(name())) AmongUs.simpleWordToString(stb, name());
-		else AmongUs.primitiveToString(stb, name());
+		if(AmongLiteralFormatting.isSimpleWord(name())) AmongLiteralFormatting.simpleWordToString(stb, name());
+		else AmongLiteralFormatting.primitiveToString(stb, name());
 		stb.append(" as ").append(OperatorProperty.typeToString(type, properties));
 		if(Double.compare(priority, type.defaultPriority(properties))!=0)
 			stb.append("(").append(FORMAT.format(priority)).append(")");
 		if(alias!=null){
 			stb.append(":");
-			if(AmongUs.isSimpleValue(alias)) AmongUs.simpleValueToString(stb, alias);
-			else AmongUs.primitiveToString(stb, alias);
+			if(AmongLiteralFormatting.isSimpleValue(alias)) AmongLiteralFormatting.simpleValueToString(stb, alias);
+			else AmongLiteralFormatting.primitiveToString(stb, alias);
 		}
 	}
 	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
 		stb.append(isKeyword ? "keyword " : "operator ");
-		if(AmongUs.isSimpleWord(name())) AmongUs.simpleWordToString(stb, name());
-		else AmongUs.primitiveToPrettyString(stb, name(), indents, option);
+		if(AmongLiteralFormatting.isSimpleWord(name())) AmongLiteralFormatting.simpleWordToString(stb, name());
+		else AmongLiteralFormatting.primitiveToPrettyString(stb, name(), indents, option);
 		stb.append(" as ").append(OperatorProperty.typeToString(type, properties));
 		if(Double.compare(priority, type.defaultPriority(properties))!=0)
 			stb.append("(").append(FORMAT.format(priority)).append(")");
 		if(alias!=null){
 			stb.append(" : ");
-			if(AmongUs.isSimpleValue(alias)) AmongUs.simpleValueToString(stb, alias);
-			else AmongUs.primitiveToPrettyString(stb, alias, indents, option);
+			if(AmongLiteralFormatting.isSimpleValue(alias)) AmongLiteralFormatting.simpleValueToString(stb, alias);
+			else AmongLiteralFormatting.primitiveToPrettyString(stb, alias, indents, option);
 		}
 	}
 }

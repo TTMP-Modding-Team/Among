@@ -1,7 +1,7 @@
 package ttmp.among.obj;
 
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.format.AmongUs;
+import ttmp.among.format.AmongLiteralFormatting;
 import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.util.NodePath;
@@ -179,12 +179,12 @@ public class AmongList extends AmongNameable implements Iterable<Among>{
 			for(int i = 0; i<values.size(); i++){
 				if(!isCompact){
 					if(option.jsonCompatibility&&i>0) stb.append(',');
-					AmongUs.newlineAndIndent(stb, indents+1, option);
+					AmongLiteralFormatting.newlineAndIndent(stb, indents+1, option);
 				}else if(i>0) stb.append(", ");
 				else stb.append(' ');
 				values.get(i).toPrettyString(stb, isCompact ? indents : indents+1, option, operation ? PrettifyContext.OPERATION : PrettifyContext.NONE);
 			}
-			if(!isCompact) AmongUs.newlineAndIndent(stb, indents, option);
+			if(!isCompact) AmongLiteralFormatting.newlineAndIndent(stb, indents, option);
 			else stb.append(' ');
 			stb.append(operation ? ')' : ']');
 		}

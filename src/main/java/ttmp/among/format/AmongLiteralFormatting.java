@@ -2,10 +2,7 @@ package ttmp.among.format;
 
 import java.util.regex.Pattern;
 
-/**
- * Absolutely Mental Object Notation Utilities. The G and S are both silent.
- */
-public class AmongUs{
+public class AmongLiteralFormatting{
 	private static final Pattern NEWLINE = Pattern.compile("\r\n?|\n");
 	private static final Pattern BACKSPACE = Pattern.compile("\b");
 	private static final Pattern FORMAT = Pattern.compile("\f");

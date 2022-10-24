@@ -2,7 +2,7 @@ package ttmp.among.definition;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ttmp.among.format.AmongUs;
+import ttmp.among.format.AmongLiteralFormatting;
 import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.format.ToPrettyString;
@@ -59,7 +59,7 @@ public final class MacroParameter extends ToPrettyString.Base implements Compara
 	}
 
 	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
-		AmongUs.paramToString(stb, name());
+		AmongLiteralFormatting.paramToString(stb, name());
 		if(defaultValue()!=null)
 			defaultValue().toString(stb.append('='), option, PrettifyContext.NONE);
 	}
@@ -69,7 +69,7 @@ public final class MacroParameter extends ToPrettyString.Base implements Compara
 	}
 
 	public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, boolean replaceDefaultValueWithStubs){
-		AmongUs.paramToString(stb, name());
+		AmongLiteralFormatting.paramToString(stb, name());
 		if(defaultValue()!=null){
 			if(replaceDefaultValueWithStubs){
 				stb.append(" = /* default */");
