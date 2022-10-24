@@ -1,6 +1,4 @@
 keyword pika as binary
 keyword pikapika as prefix
 
-undef operator ! // TODO
-
 (pikachu pika pikapika chu!!!!!!)  // pika [pikachu, pikapika [chu!!!!!!]]
