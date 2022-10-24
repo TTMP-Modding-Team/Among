@@ -405,7 +405,7 @@ public final class AmongParser{
 		if(imported==null){
 			reportError("Invalid use statement: Cannot resolve definitions from path '"+path+"'");
 		}else{
-			imported.definition().macros().macroSignatures().forEach(s -> {
+			imported.definition().macros().allMacroSignatures().forEach(s -> {
 				importDefinition.macros().remove(s);
 				definition.macros().remove(s);
 			});
@@ -439,7 +439,7 @@ public final class AmongParser{
 	}
 
 	private void copyDefinitions(AmongDefinition from, AmongDefinition to, boolean report, int startIndex){
-		from.macros().macros().forEach(m -> to.macros().add(m, report ? (t, s) -> report(t, s, startIndex) : null));
+		from.macros().allMacros().forEach(m -> to.macros().add(m, report ? (t, s) -> report(t, s, startIndex) : null));
 		from.operators().allOperators().forEach(o -> {
 			OperatorRegistry.RegistrationResult r = to.operators().add(o);
 			if(report&&!r.isSuccess()&&r!=OperatorRegistry.RegistrationResult.IDENTICAL_DUPLICATE)

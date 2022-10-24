@@ -51,7 +51,7 @@ public final class AmongDefinition extends ToPrettyString.Base{
 	}
 
 	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
-		Iterator<ToPrettyString.Base> it = Stream.concat(macros.macros(), operators.allOperators()).iterator();
+		Iterator<ToPrettyString.Base> it = Stream.concat(macros.allMacros(), operators.allOperators()).iterator();
 		boolean first = true;
 		while(it.hasNext()){
 			if(first) first = false;
@@ -60,7 +60,7 @@ public final class AmongDefinition extends ToPrettyString.Base{
 		}
 	}
 	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
-		Iterator<ToPrettyString.Base> it = Stream.concat(macros.macros(), operators.allOperators()).iterator();
+		Iterator<ToPrettyString.Base> it = Stream.concat(macros.allMacros(), operators.allOperators()).iterator();
 		boolean first = true;
 		while(it.hasNext()){
 			if(first) first = false;

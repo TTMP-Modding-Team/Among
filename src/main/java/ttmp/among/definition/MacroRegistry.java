@@ -78,10 +78,10 @@ public final class MacroRegistry{
 		return groups.get(signature);
 	}
 
-	public Stream<Macro> macros(){
+	public Stream<Macro> allMacros(){
 		return groups.values().stream().flatMap(Group::macros);
 	}
-	public Stream<MacroSignature> macroSignatures(){
+	public Stream<MacroSignature> allMacroSignatures(){
 		return groups.keySet().stream();
 	}
 
