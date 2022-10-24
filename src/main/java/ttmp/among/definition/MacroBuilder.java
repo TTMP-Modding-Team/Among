@@ -3,7 +3,6 @@ package ttmp.among.definition;
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.compile.ReportType;
 import ttmp.among.exception.Sussy;
-import ttmp.among.format.PrettifyContext;
 import ttmp.among.format.PrettifyOption;
 import ttmp.among.obj.Among;
 
@@ -135,10 +134,10 @@ public class MacroBuilder{
 		@Override @Nullable protected Among applyMacro(Among[] args, boolean copyConstant, @Nullable BiConsumer<ReportType, String> reportHandler){
 			return function.applyMacro(args, copyConstant, reportHandler);
 		}
-		@Override protected void macroBodyToString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+		@Override protected void macroBodyToString(StringBuilder stb, PrettifyOption option){
 			stb.append("Stub");
 		}
-		@Override protected void macroBodyToPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+		@Override protected void macroBodyToPrettyString(StringBuilder stb, int indents, PrettifyOption option){
 			stb.append("Stub /*code-defined macro*/");
 		}
 	}

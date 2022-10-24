@@ -37,21 +37,21 @@ public final class RootAndDefinition extends ToPrettyString.Base{
 
 	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
 		if(definition.isEmpty()){
-			if(!root.isEmpty()) root.toString(stb, option, context);
+			if(!root.isEmpty()) root.toString(stb, option, PrettifyContext.NONE);
 		}else{
-			definition.toString(stb, option, context);
-			if(!root.isEmpty()) root.toString(stb.append(','), option, context);
+			definition.toString(stb, option, PrettifyContext.NONE);
+			if(!root.isEmpty()) root.toString(stb.append(','), option, PrettifyContext.NONE);
 		}
 	}
 
 	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
 		if(definition.isEmpty()){
-			if(!root.isEmpty()) root.toPrettyString(stb, indents, option, context);
+			if(!root.isEmpty()) root.toPrettyString(stb, indents, option, PrettifyContext.NONE);
 		}else{
-			definition.toPrettyString(stb, indents, option, context);
+			definition.toPrettyString(stb, indents, option, PrettifyContext.NONE);
 			if(!root.isEmpty()){
 				AmongUs.newlineAndIndent(stb, indents, option);
-				root.toPrettyString(stb, indents, option, context);
+				root.toPrettyString(stb, indents, option, PrettifyContext.NONE);
 			}
 		}
 	}

@@ -86,10 +86,10 @@ public final class MacroDefinition extends Macro{
 		return Objects.hash(signature(), parameter(), template);
 	}
 
-	@Override protected void macroBodyToString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
+	@Override protected void macroBodyToString(StringBuilder stb, PrettifyOption option){
 		template.toString(stb, option, PrettifyContext.NONE);
 	}
-	@Override protected void macroBodyToPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
+	@Override protected void macroBodyToPrettyString(StringBuilder stb, int indents, PrettifyOption option){
 		template.toPrettyString(stb, indents, option, PrettifyContext.NONE);
 	}
 }

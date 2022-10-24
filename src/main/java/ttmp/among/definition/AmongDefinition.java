@@ -56,7 +56,7 @@ public final class AmongDefinition extends ToPrettyString.Base{
 		while(it.hasNext()){
 			if(first) first = false;
 			else stb.append(',');
-			it.next().toString(stb, option, context);
+			it.next().toString(stb, option, PrettifyContext.NONE);
 		}
 	}
 	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
@@ -65,7 +65,7 @@ public final class AmongDefinition extends ToPrettyString.Base{
 		while(it.hasNext()){
 			if(first) first = false;
 			else stb.append('\n');
-			it.next().toPrettyString(stb, indents, option, context);
+			it.next().toPrettyString(stb, indents, option, PrettifyContext.NONE);
 		}
 	}
 }

@@ -236,16 +236,16 @@ public abstract class Macro extends ToPrettyString.Base{
 
 	@Override public void toString(StringBuilder stb, PrettifyOption option, PrettifyContext context){
 		stb.append(type().isFunctionMacro() ? "fn " : "macro ");
-		signatureAndParameter().toString(stb, option, context);
-		macroBodyToString(stb.append(':'), option, context);
+		signatureAndParameter().toString(stb, option, PrettifyContext.NONE);
+		macroBodyToString(stb.append(':'), option);
 	}
 	@Override public void toPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context){
 		stb.append(type().isFunctionMacro() ? "fn " : "macro ");
-		signatureAndParameter().toPrettyString(stb, indents, option, context);
-		macroBodyToPrettyString(stb.append(" : "), indents, option, context);
+		signatureAndParameter().toPrettyString(stb, indents, option, PrettifyContext.NONE);
+		macroBodyToPrettyString(stb.append(" : "), indents, option);
 	}
-	protected abstract void macroBodyToString(StringBuilder stb, PrettifyOption option, PrettifyContext context);
-	protected abstract void macroBodyToPrettyString(StringBuilder stb, int indents, PrettifyOption option, PrettifyContext context);
+	protected abstract void macroBodyToString(StringBuilder stb, PrettifyOption option);
+	protected abstract void macroBodyToPrettyString(StringBuilder stb, int indents, PrettifyOption option);
 
 	public ToPrettyString signatureAndParameter(){
 		return signatureAndParameter(false);
