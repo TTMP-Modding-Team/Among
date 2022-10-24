@@ -115,14 +115,13 @@ public final class AmongParser{
 					tokenizer.reset(next.isSimpleLiteral());
 					Among a = nameable(false);
 					if(a==null){
-						next = tokenizer.next(true, TokenizationMode.WORD);
-						if(!next.is(QUOTED_PRIMITIVE)){
+						next = tokenizer.next(true, TokenizationMode.VALUE);
+						if(!next.isLiteral()){
 							if(next.is(COMMA))
 								reportError("Redundant comma");
 							else{
 								reportError("Top level statements can only be macro/operator/"+
-										"keyword definition, undef statement, named/unnamed collections,"+
-										" or primitives denoted with ' or \"");
+										"keyword definition, undef statement, or values.");
 								tryToRecover(TokenizationMode.UNEXPECTED, null, true, true);
 							}
 							continue;
