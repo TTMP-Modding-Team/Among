@@ -2,6 +2,7 @@ package ttmp.among.library;
 
 import org.jetbrains.annotations.Nullable;
 import ttmp.among.AmongEngine;
+import ttmp.among.compile.ReportType;
 import ttmp.among.definition.AmongDefinition;
 import ttmp.among.definition.Macro;
 import ttmp.among.definition.MacroType;
@@ -99,7 +100,8 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 	}
 
 	public static AmongDefinition collection(){
-		AmongDefinition definition = defaultOperators();
+		AmongDefinition definition = new AmongDefinition();
+		definition.operators().addOperator(".", OperatorType.BINARY, "", OperatorProperty.ACCESSOR, OperatorPriorities.BINARY_ACCESS);
 		definition.macros().add(Macro.builder("named", MacroType.OPERATION_FN)
 				.param("name", TypeFlags.PRIMITIVE)
 				.inferSelfType(TypeFlags.NAMEABLE)
@@ -129,11 +131,102 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 					}
 					return copy;
 				}));
+		definition.macros().add(Macro.builder("get", MacroType.OPERATION_FN)
+				.param("index", TypeFlags.PRIMITIVE)
+				.inferSelfType(TypeFlags.NAMEABLE)
+				.build((args, copyConstant, reportHandler) -> {
+					if(args[0].isObj()){
+						String key = args[1].asPrimitive().getValue();
+						Among a = args[0].asObj().getProperty(key);
+						if(a==null&&reportHandler!=null)
+							reportHandler.accept(ReportType.ERROR, "No property '"+key+"' in object");
+						return a;
+					}else{
+						AmongList l = args[0].asList();
+						try{
+							int i = args[1].asPrimitive().getIntValue();
+							if(i>=0&&i<l.size()) return l.get(i);
+							if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Index out of range ("+i+", size = "+l.size()+")");
+						}catch(NumberFormatException ex){
+							if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Expected int");
+						}
+					}
+					return null;
+				}));
+		definition.macros().add(Macro.builder("getOrDefault", MacroType.OPERATION_FN)
+				.param("index", TypeFlags.PRIMITIVE)
+				.param("default")
+				.inferSelfType(TypeFlags.NAMEABLE)
+				.build((args, copyConstant, reportHandler) -> {
+					if(args[0].isObj()){
+						String key = args[1].asPrimitive().getValue();
+						Among a = args[0].asObj().getProperty(key);
+						return a!=null ? a : args[2];
+					}else try{
+						int i = args[1].asPrimitive().getIntValue();
+						AmongList l = args[0].asList();
+						return i>=0&&i<l.size() ? l.get(i) : args[2];
+					}catch(NumberFormatException ex){
+						if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Expected int");
+						return null;
+					}
+				}));
+		definition.macros().add(Macro.builder("add", MacroType.OPERATION_FN)
+				.param("value")
+				.inferSelfType(TypeFlags.LIST|TypeFlags.OPERATION)
+				.build((args, copyConstant, reportHandler) -> {
+					AmongList l = args[0].asList().copy();
+					l.add(args[1]);
+					return l;
+				}));
+		definition.macros().add(Macro.builder("set", MacroType.OPERATION_FN)
+				.param("index", TypeFlags.PRIMITIVE)
+				.param("value")
+				.inferSelfType(TypeFlags.NAMEABLE)
+				.build((args, copyConstant, reportHandler) -> {
+					if(args[0].isObj()){
+						AmongObject o = args[0].asObj().copy();
+						o.setProperty(args[1].asPrimitive().getValue(), args[2]);
+						return o;
+					}else try{
+						int i = args[1].asPrimitive().getIntValue();
+						if(i>=0&&i<args[0].asList().size()){
+							AmongList l = args[0].asList().copy();
+							l.set(i, args[2]);
+							return l;
+						}
+						if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Index out of range ("+i+", size = "+args[0].asList().size()+")");
+					}catch(NumberFormatException ex){
+						if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Expected int");
+					}
+					return null;
+				}));
+		definition.macros().add(Macro.builder("remove", MacroType.OPERATION_FN)
+				.param("index", TypeFlags.PRIMITIVE)
+				.inferSelfType(TypeFlags.NAMEABLE)
+				.build((args, copyConstant, reportHandler) -> {
+					if(args[0].isObj()){
+						AmongObject o = args[0].asObj().copy();
+						o.removeProperty(args[1].asPrimitive().getValue());
+						return o;
+					}else try{
+						int i = args[1].asPrimitive().getIntValue();
+						if(i>=0&&i<args[0].asList().size()){
+							AmongList l = args[0].asList().copy();
+							l.removeAt(i);
+							return l;
+						}
+						if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Index out of range ("+i+", size = "+args[0].asList().size()+")");
+					}catch(NumberFormatException ex){
+						if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Expected int");
+					}
+					return null;
+				}));
 		return definition;
 	}
 
 	public static AmongDefinition format(){
-		AmongDefinition definition = defaultOperators();
+		AmongDefinition definition = new AmongDefinition();
 		definition.operators().addOperator("%", OperatorType.BINARY, "format", 0.5);
 		definition.macros().add(Macro.builder("format", MacroType.OPERATION)
 				.param("format", TypeFlags.PRIMITIVE)
