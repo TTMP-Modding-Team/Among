@@ -340,6 +340,20 @@ public class EqualityTests{
 				object().prop("among", "us").prop("red", "sus"));
 	}
 
+	@Test public void fmt(){
+		simpleEqualityTest("fmt",
+				value("hi"),
+				value("x:1, y:2"),
+				value("x:1, y:2, xy:12"),
+				value("x:1, y:2"),
+				value("x:1, y:2"),
+				value("x:1, y:2, xy:12"),
+				value("x:1, y:2"),
+				value("{}{}"),
+				value("a {} {}"),
+				value("a a a {}"));
+	}
+
 	private static void simpleEqualityTest(String name, Among... expected){
 		try{
 			assertArrayEquals(expected,

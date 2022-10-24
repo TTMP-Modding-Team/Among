@@ -28,6 +28,7 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 	public static final String EVAL = "among/eval";
 	public static final String COLLECTION = "among/collection";
 	public static final String COLLECTIONS = "among/collections";
+	public static final String FORMAT = "among/format";
 
 	private DefaultInstanceProvider(){}
 	private static final DefaultInstanceProvider INSTANCE = new DefaultInstanceProvider();
@@ -43,6 +44,8 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 				return new RootAndDefinition(eval());
 			case COLLECTION: case COLLECTIONS:
 				return new RootAndDefinition(collection());
+			case FORMAT:
+				return new RootAndDefinition(format());
 			default: return null;
 		}
 	}
@@ -125,6 +128,22 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 						if(!copy.hasProperty(e.getKey())) copy.setProperty(e.getKey(), e.getValue());
 					}
 					return copy;
+				}));
+		return definition;
+	}
+
+	public static AmongDefinition format(){
+		AmongDefinition definition = defaultOperators();
+		definition.operators().addOperator("%", OperatorType.BINARY, "format", 0.5);
+		definition.macros().add(Macro.builder("format", MacroType.OPERATION)
+				.param("format", TypeFlags.PRIMITIVE)
+				.param("argument", Among.list())
+				.build((args, copyConstant, reportHandler) -> {
+					String fmt = args[0].asPrimitive().getValue();
+					Among a = args[1];
+					return Among.value(a.isPrimitive() ? FormatLib.format(fmt, a.asPrimitive().getValue()) :
+							a.isList() ? FormatLib.format(fmt, a.asList().values().toArray()) :
+									FormatLib.format(fmt, a.asObj().properties()));
 				}));
 		return definition;
 	}
