@@ -117,10 +117,14 @@ public final class AmongParser{
 					if(a==null){
 						next = tokenizer.next(true, TokenizationMode.WORD);
 						if(!next.is(QUOTED_PRIMITIVE)){
-							reportError("Top level statements can only be macro/operator/"+
-									"keyword definition, undef statement, named/unnamed collections,"+
-									" or primitives denoted with ' or \"");
-							tryToRecover(TokenizationMode.WORD);
+							if(next.is(COMMA))
+								reportError("Redundant comma");
+							else{
+								reportError("Top level statements can only be macro/operator/"+
+										"keyword definition, undef statement, named/unnamed collections,"+
+										" or primitives denoted with ' or \"");
+								tryToRecover(TokenizationMode.UNEXPECTED, null, true, true);
+							}
 							continue;
 						}
 						a = Among.value(next.expectLiteral());
