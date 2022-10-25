@@ -1,4 +1,5 @@
-<img src="/logo.png" width="200" height="200" style="image-rendering: pixelated">
+<style>.logo{image-rendering: pixelated;}</style>
+<img src="/logo.png" width="200" height="200" class="logo">
 
 # AMONG: Absolutely Mental Object Notation (G is silent (that's how acronyms work right?))
 
