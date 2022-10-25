@@ -25,8 +25,9 @@ import java.util.Objects;
  * ]
  * </pre>
  * <p>
- * Note that <a href="https://youtu.be/doEqUhFiQS4">operations</a> get compiled into list; operations do not
- * have type representation.
+ * Note that operations get compiled into list; operations do not have separate type representation. Instead, {@link
+ * AmongList#operation} flag is used to distinguish operations from lists. This flag is mainly for parsing, however,
+ * since the majority of usages do not check the field for type checking.
  */
 public class AmongList extends AmongNameable implements Iterable<Among>{
 	private final List<Among> values = new ArrayList<>();

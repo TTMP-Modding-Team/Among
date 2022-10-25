@@ -52,12 +52,10 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 	}
 
 	/**
-	 * Create a new definition with basic operators.
+	 * Create a new definition with default set of operators.
 	 *
-	 * @return New definition with basic operators
-	 * @see <a href="https://youtu.be/J2C9oiP5j7Q">ok this link is supposed to be a link to the documentation about
-	 * "basic operators" but i kinda dont have one now so i will just put a rickroll here if you dont mind yea just poke
-	 * me if i have that doc up somewhere but didnt update this link ok thx</a>
+	 * @return New definition with default operators
+	 * @see <a href="https://github.com/TTMP-Modding-Team/Among/wiki/Operators-and-Keywords#default-operators">Default Operators @ Online Docs</a>
 	 */
 	public static AmongDefinition defaultOperators(){
 		AmongDefinition definition = new AmongDefinition();
