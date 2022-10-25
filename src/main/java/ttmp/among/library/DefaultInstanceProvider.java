@@ -113,6 +113,18 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 		definition.macros().add(Macro.builder("name", MacroType.ACCESS)
 				.inferSelfType(TypeFlags.NAMEABLE)
 				.build((args, copyConstant, reportHandler) -> Among.value(args[0].asNameable().getName())));
+		definition.macros().add(Macro.builder("size", MacroType.ACCESS)
+				.inferSelfType(TypeFlags.NAMEABLE)
+				.build((args, copyConstant, reportHandler) -> Among.value(args[0].isObj() ?
+						args[0].asObj().size() : args[0].asList().size())));
+		definition.macros().add(Macro.builder("keys", MacroType.ACCESS)
+				.inferSelfType(TypeFlags.OBJECT)
+				.build((args, copyConstant, reportHandler) ->
+						Among.list(args[0].asObj().properties().keySet().toArray())));
+		definition.macros().add(Macro.builder("values", MacroType.ACCESS)
+				.inferSelfType(TypeFlags.OBJECT)
+				.build((args, copyConstant, reportHandler) ->
+						Among.list(args[0].asObj().properties().values().toArray())));
 		definition.macros().add(Macro.builder("concat", MacroType.OPERATION_FN)
 				.param("other", TypeFlags.LIST|TypeFlags.OPERATION)
 				.inferSelfType(TypeFlags.LIST|TypeFlags.OPERATION)
@@ -146,7 +158,8 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 						try{
 							int i = args[1].asPrimitive().getIntValue();
 							if(i>=0&&i<l.size()) return l.get(i);
-							if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Index out of range ("+i+", size = "+l.size()+")");
+							if(reportHandler!=null)
+								reportHandler.accept(ReportType.ERROR, "Index out of range ("+i+", size = "+l.size()+")");
 						}catch(NumberFormatException ex){
 							if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Expected int");
 						}
@@ -195,7 +208,8 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 							l.set(i, args[2]);
 							return l;
 						}
-						if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Index out of range ("+i+", size = "+args[0].asList().size()+")");
+						if(reportHandler!=null)
+							reportHandler.accept(ReportType.ERROR, "Index out of range ("+i+", size = "+args[0].asList().size()+")");
 					}catch(NumberFormatException ex){
 						if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Expected int");
 					}
@@ -216,7 +230,8 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 							l.removeAt(i);
 							return l;
 						}
-						if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Index out of range ("+i+", size = "+args[0].asList().size()+")");
+						if(reportHandler!=null)
+							reportHandler.accept(ReportType.ERROR, "Index out of range ("+i+", size = "+args[0].asList().size()+")");
 					}catch(NumberFormatException ex){
 						if(reportHandler!=null) reportHandler.accept(ReportType.ERROR, "Expected int");
 					}
