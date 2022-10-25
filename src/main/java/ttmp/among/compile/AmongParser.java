@@ -676,7 +676,8 @@ public final class AmongParser{
 		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
 		if(next.isOperatorOrKeyword()){
 			OperatorDefinition op = operators.get(i).get(next.expectLiteral());
-			if(op!=null) return operationMacro(Among.namedList(op.aliasOrName(), a, rightAssociativeBinary(operators, i)).operation(), next.start);
+			if(op!=null)
+				return operationMacro(Among.namedList(op.aliasOrName(), a, rightAssociativeBinary(operators, i)).operation(), next.start);
 		}
 		tokenizer.reset();
 		return a;
@@ -704,7 +705,8 @@ public final class AmongParser{
 		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
 		if(next.isOperatorOrKeyword()){
 			OperatorDefinition op = operators.get(i).get(next.expectLiteral());
-			if(op!=null) return operationMacro(Among.namedList(op.aliasOrName(), prefix(operators, i)).operation(), next.start);
+			if(op!=null)
+				return operationMacro(Among.namedList(op.aliasOrName(), prefix(operators, i)).operation(), next.start);
 		}
 		tokenizer.reset();
 		return operationExpression(operators, i+1);
@@ -879,7 +881,9 @@ public final class AmongParser{
 				reportError("Access macros cannot have parameters");
 				invalid = true;
 			}else if(paramIndex(name)>=0){
-				reportError("Duplicated parameter '"+name+"'.", pos);
+				reportError(type.isFunctionMacro()&&"self".equals(name) ?
+						"Cannot define parameter named 'self' in function macros" :
+						"Duplicated parameter '"+name+"'.", pos);
 				invalid = true;
 			}else{
 				if(type==MacroType.LIST||type==MacroType.OPERATION||
