@@ -125,6 +125,13 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 				.inferSelfType(TypeFlags.OBJECT)
 				.build((args, copyConstant, reportHandler) ->
 						Among.list(args[0].asObj().properties().values().toArray())));
+		definition.macros().add(Macro.builder("properties", MacroType.ACCESS)
+				.inferSelfType(TypeFlags.OBJECT)
+				.build((args, copyConstant, reportHandler) ->
+						Among.list(args[0].asObj()
+								.properties().entrySet().stream()
+								.map(e-> Among.list(e.getKey(), e.getValue()))
+								.toArray())));
 		definition.macros().add(Macro.builder("concat", MacroType.OPERATION_FN)
 				.param("other", TypeFlags.LIST|TypeFlags.OPERATION)
 				.inferSelfType(TypeFlags.LIST|TypeFlags.OPERATION)
@@ -220,8 +227,10 @@ public final class DefaultInstanceProvider implements Provider<RootAndDefinition
 				.inferSelfType(TypeFlags.NAMEABLE)
 				.build((args, copyConstant, reportHandler) -> {
 					if(args[0].isObj()){
+						String key = args[1].asPrimitive().getValue();
+						if(!args[0].asObj().hasProperty(key)) return args[0];
 						AmongObject o = args[0].asObj().copy();
-						o.removeProperty(args[1].asPrimitive().getValue());
+						o.removeProperty(key);
 						return o;
 					}else try{
 						int i = args[1].asPrimitive().getIntValue();
