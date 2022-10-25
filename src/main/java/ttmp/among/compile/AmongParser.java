@@ -522,6 +522,7 @@ public final class AmongParser{
 			switch(keyToken.type){
 				case EOF: reportError("Unterminated object");
 				case R_BRACE: break L;
+				case COMMA: reportError("Redundant comma"); continue;
 			}
 			if(!keyToken.isLiteral()){
 				reportError("Expected property key");
@@ -529,9 +530,11 @@ public final class AmongParser{
 				else continue;
 			}
 
+			tokenizer.discard();
 			if(!tokenizer.next(true, TokenizationMode.UNEXPECTED).is(COLON)){
 				reportError("Expected ':' after property key");
-				if(tryToRecover(TokenizationMode.KEY, R_BRACE, true)) break;
+				tokenizer.reset();
+				if(tryToRecover(TokenizationMode.UNEXPECTED, R_BRACE, true)) break;
 				else continue;
 			}
 			String key = keyToken.expectLiteral();
@@ -569,6 +572,7 @@ public final class AmongParser{
 			switch(next.type){
 				case EOF: reportError("Unterminated list");
 				case R_BRACKET: break L;
+				case COMMA: reportError("Redundant comma"); continue;
 			}
 			tokenizer.reset(next.is(ERROR));
 			Among expr = expr();
@@ -600,6 +604,7 @@ public final class AmongParser{
 			switch(tokenizer.next(true, TokenizationMode.OPERATION).type){
 				case EOF: reportError("Unterminated operation");
 				case R_PAREN: break L;
+				case COMMA: reportError("Redundant comma"); continue;
 			}
 			tokenizer.reset();
 			list.add(operationExpression(importDefinition.operators().priorityGroup(), 0));
