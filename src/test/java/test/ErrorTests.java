@@ -18,6 +18,7 @@ public class ErrorTests{
 		list.add(errorTest("invalidMacro"));
 		list.add(errorTest("invalidStatement"));
 		list.add(errorTest("redundantComma"));
+		list.add(errorTest("wtf"));
 		return list;
 	}
 

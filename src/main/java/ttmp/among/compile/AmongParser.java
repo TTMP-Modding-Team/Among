@@ -635,6 +635,8 @@ public final class AmongParser{
 		if(!next.isLiteral()){
 			reportError("Expected value");
 			tokenizer.reset();
+			if(tryToRecover(TokenizationMode.UNEXPECTED, R_PAREN, true, true))
+				tokenizer.reset();
 			return Among.value("ERROR");
 		}
 		AmongPrimitive p = Among.value(next.expectLiteral());
