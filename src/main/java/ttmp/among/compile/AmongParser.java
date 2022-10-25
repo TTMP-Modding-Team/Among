@@ -597,7 +597,8 @@ public final class AmongParser{
 	}
 
 	private AmongList oper(@Nullable String name){
-		AmongList list = Among.namedList(name).operation();
+		AmongList list = Among.namedList(name);
+		list.setOperation(true);
 		L:
 		while(true){
 			tokenizer.discard();
@@ -668,7 +669,11 @@ public final class AmongParser{
 									b.asList().isOperation() ? operationFnMacro(call, next.start) :
 											listFnMacro(call, next.start);
 						}
-					}else a = operationMacro(Among.namedList(op.aliasOrName(), a, b).operation(), next.start);
+					}else{
+						AmongList list = Among.namedList(op.aliasOrName(), a, b);
+						list.setOperation(true);
+						a = operationMacro(list, next.start);
+					}
 					continue;
 				}
 			}
@@ -683,8 +688,11 @@ public final class AmongParser{
 		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
 		if(next.isOperatorOrKeyword()){
 			OperatorDefinition op = operators.get(i).get(next.expectLiteral());
-			if(op!=null)
-				return operationMacro(Among.namedList(op.aliasOrName(), a, rightAssociativeBinary(operators, i)).operation(), next.start);
+			if(op!=null){
+				AmongList list = Among.namedList(op.aliasOrName(), a, rightAssociativeBinary(operators, i));
+				list.setOperation(true);
+				return operationMacro(list, next.start);
+			}
 		}
 		tokenizer.reset();
 		return a;
@@ -698,7 +706,9 @@ public final class AmongParser{
 			if(next.isOperatorOrKeyword()){
 				OperatorDefinition op = operators.get(i).get(next.expectLiteral());
 				if(op!=null){
-					a = operationMacro(Among.namedList(op.aliasOrName(), a).operation(), next.start);
+					AmongList list = Among.namedList(op.aliasOrName(), a);
+					list.setOperation(true);
+					a = operationMacro(list, next.start);
 					continue;
 				}
 			}
@@ -712,8 +722,11 @@ public final class AmongParser{
 		AmongToken next = tokenizer.next(true, TokenizationMode.OPERATION);
 		if(next.isOperatorOrKeyword()){
 			OperatorDefinition op = operators.get(i).get(next.expectLiteral());
-			if(op!=null)
-				return operationMacro(Among.namedList(op.aliasOrName(), prefix(operators, i)).operation(), next.start);
+			if(op!=null){
+				AmongList list = Among.namedList(op.aliasOrName(), prefix(operators, i));
+				list.setOperation(true);
+				return operationMacro(list, next.start);
+			}
 		}
 		tokenizer.reset();
 		return operationExpression(operators, i+1);

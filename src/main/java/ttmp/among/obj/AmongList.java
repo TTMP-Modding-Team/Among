@@ -104,15 +104,6 @@ public class AmongList extends AmongNameable implements Iterable<Among>{
 	public void setOperation(boolean operation){
 		this.operation = operation;
 	}
-	/**
-	 * Mark this list as an operation or not.
-	 *
-	 * @return this
-	 */
-	public AmongList operation(){
-		this.operation = true;
-		return this;
-	}
 
 	/**
 	 * @return Iterator for each element on this list. {@link Iterator#remove()} is unsupported.
