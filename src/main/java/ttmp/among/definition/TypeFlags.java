@@ -45,10 +45,10 @@ public interface TypeFlags{
 
 	static byte from(Among among, boolean fuzzyOperation){
 		if(among.isPrimitive()) return PRIMITIVE;
-		else if(among.isObj()) return among.isNameable() ? NAMED_OBJECT : UNNAMED_OBJECT;
-		else if(fuzzyOperation) return (byte)(among.isNameable() ? NAMED_OPERATION|NAMED_LIST : UNNAMED_OPERATION|UNNAMED_LIST);
-		else if(among.asList().isOperation()) return among.isNameable() ? NAMED_OPERATION : UNNAMED_OPERATION;
-		else return among.isNameable() ? NAMED_LIST : UNNAMED_LIST;
+		else if(among.isObj()) return among.asNameable().hasName() ? NAMED_OBJECT : UNNAMED_OBJECT;
+		else if(fuzzyOperation) return (byte)(among.asNameable().hasName() ? NAMED_OPERATION|NAMED_LIST : UNNAMED_OPERATION|UNNAMED_LIST);
+		else if(among.asList().isOperation()) return among.asNameable().hasName() ? NAMED_OPERATION : UNNAMED_OPERATION;
+		else return among.asNameable().hasName() ? NAMED_LIST : UNNAMED_LIST;
 	}
 
 	static String toString(byte flag){
