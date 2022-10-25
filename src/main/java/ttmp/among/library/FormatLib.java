@@ -1,5 +1,6 @@
 package ttmp.among.library;
 
+import org.jetbrains.annotations.Nullable;
 import ttmp.among.obj.AmongPrimitive;
 
 import java.util.Map;
@@ -10,7 +11,6 @@ public final class FormatLib{
 	private FormatLib(){}
 
 	private static final Pattern FORMAT_REGEX = Pattern.compile("\\{\\{}}|\\{((?:\\\\.|[^}])*)}");
-
 	public static String format(String fmt, Object... args){
 		StringBuilder stb = null;
 		int last = 0, autoIndex = 0;
@@ -18,7 +18,7 @@ public final class FormatLib{
 			if(stb==null) stb = new StringBuilder();
 			stb.append(fmt, last, m.start());
 
-			String group = m.group(1);
+			String group = index(m, fmt);
 			if(group==null) stb.append("{}");
 			else if(group.isEmpty()){
 				if(autoIndex<args.length) append(stb, args[autoIndex++]);
@@ -42,13 +42,24 @@ public final class FormatLib{
 			if(stb==null) stb = new StringBuilder();
 			stb.append(fmt, last, m.start());
 
-			String group = m.group(1);
+			String group = index(m, fmt);
 			if(group==null) stb.append("{}");
 			else if(args.containsKey(group)) append(stb, args.get(group));
 			else stb.append(fmt, m.start(), m.end());
 		}
 		if(stb==null) return fmt;
 		stb.append(fmt, last, fmt.length());
+		return stb.toString();
+	}
+
+	@Nullable private static String index(Matcher matcher, String fmt){
+		int start = matcher.start(1);
+		if(start<0) return null;
+		StringBuilder stb = new StringBuilder();
+		for(int end = matcher.end(1); start<end; start++){
+			if(fmt.charAt(start)=='\\') start++;
+			stb.append(fmt.charAt(start));
+		}
 		return stb.toString();
 	}
 

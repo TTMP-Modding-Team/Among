@@ -351,7 +351,8 @@ public class EqualityTests{
 				value("x:1, y:2"),
 				value("{}{}"),
 				value("a {} {}"),
-				value("a a a {}"));
+				value("a a a {}"),
+				value("1"));
 	}
 
 	private static void simpleEqualityTest(String name, Among... expected){
