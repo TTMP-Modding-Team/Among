@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'ttmp'
-version "${spec_version}.${build_version}"
+version "${spec_version}.${patch_version}"
 
 repositories {
     mavenCentral()
@@ -31,7 +31,7 @@ jar {
                 "Specification-Title": "Among",
                 "Specification-Version": "${spec_version}",
                 "Implementation-Title": "ttmp.among",
-                "Implementation-Version": "${build_version}"
+                "Implementation-Version": "${patch_version}"
         )
     }
 }
